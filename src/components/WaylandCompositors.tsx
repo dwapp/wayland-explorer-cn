@@ -60,7 +60,7 @@ const CompositorHeader: React.FC<{ compositor: CompositorRegistryItem }> = ({
                 {compositor.icon && (
                     <img
                         alt={compositor.name}
-                        src={`/protocols/logos/${compositor.icon}.svg`}
+                        src={`/wayland-explorer-cn/logos/${compositor.icon}.svg`}
                         className="dark:invert h-5 m-auto"
                     />
                 )}
