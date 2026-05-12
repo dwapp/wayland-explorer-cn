@@ -3,10 +3,15 @@ import {
     CompositorRegistryItem,
 } from '../data/compositor-registry'
 import { WaylandProtocolModel } from './common'
+import { i18n } from '../lib/i18n-labels'
+import { useLanguage } from '../lib/LanguageContext'
 
 export const WaylandCompositors: React.FC<{
     element: WaylandProtocolModel
 }> = ({ element }) => {
+    const { language } = useLanguage()
+    const labels = i18n[language]
+
     return (
         <div className="mb-10">
             <h4
@@ -15,12 +20,12 @@ export const WaylandCompositors: React.FC<{
             >
                 <a href="#compositor-support">
                     <span className="codicon codicon-debug-disconnect mr-1"></span>
-                    Compositor Support
+                    {labels.compositorSupport}
                 </a>
             </h4>
 
             <div className="overflow-x-auto">
-                <CanIUseTable protocol={element} />
+                <CanIUseTable protocol={element} labels={labels} />
             </div>
         </div>
     )
@@ -101,7 +106,8 @@ const InterfaceRow: React.FC<{
 
 const CanIUseTable: React.FC<{
     protocol: WaylandProtocolModel
-}> = ({ protocol }) => {
+    labels: any
+}> = ({ protocol, labels }) => {
     const interfaces = protocol.interfaces
         .map((waylandInterface) => {
             const versions = compositorRegistry.map((comp) => {
@@ -124,7 +130,7 @@ const CanIUseTable: React.FC<{
         .filter((data) => data.versions.some((v) => v != null))
 
     if (interfaces.length === 0) {
-        return <NotFound />
+        return <NotFound labels={labels} />
     }
 
     return (
@@ -151,12 +157,13 @@ const CanIUseTable: React.FC<{
     )
 }
 
-const NotFound: React.FC = () => (
+const NotFound: React.FC<{ labels: any }> = ({ labels }) => (
     <div className="flex md:justify-center w-full items-center overflow-x-auto mt-5">
         <span
             className="codicon codicon-search mr-3"
             style={{ fontSize: 50 }}
         ></span>
-        <span className="text-xl">No compositor support found</span>
+        <span className="text-xl">{labels.noCompositorSupport}</span>
     </div>
 )
+

@@ -1,0 +1,112 @@
+{
+  "interfaces": {
+    "wp_presentation": {
+      "description": {
+        "summary": "与定时呈现相关的 wl_surface 请求",
+        "text": "此接口的主要功能是提供精确的呈现时序反馈，以确保在保持音视频同步的同时实现流畅的视频播放。部分功能使用了呈现时钟的概念，该时钟在 presentation.clock_id 事件中定义。\n\nwl_surface 的内容更新通过 wl_surface.commit 请求提交。feedback 请求与 wl_surface.commit 关联，并提供关于内容更新的反馈，特别是最终实际的呈现时间。\n\n当最终实际呈现时间可用时（例如帧缓冲区翻转完成后），所请求的 presentation_feedback.presented 事件将被发送。最终呈现时间可能与合成器预测的显示更新时间及更新目标时间不同，尤其是在合成器错过目标垂直消隐期时。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "从呈现接口解绑",
+            "text": "通知服务器客户端将不再使用此协议对象。由此对象创建的现有对象不受影响。"
+          }
+        },
+        "feedback": {
+          "description": {
+            "summary": "请求呈现反馈信息",
+            "text": "为给定表面上的当前内容提交请求呈现反馈。这将创建一个新的 presentation_feedback 对象，该对象将一次性传递反馈信息。如果为同一次提交创建了多个 presentation_feedback 对象，它们将全部传递相同的信息。\n\n有关返回信息的详细内容，请参阅 presentation_feedback 接口。"
+          }
+        }
+      },
+      "events": {
+        "clock_id": {
+          "description": {
+            "summary": "时间戳使用的时钟 ID",
+            "text": "此事件告知客户端合成器解释呈现扩展时间戳时所采用的时钟域，该时钟称为呈现时钟。\n\n合成器在客户端绑定到呈现接口时发送此事件。呈现时钟在客户端连接的生命周期内不会改变。\n\n时钟标识符与平台相关。在 POSIX 平台上，标识符值是 clock_gettime() 接受的 clockid_t 值之一，clock_gettime() 由 POSIX.1-2001 定义。\n\n此时钟域中的时间戳以 tv_sec_hi、tv_sec_lo、tv_nsec 三元组表示，每个分量均为无符号 32 位值。完整秒数存储在由 tv_sec_hi 和 tv_sec_lo 组合而成的 64 位 tv_sec 中，附加的纳秒小数部分存储在 tv_nsec 中。因此，对于有效时间戳，tv_nsec 必须在 [0, 999999999] 范围内。\n\n注意，clock_id 仅适用于呈现时钟，对 Wayland 核心协议输入事件中使用的时间戳等没有任何影响。\n\n合成器应优先选择不会跳变、也不会被 NTP 等调整的时钟。时钟的绝对值无关紧要。建议精度达到一毫秒或更高。客户端必须能够直接查询当前时钟值，而不是通过询问合成器来获取。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "致命的呈现错误",
+            "text": "这些致命协议错误可能在响应非法呈现请求时被触发。"
+          },
+          "entries": {
+            "invalid_timestamp": {
+              "summary": "tv_nsec 中的值无效"
+            },
+            "invalid_flag": {
+              "summary": "标志无效"
+            }
+          }
+        }
+      }
+    },
+    "wp_presentation_feedback": {
+      "description": {
+        "summary": "呈现时间反馈事件",
+        "text": "presentation_feedback 对象返回一个指示，表明 wl_surface 内容更新已对用户可见。一个对象对应一次内容更新提交（wl_surface.commit）。有两种可能的结果：内容更新被呈现给用户并传递呈现时间戳；或者用户未看到内容更新（因为它被后续更新取代或其表面已被销毁），内容更新被丢弃。\n\n一旦 presentation_feedback 对象传递了 presented 或 discarded 事件，它将被自动销毁。"
+      },
+      "events": {
+        "sync_output": {
+          "description": {
+            "summary": "呈现已同步到此输出",
+            "text": "由于呈现一次只能与一个输出同步，此事件告知是哪个输出。此事件仅在 presented 事件之前发送。\n\n由于客户端可能多次绑定同一个全局 wl_output，此事件会针对每个与同步输出匹配的已绑定实例发送。如果客户端根本没有绑定到正确的 wl_output 全局对象，则不会发送此事件。"
+          }
+        },
+        "presented": {
+          "description": {
+            "summary": "内容更新已被显示",
+            "text": "关联的内容更新在指定时间（tv_sec_hi/lo、tv_nsec）被显示给用户。有关时间戳的解释，请参阅 presentation.clock_id 事件。\n\n时间戳对应于内容更新在表面主输出上首次转化为光信号的时刻。合成器可以从系统的帧缓冲区翻转完成事件以及已知的物理显示路径延迟来近似估算此时间。\n\n此事件之前会有所有相关的 sync_output 事件，说明反馈对应的是哪个输出的刷新周期。建议合成器选择包含 wl_surface 最大部分的输出，或保持之前选择的输出。稳定的呈现输出关联有助于客户端预测未来的输出刷新（垂直消隐）。\n\nrefresh 参数给出合成器对下一次输出刷新可能在 tv_sec、tv_nsec 之后多少纳秒发生的预测。如果无法有效进行此类预测，则该参数为零。\n\n对于版本 2 及更高版本，如果输出没有恒定的刷新率（不包括显式视频模式切换），则 refresh 参数必须是合成器选择的适当速率，或者如果不存在此类速率则为 0。对于版本 1，如果输出没有恒定的刷新率，refresh 参数必须为零。\n\n由 seq_hi 和 seq_lo 组合而成的 64 位值是内容更新首次扫描输出到显示器时输出的垂直回扫计数器的值。此值必须与 GLX_OML_sync_control 规范中 MSC 的定义兼容。\n\n如果输出没有垂直回扫或刷新周期的概念，或者输出设备是自刷新的且无法查询刷新计数，则 seq_hi 和 seq_lo 参数必须为零。"
+          }
+        },
+        "discarded": {
+          "description": {
+            "summary": "内容更新未被显示",
+            "text": "内容更新从未被显示给用户。"
+          }
+        }
+      },
+      "enums": {
+        "kind": {
+          "description": {
+            "summary": "presented 事件中标志的位掩码",
+            "text": "这些标志提供了关于相关内容更新呈现方式的信息。其目的是帮助客户端评估反馈的可靠性以及在可能的撕裂和时序方面的视觉质量。"
+          },
+          "entries": {
+            "vsync": {
+              "summary": "呈现已进行垂直同步",
+              "description": {
+                "summary": "呈现已进行垂直同步",
+                "text": "呈现由显示硬件同步到垂直回扫，从而不会发生撕裂。依赖软件调度对于此标志是不可接受的。如果呈现是通过复制到活动前缓冲区完成的，则必须保证不会发生撕裂。"
+              }
+            },
+            "hw_clock": {
+              "summary": "硬件提供了呈现时间戳",
+              "description": {
+                "summary": "硬件提供了呈现时间戳",
+                "text": "显示硬件提供了测量值，硬件驱动程序将其转换为呈现时间戳。在软件中采样时钟对于此标志是不可接受的。"
+              }
+            },
+            "hw_completion": {
+              "summary": "硬件发出了呈现开始的信号",
+              "description": {
+                "summary": "硬件发出了呈现开始的信号",
+                "text": "显示硬件发出信号，表明它已开始使用新的图像内容。与此相反的例子是使用计时器来猜测显示硬件何时切换到新图像内容。"
+              }
+            },
+            "zero_copy": {
+              "summary": "呈现以零拷贝方式完成",
+              "description": {
+                "summary": "呈现以零拷贝方式完成",
+                "text": "此次更新的呈现以零拷贝方式完成。这意味着来自客户端的缓冲区被原样提供给显示硬件，无需复制。使用 OpenGL 进行合成算作复制，即使直接从客户端缓冲区进行纹理采样也是如此。可能的零拷贝情况包括全屏表面的直接扫描输出以及硬件叠加层上的表面。"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

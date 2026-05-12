@@ -6,6 +6,7 @@ import { Logo } from './Logo'
 import { OutlineOverlay } from './overlays/OutlineOverlay'
 import { SidebarOverlay } from './overlays/SidebarOverlay'
 import { ScrollToTop } from './ScrollToTop'
+import { useLanguage } from '../../lib/LanguageContext'
 
 export const MultiColumnLayout: React.FC<{
     hideSidebar?: boolean
@@ -14,6 +15,7 @@ export const MultiColumnLayout: React.FC<{
 }> = ({ outlineView, hideSidebar, children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isOutlineOpen, setIsOutlineOpen] = useState(false)
+    const { language, setLanguage } = useLanguage()
 
     return (
         <div className="min-h-screen bg-white dark:bg-gray-900 dark:text-white">
@@ -44,8 +46,14 @@ export const MultiColumnLayout: React.FC<{
                         {/* Sidebar component, swap this element with another sidebar if you like */}
                         <div className="flex flex-col h-full border-r border-gray-200 bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
                             <div className="flex-1 flex flex-col overflow-y-auto">
-                                <div className="shrink-0 px-4 my-5">
+                                <div className="shrink-0 px-4 my-5 flex items-center justify-between">
                                     <Logo />
+                                    <button
+                                        onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+                                        className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md"
+                                    >
+                                        {language === 'en' ? '中文' : 'EN'}
+                                    </button>
                                 </div>
                                 <WaylandProtocolLinks />
                             </div>

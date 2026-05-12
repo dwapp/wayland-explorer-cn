@@ -6,6 +6,7 @@ import { setupAnalytics } from './analytics/plausible'
 import App from './App'
 import './index.css'
 import reportWebVitals from './reportWebVitals'
+import { LanguageProvider } from './lib/LanguageContext'
 
 setupAnalytics()
 
@@ -13,9 +14,11 @@ const hydrateOrRender = process.env.NODE_ENV === 'production' ? hydrate : render
 
 hydrateOrRender(
     <React.StrictMode>
-        <Router base="/protocols">
-            <App />
-        </Router>
+        <LanguageProvider>
+            <Router base="/protocols">
+                <App />
+            </Router>
+        </LanguageProvider>
     </React.StrictMode>,
     document.getElementById('root')
 )

@@ -6,6 +6,7 @@ import { Router } from 'wouter'
 import staticLocationHook from 'wouter/static-location'
 import App from '../../src/App'
 import { waylandProtocolRegistry } from '../../src/data/protocol-registry'
+import { LanguageProvider } from '../../src/lib/LanguageContext'
 
 const buildDir = path.resolve(__dirname, '../../build/protocols')
 
@@ -61,7 +62,9 @@ async function renderAndWriteHTML(
 ): Promise<void> {
     const contentHTML = renderToString(
         <Router hook={staticLocationHook(routerPath)} base="/protocols">
-            <App />
+            <LanguageProvider>
+                <App />
+            </LanguageProvider>
         </Router>
     )
 

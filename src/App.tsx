@@ -7,8 +7,11 @@ import { waylandProtocolRegistry } from './data/protocol-registry'
 import { NotFound } from './pages/404'
 import { Homepage } from './pages/Homepage'
 import { GitLab, GitLabMrList } from './pages/GitLab'
+import { useLanguage } from './lib/LanguageContext'
+import { applyTranslation } from './lib/i18n'
 
 function App() {
+    const { language } = useLanguage()
     let contentView = <Homepage />
     let outlineView = null
 
@@ -27,22 +30,29 @@ function App() {
     } else if (isGitlab && gitlabParams?.iid) {
         return <GitLab iid={gitlabParams?.iid}></GitLab>
     } else if (match && params?.protocolId) {
-        const protocolWithMetadata = match
-            ? waylandProtocolRegistry.getProtocolWithMetadata(params.protocolId)
-            : null
-
-        contentView = protocolWithMetadata ? (
-            <WaylandProtocol
-                element={protocolWithMetadata.protocol}
-                metadata={protocolWithMetadata.metadata}
-            />
-        ) : (
-            <NotFound />
+        const protocolRegistryItem = waylandProtocolRegistry.protocols.find(
+            (p) => p.id === params.protocolId
         )
 
-        outlineView = protocolWithMetadata ? (
-            <WaylandProtocolOutline element={protocolWithMetadata.protocol} />
-        ) : null
+        if (protocolRegistryItem) {
+            const { protocol: rawProtocol, translations, ...metadata } = protocolRegistryItem
+            const translatedProtocol =
+                language === 'zh' && translations?.['zh-CN']
+                    ? applyTranslation(rawProtocol, translations['zh-CN'])
+                    : rawProtocol
+
+            contentView = (
+                <WaylandProtocol
+                    element={translatedProtocol}
+                    metadata={metadata}
+                />
+            )
+            outlineView = (
+                <WaylandProtocolOutline element={translatedProtocol} />
+            )
+        } else {
+            contentView = <NotFound />
+        }
     }
 
     return (

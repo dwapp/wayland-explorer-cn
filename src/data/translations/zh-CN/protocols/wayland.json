@@ -1,0 +1,1075 @@
+{
+  "description": {
+    "summary": "核心 Wayland 协议",
+    "text": "核心 Wayland 协议由 wayland.xml 描述，包含了 Wayland 系统的核心接口。"
+  },
+  "interfaces": {
+    "wl_display": {
+      "description": {
+        "summary": "核心全局对象",
+        "text": "核心全局对象。这是一个特殊的单例对象，用于内部 Wayland 协议功能。"
+      },
+      "requests": {
+        "sync": {
+          "description": {
+            "summary": "异步回送",
+            "text": "sync 请求要求服务器在返回的 wl_callback 对象上发出 'done' 事件。由于请求和事件都是按顺序处理和交付的，因此这可以用作屏障，以确保之前所有的请求和产生的事件都已处理完毕。\n\n此请求返回的对象将在回调触发后被合成器销毁，因此客户端在此时点后不得尝试使用它。\n\n回调中传递的 callback_data 未定义，应忽略。"
+          }
+        },
+        "get_registry": {
+          "description": {
+            "summary": "获取全局注册表对象",
+            "text": "此请求创建一个注册表对象，允许客户端列出并绑定合成器提供的全局对象。\n\n需要注意的是，响应 get_registry 请求所消耗的服务器端资源只能在客户端断开连接时释放，而不是在客户端代理销毁时释放。因此，客户端应尽可能少地调用 get_registry，以避免浪费内存。"
+          }
+        }
+      },
+      "events": {
+        "error": {
+          "description": {
+            "summary": "致命错误事件",
+            "text": "当发生致命（不可恢复）错误时发出错误事件。object_id 参数是发生错误的位点，通常是响应对该对象的请求。code 标识错误，由对象接口定义。因此，每个接口都定义了自己的错误代码集。message 是错误的简短描述，用于（调试）方便。"
+          }
+        },
+        "delete_id": {
+          "description": {
+            "summary": "确认对象 ID 删除",
+            "text": "此事件由对象 ID 管理逻辑内部使用。当客户端删除其创建的对象时，服务器将发送此事件以确认已看到删除请求。当客户端收到此事件时，它将知道可以安全地重用该对象 ID。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "全局错误值",
+            "text": "这些错误是全局性的，可以响应任何服务器请求而发出。"
+          }
+        }
+      }
+    },
+    "wl_registry": {
+      "description": {
+        "summary": "全局注册表对象",
+        "text": "单例全局注册表对象。服务器拥有许多对所有客户端都可用的全局对象。这些对象通常代表服务器中的实际对象（例如输入设备），或者是提供扩展功能的单例对象。\n\n当客户端创建注册表对象时，注册表对象会为当前注册表中的每个全局对象发出一个 global 事件。全局对象会因设备或显示器的热插拔、重新配置或其他事件而出现或消失，注册表将发送 global 和 global_remove 事件，以使客户端了解最新的更改。为了标记初始事件迸发的结束，客户端可以在调用 wl_display.get_registry 后立即使用 wl_display.sync 请求。\n\n客户端可以使用 bind 请求绑定到全局对象。这将创建一个客户端句柄，让对象向客户端发送事件，并允许客户端对该对象调用请求。"
+      },
+      "requests": {
+        "bind": {
+          "description": {
+            "summary": "将对象绑定到显示器",
+            "text": "使用指定的名称作为标识符，将客户端创建的新对象绑定到服务器。"
+          }
+        }
+      },
+      "events": {
+        "global": {
+          "description": {
+            "summary": "宣告全局对象",
+            "text": "通知客户端全局对象的信息。\n\n此事件通知客户端，具有给定名称的全局对象现在可用，并且它实现了给定接口的给定版本。"
+          }
+        },
+        "global_remove": {
+          "description": {
+            "summary": "宣告移除全局对象",
+            "text": "通知客户端已移除全局对象。\n\n此事件通知客户端，由名称标识的全局对象不再可用。如果客户端使用 bind 请求绑定到了该全局对象，则客户端现在应该销毁该对象。\n\n在客户端销毁该对象之前，该对象仍然有效，并且对该对象的请求将被忽略，以避免全局对象消失与客户端向其发送请求之间的竞争。"
+          }
+        }
+      }
+    },
+    "wl_callback": {
+      "description": {
+        "summary": "回调对象",
+        "text": "客户端可以处理 'done' 事件，以便在相关请求完成时得到通知。\n\n注意，由于 wl_callback 对象是从多个独立的工厂接口创建的，因此 wl_callback 接口被冻结在版本 1。"
+      },
+      "events": {
+        "done": {
+          "description": {
+            "summary": "完成事件",
+            "text": "在相关请求完成时通知客户端。"
+          }
+        }
+      }
+    },
+    "wl_compositor": {
+      "description": {
+        "summary": "合成器单例",
+        "text": "合成器。此对象是一个全局单例。合成器负责将多个表面的内容组合成一个可显示的输出。"
+      },
+      "requests": {
+        "create_surface": {
+          "description": {
+            "summary": "创建新表面",
+            "text": "请求合成器创建一个新表面。"
+          }
+        },
+        "create_region": {
+          "description": {
+            "summary": "创建新区域",
+            "text": "请求合成器创建一个新区域。"
+          }
+        }
+      }
+    },
+    "wl_shm_pool": {
+      "description": {
+        "summary": "共享内存池",
+        "text": "wl_shm_pool 对象封装了一块由文件描述符支持的共享内存，客户端可以从中分配 wl_buffer 对象。池中的所有缓冲区共享相同的文件描述符，并在合成器中被映射到同一内存块中。"
+      },
+      "requests": {
+        "create_buffer": {
+          "description": {
+            "summary": "从池中创建缓冲区",
+            "text": "从池中创建一个 wl_buffer 对象。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁池",
+            "text": "销毁共享内存池。"
+          }
+        },
+        "resize": {
+          "description": {
+            "summary": "调整池大小",
+            "text": "调整共享内存池的大小。"
+          }
+        }
+      }
+    },
+    "wl_shm": {
+      "description": {
+        "summary": "共享内存支持",
+        "text": "一个允许客户端分配共享内存缓冲区的全局单例。"
+      },
+      "requests": {
+        "create_pool": {
+          "description": {
+            "summary": "创建内存池",
+            "text": "创建一个共享内存池。"
+          }
+        }
+      },
+      "events": {
+        "format": {
+          "description": {
+            "summary": "支持的像素格式",
+            "text": "在绑定时，此事件会告知客户端支持哪些像素格式。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "wl_shm 错误值",
+            "text": "这些错误可以在响应 wl_shm 请求时发出。"
+          }
+        },
+        "format": {
+          "description": {
+            "summary": "像素格式",
+            "text": "此枚举描述了缓冲区的像素格式。"
+          }
+        }
+      }
+    },
+    "wl_buffer": {
+      "description": {
+        "summary": "内容缓冲区",
+        "text": "缓冲区提供表面的内容。典型的缓冲区具有由一系列像素组成的数据，这些像素可以读取并组合到显示输出中。也可以存在其他类型的缓冲区，其实现由协议扩展定义。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁缓冲区",
+            "text": "销毁缓冲区。"
+          }
+        }
+      },
+      "events": {
+        "release": {
+          "description": {
+            "summary": "释放缓冲区",
+            "text": "合成器发出此事件，表示它不再使用此缓冲区的内容，客户端现在可以重用它或销毁它。"
+          }
+        }
+      }
+    },
+    "wl_data_offer": {
+      "description": {
+        "summary": "提供 drag-and-drop 或 clipboard 数据",
+        "text": "wl_data_offer 接口代表客户端可以接收的数据。"
+      },
+      "requests": {
+        "accept": {
+          "description": {
+            "summary": "接受 MIME 类型",
+            "text": "表示客户端可以接受指定 MIME 类型的数据。"
+          }
+        },
+        "receive": {
+          "description": {
+            "summary": "接收数据",
+            "text": "请求通过文件描述符接收数据。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁数据提供",
+            "text": "销毁该对象。"
+          }
+        },
+        "finish": {
+          "description": {
+            "summary": "完成操作",
+            "text": "表示客户端已完成对提供的数据的所有处理。"
+          }
+        },
+        "set_actions": {
+          "description": {
+            "summary": "设置支持的操作",
+            "text": "设置目的地支持的操作。"
+          }
+        }
+      },
+      "events": {
+        "offer": {
+          "description": {
+            "summary": "宣告 MIME 类型",
+            "text": "宣告提供支持的 MIME 类型。"
+          }
+        },
+        "source_actions": {
+          "description": {
+            "summary": "宣告源操作",
+            "text": "宣告源端支持的操作。"
+          }
+        },
+        "action": {
+          "description": {
+            "summary": "通知所选操作",
+            "text": "通知最终选择的操作。"
+          }
+        }
+      }
+    },
+    "wl_data_source": {
+      "description": {
+        "summary": "drag-and-drop 或 clipboard 数据的源端",
+        "text": "wl_data_source 接口用于提供数据。"
+      },
+      "requests": {
+        "offer": {
+          "description": {
+            "summary": "添加 MIME 类型",
+            "text": "添加此源端支持的 MIME 类型。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁数据源",
+            "text": "销毁该对象。"
+          }
+        },
+        "set_actions": {
+          "description": {
+            "summary": "设置支持的操作",
+            "text": "设置源端支持的操作。"
+          }
+        }
+      },
+      "events": {
+        "target": {
+          "description": {
+            "summary": "接收端接受的 MIME 类型",
+            "text": "通知源端接收端接受的 MIME 类型。"
+          }
+        },
+        "send": {
+          "description": {
+            "summary": "发送数据",
+            "text": "请求源端开始发送数据。"
+          }
+        },
+        "cancelled": {
+          "description": {
+            "summary": "操作取消",
+            "text": "通知源端操作已被取消。"
+          }
+        },
+        "dnd_drop_performed": {
+          "description": {
+            "summary": "释放动作已执行",
+            "text": "通知源端释放动作已执行。"
+          }
+        },
+        "dnd_finished": {
+          "description": {
+            "summary": "操作结束",
+            "text": "通知源端操作已完全结束。"
+          }
+        },
+        "action": {
+          "description": {
+            "summary": "通知所选操作",
+            "text": "通知最终选择的操作。"
+          }
+        }
+      }
+    },
+    "wl_data_device": {
+      "description": {
+        "summary": "数据设备（用于 drag-and-drop 和 clipboard）",
+        "text": "wl_data_device 接口代表数据传输设备。"
+      },
+      "requests": {
+        "start_drag": {
+          "description": {
+            "summary": "开始拖放",
+            "text": "开始一个拖放操作。"
+          }
+        },
+        "set_selection": {
+          "description": {
+            "summary": "设置剪贴板内容",
+            "text": "设置当前剪贴板选中的数据源。"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "释放数据设备",
+            "text": "销毁该对象。"
+          }
+        }
+      },
+      "events": {
+        "data_offer": {
+          "description": {
+            "summary": "引入一个新的数据提供",
+            "text": "在拖放或粘贴操作开始时发出。"
+          }
+        },
+        "enter": {
+          "description": {
+            "summary": "拖放进入表面",
+            "text": "拖放操作进入了一个表面。"
+          }
+        },
+        "leave": {
+          "description": {
+            "summary": "拖放离开表面",
+            "text": "拖放操作离开了一个表面。"
+          }
+        },
+        "motion": {
+          "description": {
+            "summary": "拖放移动",
+            "text": "拖放操作在表面内移动。"
+          }
+        },
+        "drop": {
+          "description": {
+            "summary": "拖放释放",
+            "text": "拖放操作在表面内执行释放。"
+          }
+        },
+        "selection": {
+          "description": {
+            "summary": "剪贴板内容更改",
+            "text": "通知客户端剪贴板内容已更改。"
+          }
+        }
+      }
+    },
+    "wl_data_device_manager": {
+      "description": {
+        "summary": "数据设备管理器",
+        "text": "用于创建数据源和数据设备的全局对象。"
+      },
+      "requests": {
+        "create_data_source": {
+          "description": {
+            "summary": "创建数据源",
+            "text": "创建一个新的数据源。"
+          }
+        },
+        "get_data_device": {
+          "description": {
+            "summary": "获取数据设备",
+            "text": "获取指定席位的数据设备。"
+          }
+        }
+      },
+      "enums": {
+        "dnd_action": {
+          "description": {
+            "summary": "拖放操作类型",
+            "text": "描述支持的拖放操作。"
+          }
+        }
+      }
+    },
+    "wl_shell": {
+      "description": {
+        "summary": "旧版桌面外壳接口",
+        "text": "这是一个旧的外壳接口，已被 xdg-shell 取代。"
+      },
+      "requests": {
+        "get_shell_surface": {
+          "description": {
+            "summary": "创建外壳表面",
+            "text": "将普通表面转换为外壳表面。"
+          }
+        }
+      }
+    },
+    "wl_shell_surface": {
+      "description": {
+        "summary": "桌面式表面",
+        "text": "控制表面的窗口管理状态。"
+      },
+      "requests": {
+        "pong": {
+          "description": {
+            "summary": "响应 ping 事件",
+            "text": "向合成器确认客户端仍然响应。"
+          }
+        },
+        "move": {
+          "description": {
+            "summary": "移动窗口",
+            "text": "启动交互式移动操作。"
+          }
+        },
+        "resize": {
+          "description": {
+            "summary": "调整窗口大小",
+            "text": "启动交互式调整大小操作。"
+          }
+        },
+        "set_toplevel": {
+          "description": {
+            "summary": "设置为顶级窗口",
+            "text": "使表面表现为正常的顶级窗口。"
+          }
+        },
+        "set_transient": {
+          "description": {
+            "summary": "设置为临时窗口",
+            "text": "将表面设置为另一个表面的临时（弹出）窗口。"
+          }
+        },
+        "set_fullscreen": {
+          "description": {
+            "summary": "设置为全屏",
+            "text": "使表面进入全屏模式。"
+          }
+        },
+        "set_popup": {
+          "description": {
+            "summary": "设置为弹出窗口",
+            "text": "将表面设置为弹出窗口。"
+          }
+        },
+        "set_maximized": {
+          "description": {
+            "summary": "设置为最大化",
+            "text": "将表面设置为最大化状态。"
+          }
+        },
+        "set_title": {
+          "description": {
+            "summary": "设置窗口标题",
+            "text": "设置表面的标题。"
+          }
+        },
+        "set_class": {
+          "description": {
+            "summary": "设置窗口类",
+            "text": "设置表面的类名。"
+          }
+        }
+      },
+      "events": {
+        "ping": {
+          "description": {
+            "summary": "心跳检测",
+            "text": "检测客户端是否挂起。"
+          }
+        },
+        "configure": {
+          "description": {
+            "summary": "配置事件",
+            "text": "通知客户端更改其大小或状态。"
+          }
+        },
+        "popup_done": {
+          "description": {
+            "summary": "弹出窗口结束",
+            "text": "通知客户端弹出窗口已关闭。"
+          }
+        }
+      }
+    },
+    "wl_surface": {
+      "description": {
+        "summary": "屏幕上的矩形区域",
+        "text": "表面是在屏幕上显示的矩形区域。它由一个像素缓冲区、一个待处理的状态和一系列关于该表面如何显示的指令组成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁表面",
+            "text": "销毁该表面。"
+          }
+        },
+        "attach": {
+          "description": {
+            "summary": "关联缓冲区",
+            "text": "将一个缓冲区关联到该表面。"
+          }
+        },
+        "damage": {
+          "description": {
+            "summary": "标记损伤区域",
+            "text": "标记表面的哪些区域已更改。"
+          }
+        },
+        "frame": {
+          "description": {
+            "summary": "请求刷新回调",
+            "text": "请求在下一次渲染循环中得到通知。"
+          }
+        },
+        "set_opaque_region": {
+          "description": {
+            "summary": "设置不透明区域",
+            "text": "提示合成器表面的哪些部分是不透明的。"
+          }
+        },
+        "set_input_region": {
+          "description": {
+            "summary": "设置输入区域",
+            "text": "定义表面中可以接收鼠标和触摸事件的部分。"
+          }
+        },
+        "commit": {
+          "description": {
+            "summary": "提交待处理状态",
+            "text": "将之前发送的所有待处理状态（attach, damage, offset 等）应用到表面。"
+          }
+        },
+        "set_buffer_transform": {
+          "description": {
+            "summary": "设置缓冲区变换",
+            "text": "设置缓冲区如何旋转或翻转。"
+          }
+        },
+        "set_buffer_scale": {
+          "description": {
+            "summary": "设置缓冲区缩放",
+            "text": "设置缓冲区的缩放因子。"
+          }
+        },
+        "damage_buffer": {
+          "description": {
+            "summary": "标记缓冲区损伤",
+            "text": "以缓冲区坐标标记损伤区域。"
+          }
+        },
+        "offset": {
+          "description": {
+            "summary": "设置表面偏移",
+            "text": "设置相对于上一个缓冲区的偏移量。"
+          }
+        }
+      },
+      "events": {
+        "enter": {
+          "description": {
+            "summary": "表面进入输出设备",
+            "text": "通知表面现在已在指定的输出设备上显示。"
+          }
+        },
+        "leave": {
+          "description": {
+            "summary": "表面离开输出设备",
+            "text": "通知表面不再在指定的输出设备上显示。"
+          }
+        },
+        "preferred_buffer_scale": {
+          "description": {
+            "summary": "首选缓冲区缩放",
+            "text": "通知客户端合成器首选的缓冲区缩放因子。"
+          }
+        },
+        "preferred_buffer_transform": {
+          "description": {
+            "summary": "首选缓冲区变换",
+            "text": "通知客户端合成器首选的缓冲区变换。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "wl_surface 错误",
+            "text": "表面相关的错误值。"
+          }
+        }
+      }
+    },
+    "wl_seat": {
+      "description": {
+        "summary": "一组输入设备",
+        "text": "席位代表一组输入设备（键盘、鼠标、触摸屏）。一个席位通常对应一名用户。"
+      },
+      "requests": {
+        "get_pointer": {
+          "description": {
+            "summary": "获取指针设备",
+            "text": "获取该席位的指针（鼠标）对象。"
+          }
+        },
+        "get_keyboard": {
+          "description": {
+            "summary": "获取键盘设备",
+            "text": "获取该席位的键盘对象。"
+          }
+        },
+        "get_touch": {
+          "description": {
+            "summary": "获取触摸屏设备",
+            "text": "获取该席位的触摸屏对象。"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "释放席位",
+            "text": "销毁该对象。"
+          }
+        }
+      },
+      "events": {
+        "capabilities": {
+          "description": {
+            "summary": "输入能力更改",
+            "text": "通知客户端此席位支持哪些输入方式。"
+          }
+        },
+        "name": {
+          "description": {
+            "summary": "席位名称",
+            "text": "宣告该席位的名称（如 'default' 或 'seat0'）。"
+          }
+        }
+      },
+      "enums": {
+        "capability": {
+          "description": {
+            "summary": "能力掩码",
+            "text": "席位能力的位字段。"
+          }
+        }
+      }
+    },
+    "wl_pointer": {
+      "description": {
+        "summary": "指针（鼠标）设备",
+        "text": "wl_pointer 接口代表一个或多个类似于鼠标的输入设备。"
+      },
+      "requests": {
+        "set_cursor": {
+          "description": {
+            "summary": "设置光标图片",
+            "text": "设置指针的光标图片（图标）。"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "释放指针",
+            "text": "销毁该对象。"
+          }
+        }
+      },
+      "events": {
+        "enter": {
+          "description": {
+            "summary": "指针进入表面",
+            "text": "指针已移动到一个表面内。"
+          }
+        },
+        "leave": {
+          "description": {
+            "summary": "指针离开表面",
+            "text": "指针已离开一个表面。"
+          }
+        },
+        "motion": {
+          "description": {
+            "summary": "指针移动",
+            "text": "指针在表面内移动。"
+          }
+        },
+        "button": {
+          "description": {
+            "summary": "指针按钮点击",
+            "text": "按下或释放了一个指针按钮。"
+          }
+        },
+        "axis": {
+          "description": {
+            "summary": "轴滚动事件",
+            "text": "发生了滚动（轴）事件。"
+          }
+        },
+        "frame": {
+          "description": {
+            "summary": "指针帧结束",
+            "text": "一组逻辑上属于一起的事件的结束。"
+          }
+        },
+        "axis_source": {
+          "description": {
+            "summary": "轴事件来源",
+            "text": "描述轴事件的物理来源（如滚轮、手指、倾斜）。"
+          }
+        },
+        "axis_stop": {
+          "description": {
+            "summary": "轴滚动停止",
+            "text": "指示一个离散的轴滚动序列已结束。"
+          }
+        },
+        "axis_discrete": {
+          "description": {
+            "summary": "离散轴步长",
+            "text": "提供轴滚动的离散步数（如滚轮格数）。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "指针错误",
+            "text": "指针相关的错误值。"
+          }
+        },
+        "button_state": {
+          "description": {
+            "summary": "物理按钮状态",
+            "text": "按钮是按下还是释放。"
+          }
+        },
+        "axis": {
+          "description": {
+            "summary": "滚动轴方向",
+            "text": "水平轴或垂直轴。"
+          }
+        },
+        "axis_source": {
+          "description": {
+            "summary": "轴事件来源类型",
+            "text": "描述事件是由什么设备产生的。"
+          }
+        }
+      }
+    },
+    "wl_keyboard": {
+      "description": {
+        "summary": "键盘设备",
+        "text": "wl_keyboard 接口代表一个键盘设备。"
+      },
+      "requests": {
+        "release": {
+          "description": {
+            "summary": "释放键盘",
+            "text": "销毁该对象。"
+          }
+        }
+      },
+      "events": {
+        "keymap": {
+          "description": {
+            "summary": "键盘映射",
+            "text": "向客户端发送键盘布局映射表。"
+          }
+        },
+        "enter": {
+          "description": {
+            "summary": "键盘焦点进入表面",
+            "text": "此席位的键盘焦点已切换到该表面。"
+          }
+        },
+        "leave": {
+          "description": {
+            "summary": "键盘焦点离开表面",
+            "text": "此席位的键盘焦点已离开该表面。"
+          }
+        },
+        "key": {
+          "description": {
+            "summary": "按键事件",
+            "text": "按下了某个键或释放了某个键。"
+          }
+        },
+        "modifiers": {
+          "description": {
+            "summary": "修饰键和组合状态",
+            "text": "通知客户端修饰键（Ctrl, Alt 等）状态已更改。"
+          }
+        },
+        "repeat_info": {
+          "description": {
+            "summary": "按键重复信息",
+            "text": "告知客户端键盘的重复速率和延迟。"
+          }
+        }
+      },
+      "enums": {
+        "keymap_format": {
+          "description": {
+            "summary": "键盘映射格式",
+            "text": "键盘映射数据的格式。"
+          }
+        },
+        "key_state": {
+          "description": {
+            "summary": "按键物理状态",
+            "text": "按键是按下、释放还是重复。"
+          }
+        }
+      }
+    },
+    "wl_touch": {
+      "description": {
+        "summary": "触摸屏输入设备",
+        "text": "wl_touch 接口代表与席位关联的触摸屏。"
+      },
+      "requests": {
+        "release": {
+          "description": {
+            "summary": "释放触摸对象",
+            "text": "销毁该对象。"
+          }
+        }
+      },
+      "events": {
+        "down": {
+          "description": {
+            "summary": "按下事件",
+            "text": "一个新的触摸点出现在表面上。"
+          }
+        },
+        "up": {
+          "description": {
+            "summary": "抬起事件",
+            "text": "触摸点已离开表面。"
+          }
+        },
+        "motion": {
+          "description": {
+            "summary": "移动事件",
+            "text": "触摸点坐标已更改。"
+          }
+        },
+        "frame": {
+          "description": {
+            "summary": "触摸帧结束",
+            "text": "一组逻辑上属于一起的事件的结束。"
+          }
+        },
+        "cancel": {
+          "description": {
+            "summary": "触摸序列取消",
+            "text": "由于全局手势或其他原因，取消当前的触摸序列。"
+          }
+        },
+        "shape": {
+          "description": {
+            "summary": "更新触摸点形状",
+            "text": "触摸点的接触面积形状已更改。"
+          }
+        },
+        "orientation": {
+          "description": {
+            "summary": "更新触摸点方向",
+            "text": "触摸点的方向角度已更改。"
+          }
+        }
+      }
+    },
+    "wl_output": {
+      "description": {
+        "summary": "合成器输出区域",
+        "text": "输出描述了合成器几何结构的一部分。输出通常对应一个物理显示器。"
+      },
+      "requests": {
+        "release": {
+          "description": {
+            "summary": "释放输出对象",
+            "text": "销毁该对象。"
+          }
+        }
+      },
+      "events": {
+        "geometry": {
+          "description": {
+            "summary": "输出属性",
+            "text": "描述输出的几何属性（制造厂商、型号、物理尺寸、位置等）。"
+          }
+        },
+        "mode": {
+          "description": {
+            "summary": "通告可用模式",
+            "text": "描述输出支持的分辨率和刷新率。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "输出信息发送完毕",
+            "text": "所有属性信息已发送。"
+          }
+        },
+        "scale": {
+          "description": {
+            "summary": "输出缩放属性",
+            "text": "输出的 HiDPI 缩放比例。"
+          }
+        },
+        "name": {
+          "description": {
+            "summary": "输出名称",
+            "text": "合成器分配给该输出的名称（如 'HDMI-A-1'）。"
+          }
+        },
+        "description": {
+          "description": {
+            "summary": "输出的人类可读描述",
+            "text": "显示器的可读描述字符串。"
+          }
+        }
+      },
+      "enums": {
+        "subpixel": {
+          "description": {
+            "summary": "次像素排列信息",
+            "text": "描述物理像素的排列方式。"
+          }
+        },
+        "transform": {
+          "description": {
+            "summary": "应用到缓冲区的变换",
+            "text": "描述旋转和翻转操作。"
+          }
+        }
+      }
+    },
+    "wl_region": {
+      "description": {
+        "summary": "区域接口",
+        "text": "区域对象描述一个面积，用于表面不透明区域和输入区域的定义。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁区域",
+            "text": "销毁该对象。"
+          }
+        },
+        "add": {
+          "description": {
+            "summary": "添加矩形到区域",
+            "text": "在区域中增加一个矩形。"
+          }
+        },
+        "subtract": {
+          "description": {
+            "summary": "从区域中减去矩形",
+            "text": "从区域中移除一个矩形。"
+          }
+        }
+      }
+    },
+    "wl_subcompositor": {
+      "description": {
+        "summary": "子表面合成能力",
+        "text": "暴露子表面合成功能的全局接口。允许表面拥有嵌套的子表面，形成表面树。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "解除绑定",
+            "text": "销毁该对象。"
+          }
+        },
+        "get_subsurface": {
+          "description": {
+            "summary": "赋予表面子表面角色",
+            "text": "将普通表面转换为子表面，并关联到父表面。"
+          }
+        }
+      }
+    },
+    "wl_subsurface": {
+      "description": {
+        "summary": "wl_surface 的子表面接口",
+        "text": "已成为子表面的 wl_surface 的附加接口。子表面具有父表面，其位置相对于父表面定义。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "移除子表面接口",
+            "text": "销毁该对象并将表面恢复为普通表面。"
+          }
+        },
+        "set_position": {
+          "description": {
+            "summary": "重新定位子表面",
+            "text": "设置子表面相对于父表面的位置。"
+          }
+        },
+        "place_above": {
+          "description": {
+            "summary": "调整层级顺序（置于上方）",
+            "text": "在 Z 轴顺序中将子表面置于参考表面上方。"
+          }
+        },
+        "place_below": {
+          "description": {
+            "summary": "调整层级顺序（置于下方）",
+            "text": "在 Z 轴顺序中将子表面置于参考表面下方。"
+          }
+        },
+        "set_sync": {
+          "description": {
+            "summary": "设置为同步模式",
+            "text": "子表面的提交将与父表面的提交同步。"
+          }
+        },
+        "set_desync": {
+          "description": {
+            "summary": "设置为异步模式",
+            "text": "子表面的提交将独立于父表面运行。"
+          }
+        }
+      }
+    },
+    "wl_fixes": {
+      "description": {
+        "summary": "Wayland 协议修复",
+        "text": "此全局对象用于修复其他核心协议接口中无法在接口自身修复的问题。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁此对象"
+          }
+        },
+        "destroy_registry": {
+          "description": {
+            "summary": "销毁一个 wl_registry",
+            "text": "此请求销毁一个 wl_registry 对象。客户端在发出此请求后不应再使用该 wl_registry。"
+          }
+        }
+      }
+    }
+  }
+}

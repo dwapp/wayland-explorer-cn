@@ -6,6 +6,8 @@ import {
     WaylandProtocolSource,
     WaylandProtocolStability,
 } from '../../model/wayland-protocol-metadata'
+import { i18n } from '../../lib/i18n-labels'
+import { useLanguage } from '../../lib/LanguageContext'
 import { SidebarNavLink } from './SidebarNavLink'
 
 const SectionTitle: React.FC<{ title: string; icon?: string }> = ({
@@ -23,47 +25,52 @@ const SectionTitle: React.FC<{ title: string; icon?: string }> = ({
     </h3>
 )
 
-export const WaylandProtocolLinks: React.FC = () => (
-    <nav
-        aria-label="Sidebar"
-        className="h-full overflow-y-auto pb-4 space-y-6 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700"
-    >
-        {groupProtocolsIntoSections().map((section) => (
-            <div key={section.name}>
-                <SectionTitle title={section.name} />
+export const WaylandProtocolLinks: React.FC = () => {
+    const { language } = useLanguage()
+    const labels = i18n[language]
+
+    return (
+        <nav
+            aria-label="Sidebar"
+            className="h-full overflow-y-auto pb-4 space-y-6 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700"
+        >
+            {groupProtocolsIntoSections().map((section) => (
+                <div key={section.name}>
+                    <SectionTitle title={section.name} />
+
+                    <div className="grow flex flex-col">
+                        <div className="flex-1 space-y-1">
+                            {section.items.map((protocol) => (
+                                <SidebarNavLink
+                                    key={protocol.id}
+                                    href={`/${protocol.id}`}
+                                    title={protocol.name}
+                                >
+                                    {protocol.name}
+                                </SidebarNavLink>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            ))}
+
+            <div>
+                <SectionTitle title={labels.mergeRequests} icon="git-pull-request" />
 
                 <div className="grow flex flex-col">
                     <div className="flex-1 space-y-1">
-                        {section.items.map((protocol) => (
-                            <SidebarNavLink
-                                key={protocol.id}
-                                href={`/${protocol.id}`}
-                                title={protocol.name}
-                            >
-                                {protocol.name}
-                            </SidebarNavLink>
-                        ))}
+                        <SidebarNavLink
+                            href="/wayland-protocols"
+                            title="wayland-protocols"
+                        >
+                            wayland-protocols
+                        </SidebarNavLink>
                     </div>
                 </div>
             </div>
-        ))}
-
-        <div>
-            <SectionTitle title="Merge Requests" icon="git-pull-request" />
-
-            <div className="grow flex flex-col">
-                <div className="flex-1 space-y-1">
-                    <SidebarNavLink
-                        href="/wayland-protocols"
-                        title="wayland-protocols"
-                    >
-                        wayland-protocols
-                    </SidebarNavLink>
-                </div>
-            </div>
-        </div>
-    </nav>
-)
+        </nav>
+    )
+}
 
 interface Section {
     name: string
@@ -114,7 +121,7 @@ function groupProtocolsIntoSections(): Section[] {
     }
 
     const wlrProtocolsUnstable: Section = {
-        name: 'wlr unstable',
+        name: 'wlr Unstable',
         items: protocols.filter(
             ({ source, stability }) =>
                 source === WaylandProtocolSource.WlrProtocols &&
@@ -123,7 +130,7 @@ function groupProtocolsIntoSections(): Section[] {
     }
 
     const kdeProtocolsUnstable: Section = {
-        name: 'KDE unstable',
+        name: 'KDE Unstable',
         items: protocols.filter(
             ({ source, stability }) =>
                 source === WaylandProtocolSource.KDEProtocols &&
@@ -132,7 +139,7 @@ function groupProtocolsIntoSections(): Section[] {
     }
 
     const hyprlandProtocolsUnstable: Section = {
-        name: 'Hyprland unstable',
+        name: 'Hyprland Unstable',
         items: protocols.filter(
             ({ source, stability }) =>
                 source === WaylandProtocolSource.HyprlandProtocols &&
@@ -141,7 +148,7 @@ function groupProtocolsIntoSections(): Section[] {
     }
 
     const cosmicProtocolsUnstable: Section = {
-        name: 'Cosmic unstable',
+        name: 'Cosmic Unstable',
         items: protocols.filter(
             ({ source, stability }) =>
                 source === WaylandProtocolSource.CosmicProtocols &&
@@ -150,7 +157,7 @@ function groupProtocolsIntoSections(): Section[] {
     }
 
     const westonProtocolsUnstable: Section = {
-        name: 'Weston unstable',
+        name: 'Weston Unstable',
         items: protocols.filter(
             ({ source, stability }) =>
                 source === WaylandProtocolSource.WestonProtocols &&
@@ -159,7 +166,7 @@ function groupProtocolsIntoSections(): Section[] {
     }
 
     const treelandProtocolsUnstable: Section = {
-        name: 'Treeland unstable',
+        name: 'Treeland Unstable',
         items: protocols.filter(
             ({ source, stability }) =>
                 source === WaylandProtocolSource.TreelandProtocols &&
@@ -168,7 +175,7 @@ function groupProtocolsIntoSections(): Section[] {
     }
 
     const riverProtocolsUnstable: Section = {
-        name: 'River unstable',
+        name: 'River Unstable',
         items: protocols.filter(
             ({ source, stability }) =>
                 source === WaylandProtocolSource.RiverProtocols &&

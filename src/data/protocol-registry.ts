@@ -7,6 +7,9 @@ import {
 
 export interface WaylandProtocolRegistryItem extends WaylandProtocolMetadata {
     protocol: WaylandProtocol
+    translations?: {
+        'zh-CN': any
+    }
 }
 
 const protocols: WaylandProtocolRegistryItem[] = [
@@ -16,6 +19,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandCore,
         stability: WaylandProtocolStability.Stable,
         protocol: require('./protocols/wayland.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wayland.json'),
+        },
         deprecated: [
             { name: 'wl_shell', reason: 'Use xdg-shell' },
             { name: 'wl_shell_surface', reason: 'Use xdg-shell' },
@@ -27,6 +33,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Stable,
         protocol: require('./protocols/presentation-time.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/presentation-time.json'),
+        },
     },
     {
         id: 'viewporter',

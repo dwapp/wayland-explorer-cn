@@ -115,27 +115,31 @@ export const ProtocolBadge: React.FC<{ protocol: WaylandProtocolMetadata }> = ({
     protocol,
 }) => {
     const theme = badgeThemeFor(protocol.source, protocol.stability)
+
+    let label: string = protocol.stability
+    if (protocol.source === WaylandProtocolSource.WaylandCore) {
+        label = 'Core'
+    } else if (protocol.source === WaylandProtocolSource.WlrProtocols) {
+        label = 'wlr'
+    } else if (protocol.source === WaylandProtocolSource.KDEProtocols) {
+        label = 'kde'
+    } else if (protocol.source === WaylandProtocolSource.HyprlandProtocols) {
+        label = 'hyprland'
+    } else if (protocol.source === WaylandProtocolSource.CosmicProtocols) {
+        label = 'cosmic'
+    } else if (protocol.source === WaylandProtocolSource.WestonProtocols) {
+        label = 'weston'
+    } else if (protocol.source === WaylandProtocolSource.TreelandProtocols) {
+        label = 'treeland'
+    } else if (protocol.source === WaylandProtocolSource.RiverProtocols) {
+        label = 'river'
+    } else if (protocol.source === WaylandProtocolSource.External) {
+        label = 'External'
+    }
+
     return (
         <Badge bgColor={theme.backgroundColor} textColor={theme.textColor}>
-            {protocol.source === WaylandProtocolSource.WaylandCore
-                ? 'core'
-                : protocol.source === WaylandProtocolSource.WlrProtocols
-                ? 'wlr'
-                : protocol.source === WaylandProtocolSource.KDEProtocols
-                ? 'kde'
-                : protocol.source === WaylandProtocolSource.HyprlandProtocols
-                ? 'hyprland'
-                : protocol.source === WaylandProtocolSource.CosmicProtocols
-                ? 'cosmic'
-                : protocol.source === WaylandProtocolSource.WestonProtocols
-                ? 'weston'
-                : protocol.source === WaylandProtocolSource.TreelandProtocols
-                ? 'treeland'
-                : protocol.source === WaylandProtocolSource.RiverProtocols
-                ? 'river'
-                : protocol.source === WaylandProtocolSource.External
-                ? 'external'
-                : protocol.stability}
+            {label}
         </Badge>
     )
 }

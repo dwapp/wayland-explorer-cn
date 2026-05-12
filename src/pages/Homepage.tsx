@@ -3,9 +3,13 @@ import { Link } from 'wouter'
 import { usePageTitle } from '../components/common/hooks-utils'
 import { ProtocolBadge } from '../components/content/ProtocolBadge'
 import { waylandProtocolRegistry } from '../data/protocol-registry'
+import { i18n } from '../lib/i18n-labels'
+import { useLanguage } from '../lib/LanguageContext'
 
 export const Homepage: React.FC = () => {
-    usePageTitle('Wayland Protocol Documentation')
+    const { language } = useLanguage()
+    const labels = i18n[language]
+    usePageTitle(labels.homepageTitle)
 
     return (
         <div className="py-12 lg:py-24 xl:py-32 bg-white dark:bg-gray-900">
@@ -15,27 +19,25 @@ export const Homepage: React.FC = () => {
                         Wayland Explorer
                     </h2>
                     <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
-                        A better way to read Wayland documentation
+                        {labels.homepageSubtitle}
                     </p>
                     <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-                        The most popular Wayland protocols all in one place and
-                        without having to sift through different repositories
-                        and XML files.
+                        {labels.homepageDescription}
                     </p>
                     <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-                        Start by reading the{' '}
+                        {labels.homepageStartReading}{' '}
                         <Link className="text-indigo-500" href="/wayland">
-                            core Wayland protocol
+                            {labels.homepageCoreProtocol}
                         </Link>{' '}
-                        or discover some{' '}
+                        {labels.homepageOrDiscover}{' '}
                         <Link
                             className="text-indigo-500"
                             href="/xdg-decoration-unstable-v1"
                             title="XDG decoration"
                         >
-                            uncut gems
+                            {labels.homepageUncutGems}
                         </Link>
-                        .
+                        {language === 'zh' ? '。' : '.'}
                     </p>
                 </div>
                 <div className="mt-12">

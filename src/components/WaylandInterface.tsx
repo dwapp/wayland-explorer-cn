@@ -6,87 +6,94 @@ import { WaylandDescription } from './WaylandDescription'
 import { WaylandEnum } from './WaylandEnum'
 import { WaylandEvent } from './WaylandEvent'
 import { WaylandRequest } from './WaylandRequest'
+import { i18n } from '../lib/i18n-labels'
+import { useLanguage } from '../lib/LanguageContext'
 
 export const WaylandInterface: React.FC<
     WaylandElementProps<WaylandInterfaceModel> & {
         deprecated?: WaylandDeprecationItem
     }
-> = ({ element, deprecated }) => (
-    <div>
-        <div className="flex items-center flex-wrap justify-between">
-            <h2
-                id={element.name}
-                className="text-2xl font-extrabold text-gray-900 tracking-tight"
-            >
-                <a
-                    href={`#${element.name}`}
-                    title={`${element.name} interface`}
-                    className={`${colors.Interface}`}
+> = ({ element, deprecated }) => {
+    const { language } = useLanguage()
+    const labels = i18n[language]
+
+    return (
+        <div>
+            <div className="flex items-center flex-wrap justify-between">
+                <h2
+                    id={element.name}
+                    className="text-2xl font-extrabold text-gray-900 tracking-tight"
                 >
-                    <span className="codicon codicon-symbol-interface mr-1"></span>
-                    <span className="mr-1 break-all">{element.name}</span>
-                </a>
-            </h2>
+                    <a
+                        href={`#${element.name}`}
+                        title={`${element.name} interface`}
+                        className={`${colors.Interface}`}
+                    >
+                        <span className="codicon codicon-symbol-interface mr-1"></span>
+                        <span className="mr-1 break-all">{element.name}</span>
+                    </a>
+                </h2>
 
-            <div className="flex items-center gap-1">
-                {deprecated ? (
-                    <Badge
-                        bgColor="bg-red-500"
-                        textColor="text-white"
-                        fontWeigth="font-bold"
-                        title={deprecated.reason}
-                    >
-                        Deprecated
-                    </Badge>
-                ) : (
-                    <></>
-                )}
-                
-                {element.frozen ? (
-                    <Badge
-                        bgColor="bg-blue-500"
-                        textColor="text-white"
-                        fontWeigth='font-bold'
-                    >
-                        Frozen
-                    </Badge>
-                ) : (
-                    <></>
-                )}
-                <Badge>version {element.version}</Badge>
+                <div className="flex items-center gap-1">
+                    {deprecated ? (
+                        <Badge
+                            bgColor="bg-red-500"
+                            textColor="text-white"
+                            fontWeigth="font-bold"
+                            title={deprecated.reason}
+                        >
+                            {labels.deprecated}
+                        </Badge>
+                    ) : (
+                        <></>
+                    )}
+                    
+                    {element.frozen ? (
+                        <Badge
+                            bgColor="bg-blue-500"
+                            textColor="text-white"
+                            fontWeigth='font-bold'
+                        >
+                            {labels.frozen}
+                        </Badge>
+                    ) : (
+                        <></>
+                    )}
+                    <Badge>{labels.version} {element.version}</Badge>
+                </div>
+            </div>
+
+            {element.description ? (
+                <div className="mb-8 mt-4">
+                    <WaylandDescription element={element.description} />
+                </div>
+            ) : (
+                <br className="mb-6" />
+            )}
+
+            <div className="flex flex-col space-y-8">
+                {element.requests?.map((request, index) => (
+                    <WaylandRequest
+                        key={index}
+                        element={request}
+                        interfaceName={element.name}
+                    />
+                ))}
+                {element.events?.map((event, index) => (
+                    <WaylandEvent
+                        key={index}
+                        element={event}
+                        interfaceName={element.name}
+                    />
+                ))}
+                {element.enums?.map((childElement, index) => (
+                    <WaylandEnum
+                        key={index}
+                        element={childElement}
+                        interfaceName={element.name}
+                    />
+                ))}
             </div>
         </div>
-
-        {element.description ? (
-            <div className="mb-8 mt-4">
-                <WaylandDescription element={element.description} />
-            </div>
-        ) : (
-            <br className="mb-6" />
-        )}
-
-        <div className="flex flex-col space-y-8">
-            {element.requests?.map((request, index) => (
-                <WaylandRequest
-                    key={index}
-                    element={request}
-                    interfaceName={element.name}
-                />
-            ))}
-            {element.events?.map((event, index) => (
-                <WaylandEvent
-                    key={index}
-                    element={event}
-                    interfaceName={element.name}
-                />
-            ))}
-            {element.enums?.map((childElement, index) => (
-                <WaylandEnum
-                    key={index}
-                    element={childElement}
-                    interfaceName={element.name}
-                />
-            ))}
-        </div>
-    </div>
-)
+    )
+}
