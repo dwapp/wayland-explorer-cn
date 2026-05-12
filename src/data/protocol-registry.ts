@@ -43,6 +43,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Stable,
         protocol: require('./protocols/viewporter.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/viewporter.json'),
+        },
     },
     {
         id: 'xdg-shell',
@@ -71,6 +74,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/xdg-activation-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xdg-activation-v1.json'),
+        },
     },
     {
         id: 'drm-lease-v1',

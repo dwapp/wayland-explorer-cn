@@ -1,0 +1,89 @@
+{
+  "description": {
+    "summary": "用于请求 surface 激活的协议",
+    "text": "客户端将焦点传递给另一个顶层窗口的流程如下。\n\n意图激活另一个顶层窗口的客户端使用 xdg_activation_v1.get_activation_token 请求获取一个激活令牌。然后，该令牌通过单独的通信渠道转发给应激活其某个 surface 的客户端。\n\n一种已建立的方式是通过新启动的子进程的 XDG_ACTIVATION_TOKEN 环境变量传递。子进程应在读取后立即取消设置该环境变量，以避免将其传播给其他子进程。\n\n另一种已建立的方式适用于实现了 D-Bus 接口 org.freedesktop.Application 的应用程序，这些应用程序应在其 platform_data 中的 activation-token 下获取令牌。\n\n通常，激活令牌可以通过本协议未描述的方式在客户端之间传输。\n\n待激活的客户端随后将其收到的令牌传递给 xdg_activation_v1.activate 请求。合成器可以使用此令牌来决定如何响应激活请求。\n\n激活客户端获取的令牌可能在接收时就已失效，例如如果当时未获得焦点（为防止焦点窃取）。激活客户端无法发现令牌的有效性，但仍可将其转发给待激活的客户端。\n\n创建的激活令牌可以选择性地附带信息，供合成器用于识别意图激活的应用程序。例如，可用于显示关于正在启动的应用程序的视觉提示。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会添加向后兼容的更改，并更新相应的接口版本。向后不兼容的更改只能通过创建新的扩展主版本来完成。"
+  },
+  "interfaces": {
+    "xdg_activation_v1": {
+      "description": {
+        "summary": "用于激活 surface 的接口",
+        "text": "全局接口，用于通知合成器应用程序正在被激活或启动，或用于应用程序请求被激活。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xdg_activation 对象",
+            "text": "通知合成器 xdg_activation 对象将不再使用。\n\n通过此接口创建的子对象不受影响，应单独销毁。"
+          }
+        },
+        "get_activation_token": {
+          "description": {
+            "summary": "请求令牌",
+            "text": "创建一个 xdg_activation_token_v1 对象，该对象将为发起激活的客户端提供此激活的唯一令牌。该令牌应提供给待激活的客户端。"
+          }
+        },
+        "activate": {
+          "description": {
+            "summary": "通知有新的交互可用",
+            "text": "请求 surface 激活。具体如何展示此信息由合成器决定，例如将 surface 置于其他 surface 之上。\n\n合成器可以通过检查激活令牌来了解请求者，并可能在认为不必要时决定不执行激活。\n\n当传递了无效的令牌时，合成器可以忽略未知的激活令牌。"
+          }
+        }
+      }
+    },
+    "xdg_activation_token_v1": {
+      "description": {
+        "summary": "导出的激活句柄",
+        "text": "用于设置令牌并接收令牌句柄的对象，该句柄可以作为激活令牌传递给另一个客户端。\n\n该对象通过 xdg_activation_v1.get_activation_token 请求创建。然后应使用 app_id、surface 和 serial 信息填充此对象并提交。合成器随后将发出包含令牌的 done 事件。如果请求的参数无效，合成器将提供一个无效令牌。"
+      },
+      "requests": {
+        "set_serial": {
+          "description": {
+            "summary": "指定激活事件的 seat 和 serial",
+            "text": "提供请求令牌的 seat 和事件序列号信息。\n\n序列号可以来自输入事件或焦点事件。例如，如果点击触发了第三方客户端的启动，启动客户端应发送 set_serial 请求，包含来自 wl_pointer.button 事件的序列号和 seat。\n\n某些合成器可能在令牌没有有效且足够新的事件序列号时拒绝激活顶层窗口。\n\n必须在 commit 之前发送。此信息是可选的。"
+          }
+        },
+        "set_app_id": {
+          "description": {
+            "summary": "指定被激活的应用程序",
+            "text": "请求客户端可以指定 app_id，以将正在创建的令牌与该应用程序关联。\n\n必须在 commit 之前发送。此信息是可选的。"
+          }
+        },
+        "set_surface": {
+          "description": {
+            "summary": "指定请求激活的 surface",
+            "text": "此请求设置请求激活的 surface。注意，这与将被激活的 surface 不同。\n\n某些合成器可能在令牌没有请求 surface 时拒绝激活顶层窗口。\n\n必须在 commit 之前发送。此信息是可选的。"
+          }
+        },
+        "commit": {
+          "description": {
+            "summary": "发出令牌请求",
+            "text": "基于通过 set_serial、set_surface 和 set_app_id 已提供的不同参数，请求一个激活令牌。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 xdg_activation_token_v1 对象",
+            "text": "通知合成器 xdg_activation_token_v1 对象将不再使用。已接收的令牌仍然有效。"
+          }
+        }
+      },
+      "events": {
+        "done": {
+          "description": {
+            "summary": "导出的激活令牌",
+            "text": "'done' 事件包含此激活请求的唯一令牌，并通知提供者已完成。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_used": {
+              "summary": "令牌已被使用过"
+            }
+          }
+        }
+      }
+    }
+  }
+}

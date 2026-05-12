@@ -1,0 +1,77 @@
+{
+  "interfaces": {
+    "wp_viewporter": {
+      "description": {
+        "summary": "surface 裁剪和缩放",
+        "text": "全局接口，用于暴露 surface 裁剪和缩放功能，可为 wl_surface 对象实例化一个接口扩展。该扩展接口允许裁剪和缩放 surface 内容，从而断开缓冲区与 surface 尺寸之间的直接关联。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "从裁剪和缩放接口解绑",
+            "text": "通知服务器客户端将不再使用此协议对象。这不会影响任何其他对象，包括 wp_viewport 对象。"
+          }
+        },
+        "get_viewport": {
+          "description": {
+            "summary": "扩展 surface 接口以支持裁剪和缩放",
+            "text": "为给定的 wl_surface 实例化一个接口扩展，以裁剪和缩放其内容。如果给定的 wl_surface 已经关联了一个 wp_viewport 对象，则会触发 viewport_exists 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "viewport_exists": {
+              "summary": "该 surface 已关联了一个 viewport 对象"
+            }
+          }
+        }
+      }
+    },
+    "wp_viewport": {
+      "description": {
+        "summary": "wl_surface 的裁剪和缩放接口",
+        "text": "wl_surface 对象的附加接口，允许客户端指定 surface 内容的裁剪和缩放。\n\n此接口涉及两个概念：源矩形（src_x, src_y, src_width, src_height）和目标尺寸（dst_width, dst_height）。源矩形的内容被缩放到目标尺寸，源矩形之外的内容将被忽略。此状态是双缓冲的，参见 wl_surface.commit。\n\n裁剪和缩放状态的两个部分是独立的：源矩形和目标尺寸。初始状态下两者均未设置，即不应用任何缩放。当前 wl_buffer 的全部内容用作源，surface 尺寸由 wl_surface.attach 定义。\n\n如果设置了目标尺寸，它将使 surface 尺寸变为 dst_width, dst_height。源（矩形）被精确地缩放到此尺寸。这会覆盖已附加的 wl_buffer 的尺寸，除非 wl_buffer 为 NULL。如果 wl_buffer 为 NULL，surface 没有内容因此没有尺寸。否则，尺寸在 surface 本地坐标中始终至少为 1x1。\n\n如果设置了源矩形，它定义了从 wl_buffer 中取出作为源的区域。如果设置了源矩形但未设置目标尺寸，则 src_width 和 src_height 必须为整数，且 surface 尺寸变为源矩形的尺寸。这将实现裁剪而不缩放。如果 src_width 或 src_height 不是整数且未设置目标尺寸，则在应用 surface 状态时将触发 bad_size 协议错误。\n\n从缓冲区像素坐标到 surface 本地坐标的转换按以下顺序进行：\n1. buffer_transform（wl_surface.set_buffer_transform）\n2. buffer_scale（wl_surface.set_buffer_scale）\n3. 裁剪和缩放（wp_viewport.set*）\n这意味着裁剪和缩放的源矩形坐标是在缓冲区变换和缩放之后的坐标中给出的，即在未应用裁剪和缩放时将作为 surface 本地坐标的坐标。\n\n如果 src_x 或 src_y 为负数，将触发 bad_value 协议错误。否则，如果源矩形部分或完全位于非 NULL 的 wl_buffer 之外，则在应用 surface 状态时将触发 out_of_buffer 协议错误。NULL 的 wl_buffer 不会触发 out_of_buffer 错误。\n\n如果与 wp_viewport 关联的 wl_surface 被销毁，除 'destroy' 之外的所有 wp_viewport 请求都会触发 no_surface 协议错误。\n\n如果 wp_viewport 对象被销毁，裁剪和缩放状态将从 wl_surface 中移除。该更改将在下次 wl_surface.commit 时应用。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "移除 surface 的缩放和裁剪",
+            "text": "移除关联 wl_surface 的裁剪和缩放状态。更改将在下次 wl_surface.commit 时应用。"
+          }
+        },
+        "set_source": {
+          "description": {
+            "summary": "设置裁剪的源矩形",
+            "text": "设置关联 wl_surface 的源矩形。参见 wp_viewport 的描述及其与 wl_buffer 尺寸的关系。\n\n如果 x、y、width 和 height 均为 -1.0，则取消设置源矩形。任何其他 width 或 height 为零或负数、或 x 或 y 为负数的值组合将触发 bad_value 协议错误。\n\n裁剪和缩放状态是双缓冲的，参见 wl_surface.commit。"
+          }
+        },
+        "set_destination": {
+          "description": {
+            "summary": "设置缩放的 surface 尺寸",
+            "text": "设置关联 wl_surface 的目标尺寸。参见 wp_viewport 的描述及其与 wl_buffer 尺寸的关系。\n\n如果 width 为 -1 且 height 为 -1，则取消设置目标尺寸。任何其他包含零或负值的 width 和 height 组合将触发 bad_value 协议错误。\n\n裁剪和缩放状态是双缓冲的，参见 wl_surface.commit。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "bad_value": {
+              "summary": "width 或 height 为零或负数"
+            },
+            "bad_size": {
+              "summary": "目标尺寸不是整数"
+            },
+            "out_of_buffer": {
+              "summary": "源矩形超出内容区域范围"
+            },
+            "no_surface": {
+              "summary": "wl_surface 已被销毁"
+            }
+          }
+        }
+      }
+    }
+  }
+}
