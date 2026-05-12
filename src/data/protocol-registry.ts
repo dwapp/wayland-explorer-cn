@@ -1013,6 +1013,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.RiverProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/river-control-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/river-control-unstable-v1.json'),
+        },
     },
     {
         id: 'river-input-management-v1',
@@ -1020,6 +1023,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.RiverProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/river-input-management-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/river-input-management-v1.json'),
+        },
     },
     {
         id: 'river-layer-shell-v1',
@@ -1027,6 +1033,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.RiverProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/river-layer-shell-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/river-layer-shell-v1.json'),
+        },
     },
     {
         id: 'river-layout-v3',
@@ -1034,6 +1043,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.RiverProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/river-layout-v3.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/river-layout-v3.json'),
+        },
     },
     {
         id: 'river-libinput-config-v1',
@@ -1041,6 +1053,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.RiverProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/river-libinput-config-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/river-libinput-config-v1.json'),
+        },
     },
     {
         id: 'river-status-unstable-v1',
@@ -1048,6 +1063,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.RiverProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/river-status-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/river-status-unstable-v1.json'),
+        },
     },
     {
         id: 'river-window-management-v1',
@@ -1062,6 +1080,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.RiverProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/river-xkb-bindings-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/river-xkb-bindings-v1.json'),
+        },
     },
     {
         id: 'river-xkb-config-v1',
@@ -1069,6 +1090,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.RiverProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/river-xkb-config-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/river-xkb-config-v1.json'),
+        },
     },
     {
         id: 'wayland-drm',

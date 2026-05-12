@@ -1,0 +1,144 @@
+{
+  "description": {
+    "summary": "配置输入设备",
+    "text": "此协议支持创建/销毁 seat、分配输入设备到 seat，以及配置输入设备（例如设置键盘重复速率）。\n\n本文档中的关键字“必须”(must)、“不得”(must not)、“要求”(required)、“将”(shall)、“不应”(shall not)、“应该”(should)、“不应该”(should not)、“推荐”(recommended)、“可以”(may)和“可选”(optional)将按照 IETF RFC 2119 中的描述进行解释。"
+  },
+  "interfaces": {
+    "river_input_manager_v1": {
+      "description": {
+        "summary": "输入管理器全局接口",
+        "text": "输入管理器全局接口。"
+      },
+      "requests": {
+        "stop": {
+          "description": {
+            "summary": "停止发送事件",
+            "text": "此请求表示客户端不再希望接收此对象上的事件。\n\nWayland 协议是异步的，这意味着在处理 stop 请求之前，服务器可能会继续发送事件。客户端必须等待 river_input_manager_v1.finished 事件，然后再销毁此对象。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 river_input_manager_v1 对象",
+            "text": "收到 finished 事件后，应调用此请求以完成对象的销毁。\n\n在收到 finished 事件之前发出此请求是一个协议错误。\n\n如果客户端希望销毁此对象，它应该发送一个 river_input_manager_v1.stop 请求并等待 river_input_manager_v1.finished 事件。收到 finished 事件后，就可以安全地销毁此对象以及通过此接口创建的任何其他对象。"
+          }
+        },
+        "create_seat": {
+          "description": {
+            "summary": "创建一个新的 seat",
+            "text": "创建具有指定名称的新 seat。如果具有该名称的 seat 已经存在，则无效。\n\n名称为 \"default\" 的默认 seat 始终存在，无需显式创建。"
+          }
+        },
+        "destroy_seat": {
+          "description": {
+            "summary": "销毁一个 seat",
+            "text": "销毁指定名称的 seat。如果具有该名称的 seat 不存在，则无效。\n\n名称为 \"default\" 的默认 seat 无法被销毁，尝试销毁它不会有任何效果。\n\n在销毁时，分配给被销毁 seat 的任何输入设备都将被分配给默认 seat。"
+          }
+        }
+      },
+      "events": {
+        "finished": {
+          "description": {
+            "summary": "服务器已完成输入管理器的处理",
+            "text": "此事件表示服务器将不再发送此对象上的任何事件。客户端应销毁该对象。有关更多信息，请参见 river_input_manager_v1.destroy。"
+          }
+        },
+        "input_device": {
+          "description": {
+            "summary": "宣布输入设备",
+            "text": "在客户端绑定到 river_input_manager_v1 之后，服务器将为当前连接到系统的每个物理输入设备发送此事件。如果在客户端绑定到此接口后插入了输入设备，则也会发送此事件。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "协议错误",
+            "text": "这些错误可以在响应请求时发出。"
+          },
+          "entries": {
+            "early_destroy": {
+              "description": {
+                "summary": "在 finished 事件之前收到了 destroy 请求",
+                "text": ""
+              }
+            }
+          }
+        }
+      }
+    },
+    "river_input_device_v1": {
+      "description": {
+        "summary": "输入设备",
+        "text": "输入设备代表物理键盘、鼠标、触摸屏或绘图板工具。它在同一时间被分配给且仅分配给一个 seat。\n默认情况下，所有输入设备都被分配给默认 seat。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁输入设备对象",
+            "text": "此请求表示客户端将不再使用该输入设备对象，且可以安全地销毁它。"
+          }
+        },
+        "assign_to_seat": {
+          "description": {
+            "summary": "将输入设备分配给 seat",
+            "text": "将输入设备分配给 seat。所有未显式分配给 seat 的输入设备都被视为分配给了默认 seat。\n\n如果指定名称的 seat 不存在，则无效。"
+          }
+        },
+        "set_repeat_info": {
+          "description": {
+            "summary": "设置键盘重复速率和延迟",
+            "text": "为键盘输入设备设置重复速率和延迟。如果设备不是键盘，则无效。\n\n速率(rate)或延迟(delay)不能为负值。速率为零将禁用任何重复（无论延迟的值如何）。"
+          }
+        },
+        "set_scroll_factor": {
+          "description": {
+            "summary": "设置滚动因子",
+            "text": "为指针输入设备设置滚动因子。如果设备不是指针，则无效。\n\n例如，因子为 0.5 将使滚动速度慢一半，而因子为 3.0 将使滚动速度快 3 倍。\n\n设置小于 0 的滚动因子是一个协议错误。"
+          }
+        },
+        "map_to_output": {
+          "description": {
+            "summary": "将输入设备映射到指定的 output",
+            "text": "将输入设备映射到指定的 output。如果设备不是指针(pointer)、触摸(touch)或平板(tablet)设备，则无效。\n\n如果同时映射到 output 和矩形区域(rectangle)，则矩形区域优先。\n\n传递 null 将清除现有的映射。"
+          }
+        },
+        "map_to_rectangle": {
+          "description": {
+            "summary": "将输入设备映射到指定的矩形区域",
+            "text": "在全局 compositor 坐标空间中，将输入设备映射到指定的矩形区域。如果设备不是指针(pointer)、触摸(touch)或平板(tablet)设备，则无效。\n\n如果同时映射到 output 和矩形区域(rectangle)，则矩形区域优先。\n\n宽度和高度必须大于或等于 0。\n\n为宽度或高度传递 0 将清除现有的映射。"
+          }
+        }
+      },
+      "events": {
+        "removed": {
+          "description": {
+            "summary": "输入设备已被移除",
+            "text": "此事件表示输入设备已被移除。\n\n在设备物理上断开连接时，服务器将发送此事件。客户端应该使用 destroy 请求销毁该对象。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "协议错误",
+            "text": "这些错误可以在响应请求时发出。"
+          },
+          "entries": {
+            "invalid_scroll_factor": {
+              "description": {
+                "summary": "设置了非法的负数滚动因子",
+                "text": ""
+              }
+            },
+            "invalid_rectangle_size": {
+              "description": {
+                "summary": "设置了非法的负数映射宽度或高度",
+                "text": ""
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "description": {
+    "summary": "配置 xkbcommon 键盘状态",
+    "text": "本协议允许客户端设置各个键盘输入设备的 xkbcommon keymap。它还允许在 keymap 的不同布局之间切换，以及切换 capslock/numlock 状态。\n\n本文档中的关键字“必须 (must)”、“不得 (must not)”、“需要 (required)”、“应当 (shall)”、“不应当 (shall not)”、“应该 (should)”、“不应该 (should not)”、“建议 (recommended)”、“可以 (may)”和“可选 (optional)”应按照 IETF RFC 2119 中的描述进行解释。"
+  },
+  "interfaces": {
+    "river_xkb_config_v1": {
+      "description": {
+        "summary": "xkb config 全局接口",
+        "text": "用于配置 xkb 设备的全局接口。\n\n此全局对象仅在同时通告 river_input_manager_v1 时才会通告。"
+      },
+      "requests": {
+        "stop": {
+          "description": {
+            "summary": "停止发送事件",
+            "text": "此请求表示客户端不希望再接收此对象上的事件。\n\nWayland 协议是异步的，这意味着在处理 stop 请求之前，服务端可能会继续发送事件。在销毁此对象之前，客户端必须等待 river_xkb_config_v1.finished 事件。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 river_xkb_config_v1 对象",
+            "text": "应在接收到 finished 事件后调用此请求，以完成对象的销毁。\n\n在接收到 finished 事件之前发出此请求属于协议错误。\n\n如果客户端希望销毁此对象，它应当发送 river_xkb_config_v1.stop 请求并等待 river_xkb_config_v1.finished 事件。一旦接收到 finished 事件，就可以安全地销毁此对象及通过此接口创建的任何其他对象。"
+          }
+        },
+        "create_keymap": {
+          "description": {
+            "summary": "创建一个 keymap 对象",
+            "text": "服务端必须能够以 MAP_PRIVATE 对 fd 建立 mmap 映射。\n服务端将对 fd 执行 fstat 以获取 keymap 的大小。\n在发出此请求后，客户端不得修改 fd 的内容。\n客户端应当使用 fcntl 密封 (seal) 描述符 fd。"
+          }
+        }
+      },
+      "events": {
+        "finished": {
+          "description": {
+            "summary": "服务端已完成对象处理",
+            "text": "此事件表示服务端不会再发送此对象上的任何事件。客户端应销毁该对象。有关更多信息，请参阅 river_xkb_config_v1.destroy。"
+          }
+        },
+        "xkb_keyboard": {
+          "description": {
+            "summary": "新建 xkb 键盘",
+            "text": "已创建一个新的 xkbcommon 键盘。并非每个 river_input_device_v1 都一定是 xkbcommon 键盘。"
+          }
+        }
+      }
+    },
+    "river_xkb_keymap_v1": {
+      "description": {
+        "summary": "一个 xkbcommon keymap",
+        "text": "此对象表示一个 xkbcommon keymap，它包含 xkb_keymap_get_as_string() 输出的 keymap 格式的字符串。\n\n当以此方式创建 river_xkb_keymap_v1 对象时，它被认为是“待处理的 (pending)”并处于非活动状态。客户端只有在接收到 river_xkb_keymap_v1.success 事件后，才能确定 keymap 已成功由服务端验证并创建。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xkb keymap 对象",
+            "text": "此请求表示客户端将不再使用该 keymap 对象，并且可以安全地销毁它。"
+          }
+        }
+      },
+      "events": {
+        "success": {
+          "description": {
+            "summary": "keymap 解析成功",
+            "text": "此事件表示在创建时传递的 fd 包含一个有效的 xkbcommon keymap 并且已成功由服务端解析。\n\n从此事件开始，可以在接受 river_xkb_keymap_v1 对象的请求中使用该对象。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "keymap 解析失败",
+            "text": "此事件表示在创建时传递的 fd 无法由服务端作为 xkbcommon keymap 进行解析。这可能是因为文件包含无效数据，或者因为服务端遇到临时错误。\n\n如果接收到此事件，将通过接收此 keymap 对象的其他请求传递该对象视为协议错误。"
+          }
+        }
+      }
+    },
+    "river_xkb_keyboard_v1": {
+      "description": {
+        "summary": "具有 xkbcommon 配置的一个键盘",
+        "text": "此对象表示一个由 xkbcommon 管理其配置和状态的物理键盘。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xkb 键盘对象",
+            "text": "此请求表示客户端将不再使用该键盘对象，并且可以安全地销毁它。"
+          }
+        },
+        "set_keymap": {
+          "description": {
+            "summary": "设置 keymap",
+            "text": "设置键盘的 keymap。\n\n传递未收到 river_xkb_keymap_v1.success 事件的 keymap 对象属于协议错误。"
+          }
+        },
+        "set_layout_by_index": {
+          "description": {
+            "summary": "按索引设置活动布局",
+            "text": "设置键盘 keymap 的活动布局。如果布局索引超出当前 keymap 的边界，则没有影响。"
+          }
+        },
+        "set_layout_by_name": {
+          "description": {
+            "summary": "按名称设置活动布局",
+            "text": "设置键盘 keymap 的活动布局。如果键盘的 keymap 中没有给定名称的布局，则没有影响。"
+          }
+        },
+        "capslock_enable": {
+          "description": {
+            "summary": "启用 capslock",
+            "text": "启用键盘的 capslock。"
+          }
+        },
+        "capslock_disable": {
+          "description": {
+            "summary": "禁用 capslock",
+            "text": "禁用键盘的 capslock。"
+          }
+        },
+        "numlock_enable": {
+          "description": {
+            "summary": "启用 numlock",
+            "text": "启用键盘的 numlock。"
+          }
+        },
+        "numlock_disable": {
+          "description": {
+            "summary": "禁用 numlock",
+            "text": "禁用键盘的 numlock。"
+          }
+        }
+      },
+      "events": {
+        "removed": {
+          "description": {
+            "summary": "xkb 键盘已移除",
+            "text": "此事件表示 xkb 键盘已被移除。\n\n服务端不会再发送此对象上的事件，并忽略发送此事件之后的所有请求（除了 river_xkb_keyboard_v1.destroy）。客户端应当使用 river_xkb_keyboard_v1.destroy 请求销毁此对象以释放资源。"
+          }
+        },
+        "input_device": {
+          "description": {
+            "summary": "对应的 river 输入设备",
+            "text": "此 xkb 键盘对应的 river_input_device_v1。此事件将始终作为在 river_xkb_keyboard_v1 对象上发送的第一个事件，并且仅发送一次。"
+          }
+        },
+        "layout": {
+          "description": {
+            "summary": "当前活动布局",
+            "text": "当前活动的布局索引及其名称。如果更改了 keymap，与布局索引关联的名称可能会发生变化。\n\n此事件在创建 river_xkb_keyboard_v1 时发送一次，并在随后每次通过影响给定 river_xkb_keyboard_v1 的按键或请求导致布局更改时再次发送。"
+          }
+        },
+        "capslock_enabled": {
+          "description": {
+            "summary": "capslock 当前已启用",
+            "text": "键盘当前启用了 capslock。\n\n当创建 river_xkb_keyboard_v1 时发送一次，随后每次 capslock 状态改变时再次发送。"
+          }
+        },
+        "capslock_disabled": {
+          "description": {
+            "summary": "capslock 当前已禁用",
+            "text": "键盘当前禁用了 capslock。\n\n当创建 river_xkb_keyboard_v1 时发送一次，随后每次 capslock 状态改变时再次发送。"
+          }
+        },
+        "numlock_enabled": {
+          "description": {
+            "summary": "numlock 当前已启用",
+            "text": "键盘当前启用了 numlock。\n\n当创建 river_xkb_keyboard_v1 时发送一次，随后每次 numlock 状态改变时再次发送。"
+          }
+        },
+        "numlock_disabled": {
+          "description": {
+            "summary": "numlock 当前已禁用",
+            "text": "键盘当前禁用了 numlock。\n\n当创建 river_xkb_keyboard_v1 时发送一次，随后每次 numlock 状态改变时再次发送。"
+          }
+        }
+      }
+    }
+  }
+}

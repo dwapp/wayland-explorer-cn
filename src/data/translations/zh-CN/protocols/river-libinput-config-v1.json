@@ -1,0 +1,568 @@
+{
+  "description": {
+    "summary": "配置 libinput 设备",
+    "text": "该协议暴露了 libinput 设备配置 API。有关 libinput 的\n行为详细信息，应参考 libinput 文档。\n\n设计此协议的目的是为了（希望）任何向后兼容的\nlibinput API 更改都可以与本协议的向后兼容更改相匹配。\n\n注意：libinput API 使用浮点类型（C 语言中的 float 和 double），\nWayland 协议目前（尚未？）原生支持这些类型。但是，\nWayland 协议支持通过数组（array）参数类型发送任意字节。\n该协议使用例如 type=\"array\" summary=\"double\" 来\n表示原生字节序的 IEEE-754 64 位 double 值。\n\n本文档中的关键字“must”、“must not”、“required”、“shall”、“shall not”、\n“should”、“should not”、“recommended”、“may”和“optional”应按 IETF RFC 2119 中描述的方式解释。"
+  },
+  "interfaces": {
+    "river_libinput_config_v1": {
+      "description": {
+        "summary": "libinput 配置全局接口",
+        "text": "用于配置 libinput 设备的全局接口。仅当同时也广播了\nriver_input_manager_v1 时，才应广播此全局对象。"
+      },
+      "requests": {
+        "stop": {
+          "description": {
+            "summary": "停止发送事件",
+            "text": "此请求表明客户端不愿再在此对象上\n接收事件。\n\nWayland 协议是异步的，这意味着在处理完 stop 请求之前，\n服务端可能会继续发送事件。客户端必须等待\nriver_libinput_config_v1.finished 事件才能销毁\n该对象。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 river_libinput_config_v1 对象",
+            "text": "在接收到 finished 事件后应调用此请求\n以完成对象的销毁。\n\n在接收到 finished 事件之前发出此请求属于协议错误。\n\n如果客户端希望销毁此对象，它应发送\nriver_libinput_config_v1.stop 请求并等待\nriver_libinput_config_v1.finished 事件。一旦接收到 finished 事件，\n即可安全销毁此对象以及通过此接口创建的任何其他对象。"
+          }
+        },
+        "create_accel_config": {
+          "description": {
+            "summary": "创建加速配置",
+            "text": "创建可通过 river_libinput_device_v1.apply_accel_config\n应用的加速配置。"
+          }
+        }
+      },
+      "events": {
+        "finished": {
+          "description": {
+            "summary": "服务端已处理完该对象",
+            "text": "此事件表明服务端将不再在此对象上发送进一步的事件。\n客户端应销毁该对象。详情请参阅\nriver_libinput_config_v1.destroy。"
+          }
+        },
+        "libinput_device": {
+          "description": {
+            "summary": "新的 libinput 设备",
+            "text": "已创建新的 libinput 设备。并非每个 river_input_device_v1\n都必定是 libinput 设备。"
+          }
+        }
+      }
+    },
+    "river_libinput_device_v1": {
+      "description": {
+        "summary": "libinput 设备",
+        "text": "通常，*_support 事件将在 river_libinput_device_v1\n创建后立即发送一次。如果支持该配置选项，*_default 事件将在\n*_support 事件之后发送，*_current 事件将在\n*_default 事件之后发送，并在配置选项更改时再次发送。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 libinput 设备对象",
+            "text": "此请求表明客户端将不再使用该输入\n设备对象，可以安全地销毁它。"
+          }
+        },
+        "set_send_events": {
+          "description": {
+            "summary": "设置发送事件模式",
+            "text": "设置设备的发送事件模式。"
+          }
+        },
+        "set_tap": {
+          "description": {
+            "summary": "启用/禁用轻触点击",
+            "text": "在该设备上配置轻触点击，默认将\n1、2、3 指轻触分别映射为左键、右键和中键点击。"
+          }
+        },
+        "set_tap_button_map": {
+          "description": {
+            "summary": "设置轻触点击按钮映射",
+            "text": "设置轻触点击的手指数量到按钮编号的映射。\n大多数设备上的默认映射是将 1、2 和 3 指轻触\n分别映射为左、右和中键。"
+          }
+        },
+        "set_drag": {
+          "description": {
+            "summary": "设置轻触拖拽状态",
+            "text": "在设备上配置轻触拖拽功能。"
+          }
+        },
+        "set_drag_lock": {
+          "description": {
+            "summary": "设置拖拽锁定状态",
+            "text": "配置设备上的轻触期间拖拽锁定。启用时，\n手指可以抬起并放回触摸板上以继续拖拽过程。\n抬起手指的超时可选。禁用时，\n在轻触拖拽期间抬起手指会立即停止拖拽。\n详情请参阅 libinput 文档。"
+          }
+        },
+        "set_three_finger_drag": {
+          "description": {
+            "summary": "设置三指拖拽状态",
+            "text": "为设备配置三指拖拽功能。"
+          }
+        },
+        "set_calibration_matrix": {
+          "description": {
+            "summary": "设置校准矩阵",
+            "text": "设置校准矩阵。"
+          }
+        },
+        "set_accel_profile": {
+          "description": {
+            "summary": "设置发送事件模式",
+            "text": "设置加速配置文件。"
+          }
+        },
+        "set_accel_speed": {
+          "description": {
+            "summary": "设置加速速度",
+            "text": "在 [-1, 1] 范围内设置加速速度，其中 0 是\n此设备的默认加速，-1 是最慢的加速，\n而 1 是此设备上可用的最大加速。"
+          }
+        },
+        "apply_accel_config": {
+          "description": {
+            "summary": "应用加速配置",
+            "text": "应用指针加速配置。"
+          }
+        },
+        "set_natural_scroll": {
+          "description": {
+            "summary": "设置自然滚动状态",
+            "text": "设置自然滚动状态。"
+          }
+        },
+        "set_left_handed": {
+          "description": {
+            "summary": "设置左手模式状态",
+            "text": "设置左手模式状态。"
+          }
+        },
+        "set_click_method": {
+          "description": {
+            "summary": "设置点击方法",
+            "text": "设置点击方法。"
+          }
+        },
+        "set_clickfinger_button_map": {
+          "description": {
+            "summary": "设置 clickfinger 按钮映射",
+            "text": "设置 clickfinger 按钮映射。\n如果支持 click_methods.clickfinger 则受支持。"
+          }
+        },
+        "set_middle_emulation": {
+          "description": {
+            "summary": "设置中键模拟状态",
+            "text": "设置中键模拟状态。"
+          }
+        },
+        "set_scroll_method": {
+          "description": {
+            "summary": "设置滚动方法",
+            "text": "设置滚动方法。"
+          }
+        },
+        "set_scroll_button": {
+          "description": {
+            "summary": "设置滚动按钮",
+            "text": "设置滚动按钮。\n如果支持 scroll_methods.on_button_down 则受支持。"
+          }
+        },
+        "set_scroll_button_lock": {
+          "description": {
+            "summary": "设置滚动按钮锁定状态",
+            "text": "设置滚动按钮锁定状态。\n如果支持 scroll_methods.on_button_down 则受支持。"
+          }
+        },
+        "set_dwt": {
+          "description": {
+            "summary": "设置打字时禁用状态",
+            "text": "设置打字时禁用状态。"
+          }
+        },
+        "set_dwtp": {
+          "description": {
+            "summary": "设置使用指点杆时禁用状态",
+            "text": "设置使用指点杆时禁用状态。"
+          }
+        },
+        "set_rotation": {
+          "description": {
+            "summary": "设置旋转角度",
+            "text": "设置偏离逻辑中性位置的顺时针旋转角度（度）。\n角度必须在 [0-360) 范围内。"
+          }
+        }
+      },
+      "events": {
+        "removed": {
+          "description": {
+            "summary": "libinput 设备已移除",
+            "text": "此事件表示 libinput 设备已被移除。\n\n服务端将不再在此对象上发送进一步的事件，并忽略在发送此事件后\n发出的任何请求（river_libinput_device_v1.destroy 除外）。\n客户端应使用 river_libinput_device_v1.destroy\n请求销毁此对象以释放资源。"
+          }
+        },
+        "input_device": {
+          "description": {
+            "summary": "对应的 river 输入设备",
+            "text": "对应此 libinput 设备的 river_input_device_v1。\n此事件将始终是 river_libinput_device_v1 对象上\n发送的第一个事件，并且只发送一次。"
+          }
+        },
+        "send_events_support": {
+          "description": {
+            "summary": "支持的发送事件模式",
+            "text": "支持的发送事件模式。"
+          }
+        },
+        "send_events_default": {
+          "description": {
+            "summary": "默认发送事件模式",
+            "text": "默认发送事件模式。"
+          }
+        },
+        "send_events_current": {
+          "description": {
+            "summary": "当前发送事件模式",
+            "text": "当前发送事件模式。"
+          }
+        },
+        "tap_support": {
+          "description": {
+            "summary": "支持轻触点击/拖拽",
+            "text": "支持轻触点击/拖拽的手指数量。\n如果 finger_count 为 0，则不支持轻触点击和拖拽。"
+          }
+        },
+        "tap_default": {
+          "description": {
+            "summary": "默认轻触点击状态",
+            "text": "默认轻触点击状态。"
+          }
+        },
+        "tap_current": {
+          "description": {
+            "summary": "当前轻触点击状态",
+            "text": "当前轻触点击状态。"
+          }
+        },
+        "tap_button_map_default": {
+          "description": {
+            "summary": "默认轻触点击按钮映射",
+            "text": "默认轻触点击按钮映射。"
+          }
+        },
+        "tap_button_map_current": {
+          "description": {
+            "summary": "当前轻触点击按钮映射",
+            "text": "当前轻触点击按钮映射。"
+          }
+        },
+        "drag_default": {
+          "description": {
+            "summary": "默认轻触拖拽状态",
+            "text": "默认轻触拖拽状态。"
+          }
+        },
+        "drag_current": {
+          "description": {
+            "summary": "当前轻触拖拽状态",
+            "text": "当前轻触拖拽状态。"
+          }
+        },
+        "drag_lock_default": {
+          "description": {
+            "summary": "默认拖拽锁定状态",
+            "text": "默认拖拽锁定状态。"
+          }
+        },
+        "drag_lock_current": {
+          "description": {
+            "summary": "当前拖拽锁定状态",
+            "text": "当前拖拽锁定状态。"
+          }
+        },
+        "three_finger_drag_support": {
+          "description": {
+            "summary": "支持三指拖拽",
+            "text": "支持三/四指拖拽的手指数量。\n如果 finger_count 小于 3，则不支持三指拖拽。"
+          }
+        },
+        "three_finger_drag_default": {
+          "description": {
+            "summary": "默认三指拖拽状态",
+            "text": "默认三指拖拽状态。"
+          }
+        },
+        "three_finger_drag_current": {
+          "description": {
+            "summary": "当前三指拖拽状态",
+            "text": "当前三指拖拽状态。"
+          }
+        },
+        "calibration_matrix_support": {
+          "description": {
+            "summary": "支持校准矩阵",
+            "text": "如果 supported 参数非零，则支持校准矩阵。"
+          }
+        },
+        "calibration_matrix_default": {
+          "description": {
+            "summary": "默认校准矩阵",
+            "text": "默认校准矩阵。"
+          }
+        },
+        "calibration_matrix_current": {
+          "description": {
+            "summary": "当前校准矩阵",
+            "text": "当前校准矩阵。"
+          }
+        },
+        "accel_profiles_support": {
+          "description": {
+            "summary": "支持的加速配置文件",
+            "text": "支持的加速配置文件。"
+          }
+        },
+        "accel_profile_default": {
+          "description": {
+            "summary": "默认加速配置文件",
+            "text": "默认加速配置文件。"
+          }
+        },
+        "accel_profile_current": {
+          "description": {
+            "summary": "当前发送事件模式",
+            "text": "当前加速配置文件。"
+          }
+        },
+        "accel_speed_default": {
+          "description": {
+            "summary": "默认加速速度",
+            "text": "默认加速速度。"
+          }
+        },
+        "accel_speed_current": {
+          "description": {
+            "summary": "当前加速速度",
+            "text": "当前加速速度。"
+          }
+        },
+        "natural_scroll_support": {
+          "description": {
+            "summary": "支持自然滚动",
+            "text": "如果 supported 参数非零，则支持自然滚动。"
+          }
+        },
+        "natural_scroll_default": {
+          "description": {
+            "summary": "默认自然滚动",
+            "text": "默认自然滚动。"
+          }
+        },
+        "natural_scroll_current": {
+          "description": {
+            "summary": "当前自然滚动状态",
+            "text": "当前自然滚动。"
+          }
+        },
+        "left_handed_support": {
+          "description": {
+            "summary": "支持左手模式",
+            "text": "如果 supported 参数非零，则支持左手模式。"
+          }
+        },
+        "left_handed_default": {
+          "description": {
+            "summary": "默认左手模式",
+            "text": "默认左手模式。"
+          }
+        },
+        "left_handed_current": {
+          "description": {
+            "summary": "当前左手模式状态",
+            "text": "当前左手模式。"
+          }
+        },
+        "click_method_support": {
+          "description": {
+            "summary": "支持的点击方法",
+            "text": "设备支持的点击方法。"
+          }
+        },
+        "click_method_default": {
+          "description": {
+            "summary": "默认点击方法",
+            "text": "默认点击方法。"
+          }
+        },
+        "click_method_current": {
+          "description": {
+            "summary": "当前点击方法",
+            "text": "当前点击方法。"
+          }
+        },
+        "clickfinger_button_map_default": {
+          "description": {
+            "summary": "默认 clickfinger 按钮映射",
+            "text": "默认 clickfinger 按钮映射。\n如果支持 click_methods.clickfinger 则受支持。"
+          }
+        },
+        "clickfinger_button_map_current": {
+          "description": {
+            "summary": "当前 clickfinger 按钮映射",
+            "text": "当前 clickfinger 按钮映射。\n如果支持 click_methods.clickfinger 则受支持。"
+          }
+        },
+        "middle_emulation_support": {
+          "description": {
+            "summary": "支持中键模拟",
+            "text": "如果 supported 参数非零，则支持中键模拟。"
+          }
+        },
+        "middle_emulation_default": {
+          "description": {
+            "summary": "默认中键模拟",
+            "text": "默认中键模拟。"
+          }
+        },
+        "middle_emulation_current": {
+          "description": {
+            "summary": "当前中键模拟状态",
+            "text": "当前中键模拟。"
+          }
+        },
+        "scroll_method_support": {
+          "description": {
+            "summary": "支持的滚动方法",
+            "text": "设备支持的滚动方法。"
+          }
+        },
+        "scroll_method_default": {
+          "description": {
+            "summary": "默认滚动方法",
+            "text": "默认滚动方法。"
+          }
+        },
+        "scroll_method_current": {
+          "description": {
+            "summary": "当前滚动方法",
+            "text": "当前滚动方法。"
+          }
+        },
+        "scroll_button_default": {
+          "description": {
+            "summary": "默认滚动按钮",
+            "text": "默认滚动按钮。\n如果支持 scroll_methods.on_button_down 则受支持。"
+          }
+        },
+        "scroll_button_current": {
+          "description": {
+            "summary": "当前滚动按钮",
+            "text": "当前滚动按钮。\n如果支持 scroll_methods.on_button_down 则受支持。"
+          }
+        },
+        "scroll_button_lock_default": {
+          "description": {
+            "summary": "默认滚动按钮锁定状态",
+            "text": "默认滚动按钮锁定状态。\n如果支持 scroll_methods.on_button_down 则受支持。"
+          }
+        },
+        "scroll_button_lock_current": {
+          "description": {
+            "summary": "当前滚动按钮锁定状态",
+            "text": "当前滚动按钮锁定状态。\n如果支持 scroll_methods.on_button_down 则受支持。"
+          }
+        },
+        "dwt_support": {
+          "description": {
+            "summary": "支持打字时禁用",
+            "text": "如果 supported 参数非零，则支持打字时禁用。"
+          }
+        },
+        "dwt_default": {
+          "description": {
+            "summary": "默认打字时禁用状态",
+            "text": "默认打字时禁用状态。"
+          }
+        },
+        "dwt_current": {
+          "description": {
+            "summary": "当前打字时禁用状态",
+            "text": "当前打字时禁用状态。"
+          }
+        },
+        "dwtp_support": {
+          "description": {
+            "summary": "支持使用指点杆时禁用",
+            "text": "如果 supported 参数非零，则支持使用指点杆时禁用。"
+          }
+        },
+        "dwtp_default": {
+          "description": {
+            "summary": "默认使用指点杆时禁用状态",
+            "text": "默认使用指点杆时禁用状态。"
+          }
+        },
+        "dwtp_current": {
+          "description": {
+            "summary": "当前使用指点杆时禁用状态",
+            "text": "当前使用指点杆时禁用状态。"
+          }
+        },
+        "rotation_support": {
+          "description": {
+            "summary": "支持旋转",
+            "text": "如果 supported 参数非零，则支持旋转。"
+          }
+        },
+        "rotation_default": {
+          "description": {
+            "summary": "默认旋转角度",
+            "text": "默认旋转角度。"
+          }
+        },
+        "rotation_current": {
+          "description": {
+            "summary": "当前旋转角度",
+            "text": "当前旋转角度。"
+          }
+        }
+      }
+    },
+    "river_libinput_accel_config_v1": {
+      "description": {
+        "summary": "加速配置",
+        "text": "libinput 设置设备配置时返回的结果。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 accel 对象",
+            "text": "此请求表明客户端将不再使用 accel\n配置对象，可以安全地销毁它。"
+          }
+        },
+        "set_points": {
+          "description": {
+            "summary": "定义自定义加速函数",
+            "text": "定义使用自定义加速配置文件的加速配置中\n给定移动类型的加速函数。"
+          }
+        }
+      },
+      "events": {}
+    },
+    "river_libinput_result_v1": {
+      "description": {
+        "summary": "配置应用结果",
+        "text": "libinput 设置设备配置时返回的结果。"
+      },
+      "requests": {},
+      "events": {
+        "success": {
+          "description": {
+            "summary": "配置成功",
+            "text": "配置已成功应用到设备。"
+          }
+        },
+        "unsupported": {
+          "description": {
+            "summary": "配置不受支持",
+            "text": "设备不支持此配置，已被忽略。"
+          }
+        },
+        "invalid": {
+          "description": {
+            "summary": "配置无效",
+            "text": "配置无效，已被忽略。"
+          }
+        }
+      }
+    }
+  }
+}

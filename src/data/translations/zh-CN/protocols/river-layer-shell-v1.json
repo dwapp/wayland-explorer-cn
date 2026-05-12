@@ -1,0 +1,96 @@
+{
+  "description": {
+    "summary": "river 的 layer shell 支持",
+    "text": "此协议允许 river-window-management-v1 窗口管理器支持 wlr-layer-shell-v1 协议。\n\n本文档中的关键词“必须”(must)、“不得”(must not)、“要求”(required)、“应”(shall)、“不应”(shall not)、“应该”(should)、“不应该”(should not)、“推荐”(recommended)、“可以”(may)和“可选”(optional)应按照 IETF RFC 2119 中的描述进行解释。"
+  },
+  "interfaces": {
+    "river_layer_shell_v1": {
+      "description": {
+        "summary": "river layer shell 全局接口",
+        "text": "仅当同时发布了 river_window_manager_v1 全局对象时，才应向客户端发布此全局接口。绑定此接口表明窗口管理器支持 layer shell。\n\n如果窗口管理器未绑定此接口，compositor 不应允许客户端映射 layer surface。这可以通过立即关闭 layer surface 来实现。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 river_layer_shell_v1 对象",
+            "text": "此请求表明客户端将不再使用 river_layer_shell_v1 对象。"
+          }
+        },
+        "get_output": {
+          "description": {
+            "summary": "获取 layer shell output 状态",
+            "text": "对给定的 river_output_v1 对象多次发出此请求属于协议错误。"
+          }
+        },
+        "get_seat": {
+          "description": {
+            "summary": "获取 layer shell seat 状态",
+            "text": "对给定的 river_seat_v1 对象多次发出此请求属于协议错误。"
+          }
+        }
+      }
+    },
+    "river_layer_shell_output_v1": {
+      "description": {
+        "summary": "layer shell output 状态",
+        "text": "此对象的生命周期与对应的 river_output_v1 绑定。\n当发送 river_output_v1.removed 事件时，此对象将变为惰性（inert），并且应当被销毁。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁对象",
+            "text": "此请求表明客户端将不再使用 river_layer_shell_output_v1 对象，可以安全地将其销毁。\n\n应在收到 river_output_v1.removed 事件后发出此请求，以完成 output 的销毁。"
+          }
+        },
+        "set_default": {
+          "description": {
+            "summary": "为 layer surface 设置默认 output",
+            "text": "将此 output 标记为未指定特定 output 的新 layer surface 的默认 output。此请求将覆盖任何 river_layer_shell_output_v1 对象上先前的 set_default 请求。\n\n如果未发出 set_default 请求或默认 output 被销毁，则默认 output 在下一次 set_default 请求之前是未定义的。\n\n此请求修改窗口管理状态，并且只能作为管理序列（manage sequence）的一部分发出，请参阅 river_window_manager_v1 的描述。"
+          }
+        }
+      },
+      "events": {
+        "non_exclusive_area": {
+          "description": {
+            "summary": "减去 exclusive zone 后剩余的区域",
+            "text": "此事件指示从 output 中减去 layer surface 的 exclusive zone 后剩余的区域。exclusive zone 是一种提示（hint），窗口管理器可以随意忽略此区域提示。\n\nx 和 y 值位于全局坐标空间中，而不是相对于 output 的位置。\n\n在服务器发送了所有其他新状态之后，此事件之后将跟随一个 manage_start 事件。"
+          }
+        }
+      }
+    },
+    "river_layer_shell_seat_v1": {
+      "description": {
+        "summary": "layer shell seat 状态",
+        "text": "此对象的生命周期与对应的 river_seat_v1 绑定。\n当发送 river_seat_v1.removed 事件时，此对象将变为惰性（inert），并且应当被销毁。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁对象",
+            "text": "此请求表明客户端将不再使用 river_layer_shell_seat_v1 对象，可以安全地将其销毁。\n\n应在收到 river_seat_v1.removed 事件后发出此请求，以完成 seat 的销毁。"
+          }
+        }
+      },
+      "events": {
+        "focus_exclusive": {
+          "description": {
+            "summary": "",
+            "text": "发送此事件的管理序列结束时，layer shell surface 将获得排他性键盘焦点。窗口管理器可能想要更新窗口装饰或类似内容，以指示没有 window 获得焦点。\n\n在发送 focus_non_exclusive 或 focus_none 事件之前，窗口管理器更改焦点的所有请求都将被忽略。\n\n在服务器发送了所有其他新状态之后，此事件之后将跟随一个 manage_start 事件。"
+          }
+        },
+        "focus_non_exclusive": {
+          "description": {
+            "summary": "",
+            "text": "发送此事件的管理序列结束时，layer shell surface 将获得非排他性键盘焦点。窗口管理器可能想要更新窗口装饰或类似内容，以指示没有 window 获得焦点。\n\n窗口管理器继续控制焦点，并可随时选择聚焦不同的 window/shell surface。如果窗口管理器在发送此事件的同一管理序列中设置焦点，则 layer surface 不会获得焦点。\n\n在服务器发送了所有其他新状态之后，此事件之后将跟随一个 manage_start 事件。"
+          }
+        },
+        "focus_none": {
+          "description": {
+            "summary": "",
+            "text": "发送此事件的管理序列结束时，没有 layer shell surface 会拥有键盘焦点。例如，窗口管理器可能希望将焦点返回给最后拥有焦点的任意 window。\n\n在服务器发送了所有其他新状态之后，此事件之后将跟随一个 manage_start 事件。"
+          }
+        }
+      }
+    }
+  }
+}

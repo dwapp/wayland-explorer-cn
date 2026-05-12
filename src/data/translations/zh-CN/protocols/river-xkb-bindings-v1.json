@@ -1,0 +1,120 @@
+{
+  "description": {
+    "summary": "定义基于 xkbcommon 的键绑定",
+    "text": "此协议允许 river-window-management-v1 窗口管理器根据 xkbcommon keysyms 以及其他可配置属性来定义键绑定。\n\n本文档中的关键字 \"must\"、\"must not\"、\"required\"、\"shall\"、\"shall not\"、\"should\"、\"should not\"、\"recommended\"、\"may\" 以及 \"optional\" 的解释均如 IETF RFC 2119 中所述。"
+  },
+  "interfaces": {
+    "river_xkb_bindings_v1": {
+      "description": {
+        "summary": "xkbcommon 绑定全局接口",
+        "text": "仅当同样广播了 river_window_manager_v1 全局对象时，此全局接口才应向客户端广播。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 river_xkb_bindings_v1 对象",
+            "text": "此请求表明客户端将不再使用 river_xkb_bindings_v1 对象。"
+          }
+        },
+        "get_xkb_binding": {
+          "description": {
+            "summary": "定义新的 xkbcommon 键绑定",
+            "text": "针对给定的 seat，根据 xkbcommon keysym 以及其他可配置属性定义一个键绑定。\n\n新的键绑定不会启用，直到初始配置完成，并在 manage sequence 期间发出 enable 请求为止。"
+          }
+        },
+        "get_seat": {
+          "description": {
+            "summary": "管理特定于 seat 的状态",
+            "text": "创建一个用于管理特定于 seat 的 xkb bindings 状态的对象。\n\n对给定的 river_seat_v1 对象多次发出此请求属于协议错误。"
+          }
+        }
+      }
+    },
+    "river_xkb_binding_v1": {
+      "description": {
+        "summary": "配置 xkb 键绑定，接收触发事件",
+        "text": "该对象允许窗口管理器配置 xkbcommon 键绑定，并在触发键绑定时接收事件。\n\n新的键绑定不会启用，直到在 manage sequence 期间发出 enable 请求为止。\n\n通常，所有的按键事件都会由 compositor 发送至拥有键盘焦点的 surface。但触发键绑定的按键事件则不会发送给具有键盘焦点的 surface。\n\n如果 compositor 端的单一物理按键事件可能会触发多个键绑定，则由 compositor 策略决定哪一个（或哪些）键绑定将接收 press/release 事件，抑或是所有匹配的键绑定都接收 press/release 事件。\n\n由于共享 keysym 和 modifiers（修饰键），键绑定可能会被相同的物理按键事件所匹配。layout 覆盖特性也可能导致同一个物理按键事件触发具有不同 keysyms 和不同 layout 覆盖配置的两个键绑定。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xkb binding 对象",
+            "text": "此请求表明客户端将不再使用 xkb 键绑定对象，该对象可以被安全地销毁。"
+          }
+        },
+        "set_layout_override": {
+          "description": {
+            "summary": "覆盖当前激活的 xkb layout",
+            "text": "指定一个应用于转换按键事件的 xkb layout，用于触发此键绑定，而不管当前激活的 xkb layout 是什么。\n\nlayout 参数是生成按键事件的键盘的一个从 0 开始索引的 xkbcommon layout 编号。\n\n如果从未发出过此请求，将使用生成按键事件的键盘当前激活的 xkb layout。\n\n此请求会修改窗口管理状态，并且只能作为 manage sequence 的一部分发出，参见 river_window_manager_v1 说明。"
+          }
+        },
+        "enable": {
+          "description": {
+            "summary": "启用键绑定",
+            "text": "该请求应当在所有初始配置完成后，且窗口管理器希望键绑定能够被触发时发出。\n\n此请求会修改窗口管理状态，并且只能作为 manage sequence 的一部分发出，参见 river_window_manager_v1 说明。"
+          }
+        },
+        "disable": {
+          "description": {
+            "summary": "禁用键绑定",
+            "text": "此请求可用于暂时禁用键绑定。稍后可以通过 enable 请求重新启用。\n\n此请求会修改窗口管理状态，并且只能作为 manage sequence 的一部分发出，参见 river_window_manager_v1 说明。"
+          }
+        }
+      },
+      "events": {
+        "pressed": {
+          "description": {
+            "summary": "触发绑定的键已被按下",
+            "text": "此事件表明触发该绑定的物理按键已被按下。\n\n在服务器发送所有其他新状态之后，此事件随后会发出 manage_start 事件。\n\ncompositor 应该在处理进一步输入事件之前等待 manage sequence 完成。这允许窗口管理器客户端（例如）修改键绑定和键盘焦点，而不会与未来的输入事件发生竞争。当然，窗口管理器应该尽快响应，因为 compositor 缓冲传入输入事件的容量是有限的。"
+          }
+        },
+        "released": {
+          "description": {
+            "summary": "触发绑定的键已被释放",
+            "text": "此事件表明触发该绑定的物理按键已被释放。\n\n释放绑定的 modifiers（修饰键）而不释放产生绑定 keysym 的“主”物理按键，并不会触发 release 事件。即使自 pressed 事件发出以来 modifiers 发生了变化，此事件也会在“主”按键被释放时发出。\n\n在服务器发送所有其他新状态之后，此事件随后会发出 manage_start 事件。\n\ncompositor 应该在处理进一步输入事件之前等待 manage sequence 完成。这允许窗口管理器客户端（例如）修改键绑定和键盘焦点，而不会与未来的输入事件发生竞争。当然，窗口管理器应该尽快响应，因为 compositor 缓冲传入输入事件的容量是有限的。"
+          }
+        },
+        "stop_repeat": {
+          "description": {
+            "summary": "应停止 repeat（重复按键）",
+            "text": "此事件表明，如果在 pressed 事件发生后，窗口管理器一直在 repeat（重复执行）某些操作，则应该针对该绑定停止 repeat。\n\n此事件通常在发出此绑定的 pressed 事件之后，且尚未发出 released 事件之前，有其他（可能是未绑定的）按键被按下时发送。\n\n在服务器发送所有其他新状态之后，此事件随后会发出 manage_start 事件。"
+          }
+        }
+      }
+    },
+    "river_xkb_bindings_seat_v1": {
+      "description": {
+        "summary": "xkb bindings seat 对象",
+        "text": "该对象负责管理与特定 seat 关联的 xkb bindings 状态。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁对象",
+            "text": "此请求表明客户端将不再使用该对象，并且它可以被安全地销毁。"
+          }
+        },
+        "ensure_next_key_eaten": {
+          "description": {
+            "summary": "确保下一个按键事件被“吞噬” (eaten)",
+            "text": "确保此 seat 的下一个非 modifier（非修饰键）按键事件及相应的 release 事件不被发送到当前聚焦的 surface。\n\n如果下一个非 modifier 按键触发了某个绑定，pressed/released 事件将如常发送给 river_xkb_binding_v1 对象。\n\n如果下一个非 modifier 按键并未触发绑定，则会转而发送 ate_unbound_key 事件。\n\n原理：窗口管理器可能希望实现“和弦（chorded）”键绑定，即触发一个绑定时，会激活一个带有不同键绑定集的“submap（子映射）”。如果没有机制去吞噬（eat）下一个按键事件，那么当在 submap 中按下了未绑定的按键时，窗口管理器就没有好的办法知晓它应当报错并退出 submap。\n\n此请求会修改窗口管理状态，并且只能作为 manage sequence 的一部分发出，参见 river_window_manager_v1 说明。"
+          }
+        },
+        "cancel_ensure_next_key_eaten": {
+          "description": {
+            "summary": "取消 ensure_next_key_eaten 请求",
+            "text": "如果由于该请求尚未有按键被吞噬 (eaten)，此请求将取消最近的 ensure_next_key_eaten 请求的作用。如果已有按键被吞噬或者根本没有发起过 ensure_next_key_eaten 请求，则此请求无效。\n\n原理：窗口管理器可能希望在几秒钟超时后取消未完成的“和弦”键绑定。请注意，因为这种超时的用例要求窗口管理器使用 river_window_manager_v1.manage_dirty 请求触发 manage sequence，所以在窗口管理器有机会发出 cancel_ensure_next_key_eaten 请求之前，可能已经发送了 ate_unbound_key 事件。\n\n此请求会修改窗口管理状态，并且只能作为 manage sequence 的一部分发出，参见 river_window_manager_v1 说明。"
+          }
+        }
+      },
+      "events": {
+        "ate_unbound_key": {
+          "description": {
+            "summary": "一个未绑定的按键事件已被吞噬 (eaten)",
+            "text": "由于 ensure_next_key_eaten 请求，一个未绑定的按键事件被吞噬了。\n\n在服务器发送所有其他新状态之后，此事件随后会发出 manage_start 事件。"
+          }
+        }
+      }
+    }
+  }
+}

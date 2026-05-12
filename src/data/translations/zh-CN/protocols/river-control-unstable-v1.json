@@ -1,0 +1,50 @@
+{
+  "interfaces": {
+    "zriver_control_v1": {
+      "description": {
+        "text": "此接口允许客户端运行 compositor 命令，并分别接收带有输出或失败消息的成功/失败响应。\n\n每个命令通过一系列 add_argument 请求构建，并通过 run_command 请求执行。第一个参数是要运行的命令。\n\ncompositor 的 man 手册中应提供完整的命令列表。",
+        "summary": "运行 compositor 命令"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "text": "此请求表明客户端将不再使用 river_control 对象。通过此实例创建的对象不受影响。",
+            "summary": "销毁 river_control 对象"
+          }
+        },
+        "add_argument": {
+          "description": {
+            "text": "在发起 run_command 请求之前，服务器会按照参数发送的顺序存储参数。",
+            "summary": "向当前命令添加参数"
+          }
+        },
+        "run_command": {
+          "description": {
+            "text": "针对给定的 seat 执行使用 add_argument 请求构建的命令。",
+            "summary": "运行当前命令"
+          }
+        }
+      }
+    },
+    "zriver_command_callback_v1": {
+      "description": {
+        "text": "此对象由 run_command 请求创建。将发送 success 或 failure 事件中的且仅发送其中一个。发送其中一个事件后，compositor 将销毁此对象。",
+        "summary": "回调对象"
+      },
+      "events": {
+        "success": {
+          "description": {
+            "text": "当 compositor 成功接收并执行命令时发送。某些命令可能会产生输出，在这种情况下，output 参数将是一个非空字符串。",
+            "summary": "命令成功"
+          }
+        },
+        "failure": {
+          "description": {
+            "text": "当无法执行命令时发送。这可能是由于发送了不存在的命令、没有命令、参数不足、参数过多、参数无效等原因。",
+            "summary": "命令失败"
+          }
+        }
+      }
+    }
+  }
+}

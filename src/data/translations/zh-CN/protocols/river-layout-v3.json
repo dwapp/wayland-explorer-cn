@@ -1,0 +1,92 @@
+{
+  "description": {
+    "summary": "允许客户端提议 view 位置和尺寸",
+    "text": "此协议为客户端指定了一种方式，通过 river_layout_v3 对象向 compositor 的特定 output 提议一组 view 的任意位置和尺寸。\n\nlayout 是 view 的严格线性列表，其位置和尺寸由客户端提供。客户端在生成 layout 时可能使用的任何复杂的底层数据结构在传输过程中都会丢失。这是一个有意的限制。\n\n此外，此协议允许 compositor 将与 layout 相关的任意用户提供的命令传递给客户端。客户端可以使用这些命令来实现运行时配置/控制，或者可以完全忽略它们。用户如何将这些命令提供给 compositor 并没有由此协议指定，而是留给了 compositor 策略。\n\n警告！此文件中描述的协议目前处于测试阶段。在增加相应接口版本号的同时，可能会添加向后兼容的更改。只能通过创建扩展的新主版本来进行向后不兼容的更改。"
+  },
+  "interfaces": {
+    "river_layout_manager_v3": {
+      "description": {
+        "summary": "管理 river layout 对象",
+        "text": "用于 river_layout_v3 对象的全局工厂。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 river_layout_manager 对象",
+            "text": "此请求表示客户端将不再使用 river_layout_manager 对象。通过此实例创建的对象不受影响。"
+          }
+        },
+        "get_layout": {
+          "description": {
+            "summary": "创建 river_layout_v3 对象",
+            "text": "这会为给定的 wl_output 创建一个新的 river_layout_v3 对象。\n\n所有与 layout 相关的通信均通过此接口完成。\n\ncompositor 使用 namespace 来决定哪个 river_layout_v3 对象将接收该 output 的 layout 需求（layout demands）。\n\n要求每个 output 的 namespace 必须唯一。此外，两个不同的客户端不能在不同的 output 上共享同一个 namespace。如果不满足这些条件，将在创建 river_layout_v3 对象后立即发送 namespace_in_use 事件。"
+          }
+        }
+      }
+    },
+    "river_layout_v3": {
+      "description": {
+        "summary": "接收并响应 layout 需求",
+        "text": "此接口允许客户端从 compositor 接收特定 output 的 layout 需求，并随后提议各个 view 的位置和尺寸。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 river_layout_v3 对象",
+            "text": "此请求表示客户端将不再使用 river_layout_v3 对象。"
+          }
+        },
+        "push_view_dimensions": {
+          "description": {
+            "summary": "提议下一个 view 的尺寸",
+            "text": "此请求为具有匹配 serial 的 layout 需求中的 view 提议尺寸和位置。\n\n客户端必须为作为 layout 需求一部分的每个 view 发送此请求。layout 中的 view 数量由 layout_demand 事件的 view_count 参数给出。推送过多或过少的 view 尺寸都是协议错误。\n\nx 和 y 坐标相对于 output 的可用区域，以 (0,0) 作为左上角。"
+          }
+        },
+        "commit": {
+          "description": {
+            "summary": "提交 layout",
+            "text": "此请求表示客户端已完成尺寸的推送，compositor 可以应用该 layout。这完成了具有匹配 serial 的 layout 需求，任何与该 serial 一起发送的其他请求都是协议错误。\n\nlayout_name 参数是正在提交的 layout 的面向用户的名称或简短描述。例如，compositor 可能会将其显示在状态栏上，但具体如何处理由 compositor 自行决定。\n\ncompositor 可以自由选择如何使用这个提议的 layout，包括忽略它。"
+          }
+        }
+      },
+      "events": {
+        "namespace_in_use": {
+          "description": {
+            "summary": "请求的 namespace 已在使用中",
+            "text": "发送此事件后，除了 destroy 事件之外的所有请求都将被服务器忽略。如果客户端希望使用不同的 namespace 重试，它们必须创建一个新的 river_layout_v3 对象。"
+          }
+        },
+        "layout_demand": {
+          "description": {
+            "summary": "compositor 需要一个 layout",
+            "text": "compositor 发送此事件以通知客户端它需要一组 view 的 layout。\n\n可用宽度（usable width）和高度（height）指示了客户端可以安全放置 view 的空间，而不会干扰如面板（panels）之类的桌面小部件。\n\n此事件的 serial 用于将后续请求标识为属于此 layout 需求。请注意，客户端可能需要同时处理多个 layout 需求。\n\n服务器将忽略除最近的 layout 需求以外的所有响应。因此，只要求客户端响应最近收到的 layout_demand。如果在客户端完成对旧需求的响应之前收到了较新的 layout_demand，客户端应该中止对旧需求的工作，因为任何进一步的工作都将被浪费。"
+          }
+        },
+        "user_command": {
+          "description": {
+            "summary": "用户发送的命令",
+            "text": "此事件向客户端通知由用户发送给它的命令。\n\n命令的语义含义由客户端决定。如果它愿意，它也可以完全忽略它。\n\n如果 compositor 当前正在使用此 layout 对象来排列 output，则会在此事件之后发送一个 layout_demand。\n\n如果绑定了 river_layout_v3 对象的版本 2 或更高版本，则保证在 user_command 事件之前直接发送 user_command_tags 事件。"
+          }
+        },
+        "user_command_tags": {
+          "description": {
+            "summary": "用户发送的命令标签",
+            "text": "如果绑定了 river_layout_v3 对象的版本 2 或更高版本，则此事件将在每个 user_command 事件之前直接发送。这允许 layout 生成器在发送用户命令时了解 active tags（活动标签）。对于希望在每个 tag 基础上保留设置的生成器来说，这是必要的。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "count_mismatch": {
+              "summary": "提议的尺寸数量与 layout 中的 view 数量不匹配"
+            },
+            "already_committed": {
+              "summary": "带有提供 serial 的 layout 需求已被提交"
+            }
+          }
+        }
+      }
+    }
+  }
+}

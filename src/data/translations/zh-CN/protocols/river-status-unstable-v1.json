@@ -1,0 +1,132 @@
+{
+  "interfaces": {
+    "zriver_status_manager_v1": {
+      "description": {
+        "summary": "管理 river 状态对象",
+        "text": "一个全局工厂，用于接收特定于 river 的状态信息的对象。它可用于实现例如状态栏 (status bar)。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 river_status_manager 对象",
+            "text": "此请求表明客户端将不再使用 river_status_manager 对象。通过此实例创建的对象不受影响。"
+          }
+        },
+        "get_river_output_status": {
+          "description": {
+            "summary": "创建 output 状态对象",
+            "text": "这将为给定的 wl_output 创建一个新的 river_output_status 对象。"
+          }
+        },
+        "get_river_seat_status": {
+          "description": {
+            "summary": "创建 seat 状态对象",
+            "text": "这将为给定的 wl_seat 创建一个新的 river_seat_status 对象。"
+          }
+        }
+      }
+    },
+    "zriver_output_status_v1": {
+      "description": {
+        "summary": "跟踪 output 标签 (tags) 和焦点",
+        "text": "此接口允许客户端接收有关 output 当前窗口状态的信息。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 river_output_status 对象",
+            "text": "此请求表明客户端将不再使用 river_output_status 对象。"
+          }
+        }
+      },
+      "events": {
+        "focused_tags": {
+          "description": {
+            "summary": "output 的焦点标签 (focused tags)",
+            "text": "在绑定接口时发送一次，之后在 output 的标签焦点改变时再次发送。"
+          }
+        },
+        "view_tags": {
+          "description": {
+            "summary": "output 视图 (views) 的标签状态",
+            "text": "在绑定接口时发送一次，之后在 output 的标签状态改变时再次发送。"
+          }
+        },
+        "urgent_tags": {
+          "description": {
+            "summary": "包含紧急视图 (urgent view) 的 output 标签",
+            "text": "在绑定接口时发送一次，之后在具有至少一个紧急视图的标签集发生改变时再次发送。"
+          }
+        },
+        "layout_name": {
+          "description": {
+            "summary": "布局名称",
+            "text": "如果存在布局名称，则在绑定接口时发送一次，之后在名称改变时再次发送。"
+          }
+        },
+        "layout_name_clear": {
+          "description": {
+            "summary": "布局名称清除",
+            "text": "当当前布局名称被移除且未设置新名称时发送，例如当活动布局生成器 (layout generator) 断开连接时。"
+          }
+        }
+      }
+    },
+    "zriver_seat_status_v1": {
+      "description": {
+        "summary": "跟踪 seat 焦点和模式",
+        "text": "此接口允许客户端接收有关 seat 焦点的 output 以及在输出级别操作还是在视图级别操作等状态的信息。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 river_seat_status 对象",
+            "text": "此请求表明客户端将不再使用 river_seat_status 对象。"
+          }
+        }
+      },
+      "events": {
+        "focused_output": {
+          "description": {
+            "summary": "seat 当前焦点的 output",
+            "text": "在绑定接口时发送一次，之后在 seat 的 output 焦点改变时再次发送。"
+          }
+        },
+        "unfocused": {
+          "description": {
+            "summary": "seat 失去 output 焦点",
+            "text": "在绑定接口时如果没有获得焦点的 output 以及之后在 seat 失去其 output 焦点时发送。"
+          }
+        },
+        "mode": {
+          "description": {
+            "summary": "当前操作模式",
+            "text": "在绑定接口时发送一次，之后在 seat 模式改变时再次发送。"
+          }
+        }
+      },
+      "enums": {
+        "mode": {
+          "description": {
+            "summary": "seat 的模式",
+            "text": "指示正在发生或即将发生什么样的操作。\n\n在 normal 模式下，事件像往常一样路由到获得焦点的视图。\n\n在 output_layout_generation 模式下，获得焦点的 output 正处于由布局生成器 (layout generator) 执行初始布局生成的阶段。"
+          },
+          "entries": {
+            "normal": {
+              "description": {
+                "summary": "正常操作",
+                "text": ""
+              }
+            },
+            "output_layout_generation": {
+              "description": {
+                "summary": "output 布局生成进行中",
+                "text": ""
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
