@@ -1,0 +1,652 @@
+{
+  "description": {
+    "summary": "图形数位板的 Wayland 协议",
+    "text": "本文描述提供了此协议中定义的接口之间交互的高级概述。详情请参阅协议规范。\n\n可能存在多个数位板，且设备特性各不相同。数位板不像 wl_pointer 那样由单一虚拟设备表示。客户端绑定到 tablet manager 对象，它只是一个代理对象。通过它，客户端请求 zwp_tablet_manager_v2.get_tablet_seat(wl_seat)，返回实际拥有所有数位板的接口。通过这种间接方式，可以避免将 zwp_tablet_v2 合并到实际的 Wayland 协议中，这是一个长期的好处。\n\nzwp_tablet_seat_v2 为每个连接的数位板发送\"数位板已添加\"事件。该事件之后是关于硬件的描述性事件；目前包括名称、vid/pid 和 zwp_tablet_v2.path 事件（描述本地路径）。此路径可用于唯一标识数位板或通过 libwacom 获取更多信息。模拟或嵌套的数位板可以跳过其中任何事件，例如虚拟数位板可能没有 vid/pid。描述性事件序列以 zwp_tablet_v2.done 事件终止，表示客户端可以现在完成该数位板的初始化。\n\n数位板的事件需要工具处于接近状态。工具也由 tablet seat 管理；当工具对合成器而言是新工具时，会发送\"工具已添加\"事件。该事件之后是一系列关于硬件的描述性事件；目前包括功能、硬件 ID 和序列号，以及工具类型。与数位板接口类似，zwp_tablet_tool_v2.done 事件用于终止该初始序列。\n\n来自工具的所有事件都在 zwp_tablet_tool_v2 接口上发生。当工具接近数位板时，zwp_tablet_tool_v2 接口上会发送 proximity_in 事件，列出数位板和 surface。该事件之后是带有坐标的 motion 事件。之后是常规的 motion、axis、button 等事件。协议的序列化意味着事件由 zwp_tablet_tool_v2.frame 事件分组。\n\n两个特殊事件（在 X 中不存在）是 down 和 up。它们表示\"笔尖接触 surface\"。对于没有真实接近检测的数位板，序列是：proximity_in, motion, down, frame。\n\n当工具离开接近范围时，会发送 proximity_out 事件。如果离开时任何按钮仍处于按下状态，会在 proximity 事件之前发送按钮释放事件。这些按钮事件与 proximity 事件在同一帧中发送，以向客户端表示工具离开接近范围时按钮仍被按住。\n\n如果工具移出 surface 但保持接近状态（即窗口之间），则适用合成器特定的抓取策略。这通常意味着 proximity-out 会延迟到所有按钮释放后。\n\n将工具从一个数位板物理移动到另一个数位板对协议没有实际影响，因为工具对象已从\"工具已添加\"事件中获得。所有信息已经存在，两个数位板上的 proximity 事件就是客户端重建发生情况所需的全部信息。\n\n一些额外的轴是归一化的，即客户端知道协议中指定的范围（例如 [0, 65535]），但粒度未知。当前的归一化轴是压力、距离和滑块。\n\n其他额外轴使用协议中指定的物理单位。当前具有物理单位的额外轴是倾斜、旋转和滚轮旋转。\n\n由于数位板独立于鼠标控制的指针工作，焦点处理也是独立的并由接近状态控制。zwp_tablet_tool_v2.set_cursor 请求设置工具特定的光标。此光标 surface 可能与鼠标光标相同，也可能在工具间相同，但也可以更细粒度。例如，客户端可以为笔和橡皮擦设置不同的光标。\n\n工具通常独立于数位板，工具何时可以被移除是合成器特定的策略。常见方法可能包括在工具使用过的所有数位板都被移除时移除工具。"
+  },
+  "interfaces": {
+    "zwp_tablet_manager_v2": {
+      "description": {
+        "summary": "图形数位板设备的控制对象",
+        "text": "提供对系统上可用图形数位板访问的对象。所有数位板都与一个 seat 关联，要访问实际的数位板，请使用 zwp_tablet_manager_v2.get_tablet_seat。"
+      },
+      "requests": {
+        "get_tablet_seat": {
+          "description": {
+            "summary": "获取 tablet seat",
+            "text": "获取给定 seat 的 zwp_tablet_seat_v2 对象。此对象提供对该 seat 中所有图形数位板的访问。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "释放 tablet manager 对象的内存",
+            "text": "销毁 zwp_tablet_manager_v2 对象。由此对象创建的对象不受影响，应单独销毁。"
+          }
+        }
+      }
+    },
+    "zwp_tablet_seat_v2": {
+      "description": {
+        "summary": "seat 的图形数位板设备控制对象",
+        "text": "提供对 seat 上可用图形数位板访问的对象。绑定到此接口后，合成器会发送一组 zwp_tablet_seat_v2.tablet_added 和 zwp_tablet_seat_v2.tool_added 事件。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "释放 tablet seat 对象的内存",
+            "text": "销毁 zwp_tablet_seat_v2 对象。由此对象创建的对象不受影响，应单独销毁。"
+          }
+        }
+      },
+      "events": {
+        "tablet_added": {
+          "description": {
+            "summary": "新设备通知",
+            "text": "每当新的数位板在此 seat 上可用时发送此事件。此事件仅提供数位板的对象 ID，任何关于数位板的静态信息（设备名称、vid/pid 等）通过 zwp_tablet_v2 接口发送。"
+          }
+        },
+        "tool_added": {
+          "description": {
+            "summary": "新的工具已被用于数位板",
+            "text": "每当先前未与数位板一起使用过的工具开始使用时发送此事件。此事件仅提供工具的对象 ID；任何关于工具的静态信息（功能、类型等）通过 zwp_tablet_tool_v2 接口发送。"
+          }
+        },
+        "pad_added": {
+          "description": {
+            "summary": "新 pad 通知",
+            "text": "每当系统获知新的 pad 时发送此事件。通常，pad 物理连接到数位板，pad_added 事件在 zwp_tablet_seat_v2.tablet_added 之后立即发送。但是，某些独立 pad 设备在运行时逻辑上附加到数位板，客户端必须等待 zwp_tablet_pad_v2.enter 才能知道 pad 附加到哪个数位板。\n\n此事件仅提供 pad 的对象 ID。所有进一步的功能（按钮、触摸条、触摸环）通过 zwp_tablet_pad_v2 接口发送。"
+          }
+        }
+      }
+    },
+    "zwp_tablet_tool_v2": {
+      "description": {
+        "summary": "物理数位板工具",
+        "text": "表示曾经或当前在此 seat 的数位板上使用的物理工具的对象。每个 zwp_tablet_tool_v2 对象保持有效直到客户端销毁它；合成器重用 zwp_tablet_tool_v2 对象来表示该对象对应的物理工具再次接近数位板。\n\nzwp_tablet_tool_v2 对象与物理工具的关系取决于数位板报告序列号的能力。如果数位板支持此功能，则该对象代表特定的物理工具，即使在多个数位板上使用也可以被识别。\n\n数位板工具有许多静态特性，例如工具类型、hardware_serial 和功能。这些功能在 zwp_tablet_seat_v2.tool_added 事件之后的事件序列中发送，在此工具的任何实际事件之前。此初始事件序列由 zwp_tablet_tool_v2.done 事件终止。\n\n数位板工具事件由 zwp_tablet_tool_v2.frame 事件分组。在 zwp_tablet_tool_v2.frame 事件之前收到的任何事件应被视为同一硬件状态更改的一部分。"
+      },
+      "requests": {
+        "set_cursor": {
+          "description": {
+            "summary": "设置数位板工具的 surface",
+            "text": "设置此工具在给定数位板上使用的光标 surface。此请求仅在工具接近请求客户端的某个 surface 或 surface 参数是当前指针 surface 时生效。如果之前通过此请求设置了 surface，它将被替换。如果 surface 为 NULL，则隐藏光标图像。\n\n参数 hotspot_x 和 hotspot_y 定义了指针 surface 相对于指针位置的位置。其左上角始终位于 (x, y) - (hotspot_x, hotspot_y)，其中 (x, y) 是指针位置的坐标，以 surface 本地坐标表示。\n\n在对指针 surface 进行 surface.attach 请求时，hotspot_x 和 hotspot_y 会分别减去传递给请求的 x 和 y 参数。Attach 必须像往常一样通过 wl_surface.commit 确认。\n\n也可以通过将当前设置的指针 surface 传递给此请求并提供新的 hotspot_x 和 hotspot_y 值来更新热点。\n\nwl_surface 的当前和待处理输入区域会被清除，并且在 wl_surface 不再用作光标之前，wl_surface.set_input_region 会被忽略。当用作光标结束时，当前和待处理输入区域变为未定义，且 wl_surface 被取消映射。\n\n此请求赋予 surface zwp_tablet_tool_v2 光标的角色。一个 surface 只能用作一个 zwp_tablet_tool_v2 的光标 surface。如果 surface 已有其他角色或曾被用作不同工具的光标 surface，将触发协议错误。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁工具对象",
+            "text": "销毁客户端的此工具对象资源。"
+          }
+        }
+      },
+      "events": {
+        "type": {
+          "description": {
+            "summary": "工具类型",
+            "text": "工具类型是工具的高级类型，通常决定此工具预期的交互方式。\n\n此事件在 zwp_tablet_tool_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        },
+        "hardware_serial": {
+          "description": {
+            "summary": "工具的唯一硬件序列号",
+            "text": "如果物理工具可以通过唯一的 64 位序列号标识，此事件通知客户端此序列号。\n\n如果同一 seat 中有多个数位板可用且工具可以通过序列号唯一标识，则该工具可以在数位板之间移动。\n\n否则，如果工具没有序列号且缺少此事件，则工具绑定到它首次接近的数位板。即使物理工具在多个数位板上使用，也会为每个数位板创建单独的 zwp_tablet_tool_v2 对象。\n\n此事件在 zwp_tablet_tool_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        },
+        "hardware_id_wacom": {
+          "description": {
+            "summary": "Wacom 格式的硬件 ID 通知",
+            "text": "此事件通知客户端此工具上可用的硬件 ID。\n\n硬件 ID 是设备特定的 64 位 ID，提供关于使用中工具的额外信息，超出 wl_tool.type 枚举。ID 的格式特定于 Wacom Inc. 制造的数位板。例如，Wacom Grip Pen（手写笔）的硬件 ID 是 0x802。\n\n此事件在 zwp_tablet_tool_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        },
+        "capability": {
+          "description": {
+            "summary": "工具功能通知",
+            "text": "此事件通知客户端此工具的任何功能，超出主要的 x/y 轴和笔尖上下检测。\n\n为此工具上的每个额外功能发送一个事件。\n\n此事件在 zwp_tablet_tool_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "工具描述事件序列完成",
+            "text": "此事件标志着初始描述性事件迸发的结束。客户端可以认为工具的静态描述已完成并最终确定工具的初始化。"
+          }
+        },
+        "removed": {
+          "description": {
+            "summary": "工具已移除",
+            "text": "当工具从系统中移除且将不再发送任何事件时发送此事件。如果物理工具之后再次接近，将创建一个新的 zwp_tablet_tool_v2 对象。\n\n工具何时被移除取决于合成器。合成器可以在 proximity out 时、数位板移除时或任何其他原因移除工具。合成器也可以保持工具存活直到关闭。\n\n如果工具当前处于接近状态，在 removed 事件之前将发送 proximity_out 事件。有关任何逻辑上按下的按钮的处理，请参阅 zwp_tablet_tool_v2.proximity_out。\n\n收到此事件时，客户端必须 zwp_tablet_tool_v2.destroy 该对象。"
+          }
+        },
+        "proximity_in": {
+          "description": {
+            "summary": "接近事件",
+            "text": "通知此工具聚焦在某个 surface 上。\n\n当工具从一个 surface 移动到另一个 surface 时，或当工具再次接近 surface 时，可以收到此事件。\n\n如果工具接近时任何按钮逻辑上处于按下状态，相应的按钮事件在 proximity_in 事件之后但在同一帧中发送。"
+          }
+        },
+        "proximity_out": {
+          "description": {
+            "summary": "离开接近事件",
+            "text": "通知此工具已离开接近状态或不再聚焦于某个 surface。\n\n当数位板工具离开数位板的接近范围时，为当时仍处于按下状态的每个按钮发送按钮释放事件。这些事件在 proximity_out 事件之前但在同一 zwp_tablet_v2.frame 中发送。\n\n如果工具保持在数位板的接近范围内，但焦点从一个 surface 更改到另一个 surface，按钮释放事件可能要到按钮实际释放或工具离开数位板的接近范围时才发送。"
+          }
+        },
+        "down": {
+          "description": {
+            "summary": "数位板工具正在接触",
+            "text": "每当数位板工具与数位板表面接触时发送。\n\n如果工具在进入输入区域时已与数位板接触，拥有该区域的客户端将收到 zwp_tablet_v2.proximity_in 事件，后跟 zwp_tablet_v2.down 事件和 zwp_tablet_v2.frame 事件。\n\n请注意，此事件描述的是逻辑接触，而非物理接触。在某些设备上，合成器可能要到超过最小物理压力阈值时才认为工具处于逻辑接触状态。"
+          }
+        },
+        "up": {
+          "description": {
+            "summary": "数位板工具不再接触",
+            "text": "每当数位板工具停止与数位板表面接触时，或当数位板工具移出输入区域且合成器抓取（如果有）被解除时发送。\n\n如果数位板工具在与数位板表面接触时移出输入区域，且合成器没有对该 surface 的持续抓取，拥有该区域的客户端将收到 zwp_tablet_v2.up 事件，后跟 zwp_tablet_v2.proximity_out 事件和 zwp_tablet_v2.frame 事件。如果合成器对该设备有持续抓取，此事件序列将在将来抓取被解除时发送。\n\n请注意，此事件描述的是逻辑接触，而非物理接触。在某些设备上，合成器可能要到物理压力降到特定阈值以下时才认为工具脱离逻辑接触。"
+          }
+        },
+        "motion": {
+          "description": {
+            "summary": "移动事件",
+            "text": "每当数位板工具移动时发送。"
+          }
+        },
+        "pressure": {
+          "description": {
+            "summary": "压力变化事件",
+            "text": "每当工具上的压力轴变化时发送。此事件的值归一化为 0 到 65535 之间的值。\n\n请注意，即使工具未处于逻辑接触状态，压力也可能非零。有关更多详细信息，请参阅 down 和 up 事件。"
+          }
+        },
+        "distance": {
+          "description": {
+            "summary": "距离变化事件",
+            "text": "每当工具上的距离轴变化时发送。此事件的值归一化为 0 到 65535 之间的值。\n\n请注意，即使工具未处于逻辑接触状态，距离也可能非零。有关更多详细信息，请参阅 down 和 up 事件。"
+          }
+        },
+        "tilt": {
+          "description": {
+            "summary": "倾斜变化事件",
+            "text": "每当工具上的一个或两个倾斜轴变化时发送。每个倾斜值以度为单位，相对于数位板的 z 轴。当工具顶部沿正 x 或 y 轴倾斜时，角度为正。"
+          }
+        },
+        "rotation": {
+          "description": {
+            "summary": "Z 轴旋转变化事件",
+            "text": "每当工具上的 z 旋转轴变化时发送。旋转值以度为单位，从工具的逻辑中性位置顺时针计算。"
+          }
+        },
+        "slider": {
+          "description": {
+            "summary": "滑块位置变化事件",
+            "text": "每当工具上的滑块位置变化时发送。值归一化在 -65535 到 65535 之间，0 表示滑块的逻辑中性位置。\n\n滑块可用于例如 Wacom Airbrush 工具。"
+          }
+        },
+        "wheel": {
+          "description": {
+            "summary": "滚轮增量事件",
+            "text": "每当工具上的滚轮发出事件时发送。此事件包含同一轴变化的两个值。degrees 值与 wl_pointer.vertical_scroll 轴的方向相同。clicks 值是鼠标滚轮的离散逻辑刻度。如果滚轮移动不到一个逻辑刻度，此值可能为零。\n\n客户端应选择其中一个值并避免混合使用 degrees 和 clicks。合成器可以累积小于一个逻辑刻度的值，并在达到特定阈值时模拟点击事件。因此，具有非零 clicks 值的 zwp_tablet_tool_v2.wheel 事件可能具有不同的 degrees 值。"
+          }
+        },
+        "button": {
+          "description": {
+            "summary": "按钮事件",
+            "text": "每当工具上的按钮被按下或释放时发送。\n\n如果工具进入或离开接近范围时有按钮被按住，合成器会生成按钮事件。详情请参阅 zwp_tablet_tool_v2.proximity_in 和 zwp_tablet_tool_v2.proximity_out。"
+          }
+        },
+        "frame": {
+          "description": {
+            "summary": "帧事件",
+            "text": "标记来自数位板的一系列轴和/或按钮更新的结束。Wayland 协议要求轴更新按顺序发送，但帧中的所有事件应被视为一个硬件事件。"
+          }
+        }
+      },
+      "enums": {
+        "type": {
+          "description": {
+            "summary": "物理工具类型",
+            "text": "描述工具的物理类型。工具的物理类型通常决定其基本用途。\n\n鼠标工具代表鼠标形状的工具，它不是相对设备而是绑定到数位板的表面，提供绝对坐标。\n\n镜头工具是鼠标形状的工具，带有附加镜头以提供精确聚焦。"
+          },
+          "entries": {
+            "pen": {
+              "summary": "笔"
+            },
+            "eraser": {
+              "summary": "橡皮擦"
+            },
+            "brush": {
+              "summary": "画笔"
+            },
+            "pencil": {
+              "summary": "铅笔"
+            },
+            "airbrush": {
+              "summary": "喷枪"
+            },
+            "finger": {
+              "summary": "手指"
+            },
+            "mouse": {
+              "summary": "鼠标"
+            },
+            "lens": {
+              "summary": "镜头"
+            }
+          }
+        },
+        "capability": {
+          "description": {
+            "summary": "工具的功能标志",
+            "text": "描述数位板上的额外功能。\n\n任何工具都必须提供 x 和 y 值，额外的轴是设备特定的。"
+          },
+          "entries": {
+            "tilt": {
+              "summary": "倾斜轴"
+            },
+            "pressure": {
+              "summary": "压力轴"
+            },
+            "distance": {
+              "summary": "距离轴"
+            },
+            "rotation": {
+              "summary": "Z 旋转轴"
+            },
+            "slider": {
+              "summary": "滑块轴"
+            },
+            "wheel": {
+              "summary": "滚轮轴"
+            }
+          }
+        },
+        "button_state": {
+          "description": {
+            "summary": "物理按钮状态",
+            "text": "描述产生按钮事件的按钮的物理状态。"
+          },
+          "entries": {
+            "released": {
+              "summary": "按钮未被按下"
+            },
+            "pressed": {
+              "summary": "按钮被按下"
+            }
+          }
+        },
+        "error": {
+          "entries": {
+            "role": {
+              "summary": "给定的 wl_surface 具有其他角色"
+            }
+          }
+        }
+      }
+    },
+    "zwp_tablet_v2": {
+      "description": {
+        "summary": "图形数位板设备",
+        "text": "zwp_tablet_v2 接口代表一个图形数位板设备。数位板接口本身不生成事件；所有事件由 zwp_tablet_tool_v2 对象在接近数位板时生成。\n\n数位板有许多静态特性，例如设备名称和 pid/vid。这些功能在 zwp_tablet_seat_v2.tablet_added 事件之后的事件序列中发送。此初始事件序列由 zwp_tablet_v2.done 事件终止。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁数位板对象",
+            "text": "销毁客户端的此数位板对象资源。"
+          }
+        }
+      },
+      "events": {
+        "name": {
+          "description": {
+            "summary": "数位板设备名称",
+            "text": "数位板设备的描述性名称。\n\n如果设备没有描述性名称，则不发送此事件。\n\n此事件在 zwp_tablet_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        },
+        "id": {
+          "description": {
+            "summary": "数位板设备的供应商/产品 ID",
+            "text": "数位板设备的供应商和产品 ID。\n\nID 的解释取决于 zwp_tablet_v2.bustype。在此协议的 v2 之前，ID 隐含为 USB 供应商和产品 ID。如果未发送 zwp_tablet_v2.bustype，则 ID 将被解释为 USB 供应商和产品 ID。\n\n如果设备没有供应商/产品 ID，则不发送此事件。例如虚拟设备或非 USB 设备可能发生这种情况。\n\n此事件在 zwp_tablet_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        },
+        "path": {
+          "description": {
+            "summary": "设备路径",
+            "text": "指示此 zwp_tablet_v2 背后设备的系统特定设备路径。此信息可用于获取关于设备的更多信息，例如通过 libwacom。\n\n设备可能有多个设备路径。如果是这样，会发送多个 zwp_tablet_v2.path 事件。设备可能是模拟的且没有设备路径，在这种情况下不会发送此事件。\n\n路径的格式未指定，可能是设备节点、sysfs 路径或其他标识符。由客户端负责识别所提供的字符串。\n\n此事件在 zwp_tablet_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "数位板描述事件序列完成",
+            "text": "此事件立即发送以标志初始描述性事件迸发的结束。客户端可以认为数位板的静态描述已完成并最终确定数位板的初始化。"
+          }
+        },
+        "removed": {
+          "description": {
+            "summary": "数位板已移除事件",
+            "text": "当数位板从系统中移除时发送。当数位板被移除时，某些工具可能也会被移除。\n\n收到此事件时，客户端必须 zwp_tablet_v2.destroy 该对象。"
+          }
+        },
+        "bustype": {
+          "description": {
+            "summary": "数位板设备总线类型",
+            "text": "bustype 参数是 Linux 内核 linux/input.h 中 BUS_ 定义之一。\n\n如果设备没有已知的总线类型或无法查询总线类型，则不发送此事件。\n\n此事件在 zwp_tablet_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        }
+      },
+      "enums": {
+        "bustype": {
+          "description": {
+            "summary": "总线类型",
+            "text": "描述此数位板连接的总线类型。"
+          },
+          "entries": {
+            "usb": {
+              "summary": "USB"
+            },
+            "bluetooth": {
+              "summary": "蓝牙"
+            },
+            "virtual": {
+              "summary": "虚拟"
+            },
+            "serial": {
+              "summary": "串口"
+            },
+            "i2c": {
+              "summary": "I2C"
+            }
+          }
+        }
+      }
+    },
+    "zwp_tablet_pad_ring_v2": {
+      "description": {
+        "summary": "pad 触摸环",
+        "text": "圆形交互区域，例如 Wacom Intuos Pro 系列数位板上的触摸环。\n\n环上的事件由 zwp_tablet_pad_ring_v2.frame 事件逻辑分组。"
+      },
+      "requests": {
+        "set_feedback": {
+          "description": {
+            "summary": "设置合成器反馈",
+            "text": "请求合成器使用与此环关联的提供的反馈字符串。此请求应在收到来自相应组的 zwp_tablet_pad_group_v2.mode_switch 事件后立即发出，或在环被映射到不同操作时发出。详情请参阅 zwp_tablet_pad_group_v2.mode_switch。\n\n鼓励客户端为与环关联的操作提供上下文相关的描述；合成器可以使用此信息提供关于按钮布局的视觉反馈（例如屏幕显示）。\n\n提供的字符串 'description' 是与此环关联的 UTF-8 编码字符串，被视为用户可见的；适用一般的国际化规则。\n\nserial 参数将是此环所在组收到的最后一个 zwp_tablet_pad_group_v2.mode_switch 事件的 serial。提供非最近 serial 的请求将被忽略。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁触摸环对象",
+            "text": "销毁客户端的此环对象资源。"
+          }
+        }
+      },
+      "events": {
+        "source": {
+          "description": {
+            "summary": "触摸环事件源",
+            "text": "触摸环事件的源信息。\n\n此事件不会单独出现。它在 zwp_tablet_pad_ring_v2.frame 事件之前发送，并携带该帧中所有事件的源信息。\n\n源指定此事件是如何生成的。如果源是 zwp_tablet_pad_ring_v2.source.finger，当用户将手指从设备上抬起时将发送 zwp_tablet_pad_ring_v2.stop 事件。\n\n此事件是可选的。如果交互的源未知，则不发送事件。"
+          }
+        },
+        "angle": {
+          "description": {
+            "summary": "角度已更改",
+            "text": "每当触摸环上的角度变化时发送。\n\n角度以度为单位，从 pad 当前旋转中环的逻辑北方顺时针计算。"
+          }
+        },
+        "stop": {
+          "description": {
+            "summary": "交互已停止",
+            "text": "触摸环事件的停止通知。\n\n对于某些 zwp_tablet_pad_ring_v2.source 类型，会发送 zwp_tablet_pad_ring_v2.stop 事件来通知客户端与环的交互已终止。这使客户端能够实现动力滚动。有关何时可能生成此事件的信息，请参阅 zwp_tablet_pad_ring_v2.source 文档。\n\n此后具有相同源的任何 zwp_tablet_pad_ring_v2.angle 事件应被视为新交互的开始。"
+          }
+        },
+        "frame": {
+          "description": {
+            "summary": "触摸环事件序列结束",
+            "text": "指示一组逻辑上属于一起的触摸环事件的结束。客户端应累积帧中所有事件的数据后再继续处理。\n\nzwp_tablet_pad_ring_v2.frame 事件之前的所有 zwp_tablet_pad_ring_v2 事件在逻辑上属于一起。例如，在终止触摸环上的手指交互时，合成器将发送 zwp_tablet_pad_ring_v2.source 事件、zwp_tablet_pad_ring_v2.stop 事件和 zwp_tablet_pad_ring_v2.frame 事件。\n\nzwp_tablet_pad_ring_v2.frame 事件为每个逻辑事件组发送，即使该组只包含单个 zwp_tablet_pad_ring_v2 事件。具体来说，客户端可能获得序列：angle, frame, angle, frame 等。"
+          }
+        }
+      },
+      "enums": {
+        "source": {
+          "description": {
+            "summary": "触摸环轴事件源",
+            "text": "描述触摸环事件的源类型。这向客户端指示触摸环事件是如何物理生成的；客户端可以相应地调整用户界面。例如，来自\"手指\"源的事件可能触发动力滚动。"
+          },
+          "entries": {
+            "finger": {
+              "summary": "手指"
+            }
+          }
+        }
+      }
+    },
+    "zwp_tablet_pad_strip_v2": {
+      "description": {
+        "summary": "pad 触摸条",
+        "text": "线性交互区域，例如 Wacom Cintiq 型号上的触摸条。\n\n触摸条上的事件由 zwp_tablet_pad_strip_v2.frame 事件逻辑分组。"
+      },
+      "requests": {
+        "set_feedback": {
+          "description": {
+            "summary": "设置合成器反馈",
+            "text": "请求合成器使用与此触摸条关联的提供的反馈字符串。此请求应在收到来自相应组的 zwp_tablet_pad_group_v2.mode_switch 事件后立即发出，或在触摸条被映射到不同操作时发出。详情请参阅 zwp_tablet_pad_group_v2.mode_switch。\n\n鼓励客户端为与触摸条关联的操作提供上下文相关的描述，合成器可以使用此信息提供关于按钮布局的视觉反馈（例如屏幕显示）。\n\n提供的字符串 'description' 是与此触摸条关联的 UTF-8 编码字符串，被视为用户可见的；适用一般的国际化规则。\n\nserial 参数将是此触摸条所在组收到的最后一个 zwp_tablet_pad_group_v2.mode_switch 事件的 serial。提供非最近 serial 的请求将被忽略。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁触摸条对象",
+            "text": "销毁客户端的此触摸条对象资源。"
+          }
+        }
+      },
+      "events": {
+        "source": {
+          "description": {
+            "summary": "触摸条事件源",
+            "text": "触摸条事件的源信息。\n\n此事件不会单独出现。它在 zwp_tablet_pad_strip_v2.frame 事件之前发送，并携带该帧中所有事件的源信息。\n\n源指定此事件是如何生成的。如果源是 zwp_tablet_pad_strip_v2.source.finger，当用户将手指从设备上抬起时将发送 zwp_tablet_pad_strip_v2.stop 事件。\n\n此事件是可选的。如果交互的源未知，则不发送事件。"
+          }
+        },
+        "position": {
+          "description": {
+            "summary": "位置已更改",
+            "text": "每当触摸条上的位置变化时发送。\n\n位置归一化为 [0, 65535] 的范围，0 值表示 pad 当前旋转中触摸条的最顶部和/或最左侧位置。"
+          }
+        },
+        "stop": {
+          "description": {
+            "summary": "交互已停止",
+            "text": "触摸条事件的停止通知。\n\n对于某些 zwp_tablet_pad_strip_v2.source 类型，会发送 zwp_tablet_pad_strip_v2.stop 事件来通知客户端与触摸条的交互已终止。这使客户端能够实现动力滚动。有关何时可能生成此事件的信息，请参阅 zwp_tablet_pad_strip_v2.source 文档。\n\n此后具有相同源的任何 zwp_tablet_pad_strip_v2.position 事件应被视为新交互的开始。"
+          }
+        },
+        "frame": {
+          "description": {
+            "summary": "触摸条事件序列结束",
+            "text": "指示代表一个逻辑硬件触摸条事件的一组事件的结束。客户端应累积帧中所有事件的数据后再继续处理。\n\nzwp_tablet_pad_strip_v2.frame 事件之前的所有 zwp_tablet_pad_strip_v2 事件在逻辑上属于一起。例如，在终止触摸条上的手指交互时，合成器将发送 zwp_tablet_pad_strip_v2.source 事件、zwp_tablet_pad_strip_v2.stop 事件和 zwp_tablet_pad_strip_v2.frame 事件。\n\nzwp_tablet_pad_strip_v2.frame 事件为每个逻辑事件组发送，即使该组只包含单个 zwp_tablet_pad_strip_v2 事件。具体来说，客户端可能获得序列：position, frame, position, frame 等。"
+          }
+        }
+      },
+      "enums": {
+        "source": {
+          "description": {
+            "summary": "触摸条轴事件源",
+            "text": "描述触摸条事件的源类型。这向客户端指示触摸条事件是如何物理生成的；客户端可以相应地调整用户界面。例如，来自\"手指\"源的事件可能触发动力滚动。"
+          },
+          "entries": {
+            "finger": {
+              "summary": "手指"
+            }
+          }
+        }
+      }
+    },
+    "zwp_tablet_pad_group_v2": {
+      "description": {
+        "summary": "按钮、触摸环和触摸条的集合",
+        "text": "pad 组描述了数位板中存在的按钮、触摸环和触摸条的一个独特（子）集。此分组的标准通常是位置性的，例如如果数位板左右两侧各有按钮，将呈现 2 个组。组的物理排列未公开且可能随时更改。\n\nPad 组在 pad 初始化期间宣告其功能。在相应的 zwp_tablet_pad_v2.group 事件和 zwp_tablet_pad_group_v2.done 之间，pad 组将宣告其中包含的按钮、触摸环和触摸条，以及支持的模式数量。\n\n模式是一种机制，允许 pad 组中的每个元素有多个操作组。组的数量和每个组中的可用模式在设备插拔时是持久的。当前模式是用户可切换的，将在切换时以及 zwp_tablet_pad_v2.enter 之后通过 zwp_tablet_pad_group_v2.mode_switch 事件宣告。\n\n当前模式逻辑上应用于 pad 组中的所有元素，但客户端可自行决定是否实际执行不同的操作，和/或发出相应的 .set_feedback 请求以通知合成器。详情请参阅 zwp_tablet_pad_group_v2.mode_switch 事件。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 pad 对象",
+            "text": "销毁 zwp_tablet_pad_group_v2 对象。由此对象创建的对象不受影响，应单独销毁。"
+          }
+        }
+      },
+      "events": {
+        "buttons": {
+          "description": {
+            "summary": "按钮已宣告",
+            "text": "在 zwp_tablet_pad_group_v2 初始化时发送以宣告组中可用的按钮。按钮索引从 0 开始，一个按钮一次只能在一个组中。\n\n此事件在 zwp_tablet_pad_group_v2.done 事件之前的初始事件迸发中首次发送。\n\n某些按钮由合成器保留。这些按钮不能分配给任何 zwp_tablet_pad_group_v2。合成器可以在这些保留按钮的映射更改时广播此事件。如果合成器恰好保留了组中的所有按钮，此事件将发送空数组。"
+          }
+        },
+        "ring": {
+          "description": {
+            "summary": "触摸环已宣告",
+            "text": "在 zwp_tablet_pad_group_v2 初始化时发送以宣告可用的触摸环。为此 pad 组中的每个触摸环发送一个事件。\n\n此事件在 zwp_tablet_pad_group_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        },
+        "strip": {
+          "description": {
+            "summary": "触摸条已宣告",
+            "text": "在 zwp_tablet_pad_v2 初始化时发送以宣告可用的触摸条。为此 pad 组中的每个触摸条发送一个事件。\n\n此事件在 zwp_tablet_pad_group_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        },
+        "modes": {
+          "description": {
+            "summary": "模式切换能力已宣告",
+            "text": "在 zwp_tablet_pad_group_v2 初始化时发送以宣告 pad 组可以在模式之间切换。客户端可以使用模式为按钮、触摸环和触摸条存储特定配置，并使用 zwp_tablet_pad_group_v2.mode_switch 事件在这些配置之间切换。模式索引从 0 开始。\n\n模式切换取决于合成器。详情请参阅 zwp_tablet_pad_group_v2.mode_switch 事件。\n\n此事件在 zwp_tablet_pad_group_v2.done 事件之前的初始事件迸发中发送。仅当有多个可用模式时才发送此事件。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "tablet 组描述事件序列完成",
+            "text": "此事件立即发送以标志初始描述性事件迸发的结束。客户端可以认为数位板的静态描述已完成并最终确定 tablet 组的初始化。"
+          }
+        },
+        "mode_switch": {
+          "description": {
+            "summary": "模式切换事件",
+            "text": "通知模式已切换。\n\n模式同时应用于组中的所有按钮、触摸环、触摸条和拨盘，但客户端不需要为每个模式分配不同的操作。例如，客户端可以有模式特定的按钮映射，但在所有模式中将触摸环映射到垂直滚动。模式索引从 0 开始。\n\n模式切换取决于合成器。合成器可以向用户提供关于模式的视觉提示，例如通过切换数位板设备上的 LED。模式切换可以是软件控制的，也可以由一个或多个物理按钮控制。例如，在 Wacom Intuos Pro 上，触摸环内的按钮可以分配为在模式之间切换。\n\n合成器还会在 zwp_tablet_pad_v2.enter 之后为每个组发送此事件以通知当前模式。只有一个模式的组在发出此事件时将使用 mode=0。\n\n如果新模式中的按钮操作与前一个模式不同，客户端应立即为每个更改的按钮发出 zwp_tablet_pad_v2.set_feedback 请求。\n\n如果新模式中的触摸环、触摸条或拨盘操作与前一个模式不同，客户端应立即为每个更改的触摸环、触摸条或拨盘发出 zwp_tablet_ring_v2.set_feedback、zwp_tablet_strip_v2.set_feedback 或 zwp_tablet_dial_v2.set_feedback 请求。"
+          }
+        },
+        "dial": {
+          "description": {
+            "summary": "拨盘已宣告",
+            "text": "在 zwp_tablet_pad_v2 初始化时发送以宣告可用的拨盘。为此 pad 组中的每个拨盘发送一个事件。\n\n此事件在 zwp_tablet_pad_group_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        }
+      }
+    },
+    "zwp_tablet_pad_v2": {
+      "description": {
+        "summary": "按钮、触摸环、触摸条和拨盘的集合",
+        "text": "pad 设备是一组按钮、触摸环、触摸条和拨盘，通常物理存在于数位板设备本身上。也存在一些例外情况，其中 pad 设备是物理分离的，例如 Wacom ExpressKey Remote。\n\nPad 设备没有控制光标的轴，通常是在数位板表面使用的工具设备的辅助设备。\n\nPad 设备有许多静态特性，例如触摸环的数量。这些功能在 zwp_tablet_seat_v2.pad_added 事件之后的事件序列中在此 pad 的任何实际事件之前发送。此初始事件序列由 zwp_tablet_pad_v2.done 事件终止。\n\n所有 pad 功能（按钮、触摸环、触摸条和拨盘）在逻辑上分为组，所有 pad 至少有一个组。可用的组通过 zwp_tablet_pad_v2.group 事件通知；合成器将在发出 zwp_tablet_pad_v2.done 之前为每个组发出一个事件。\n\n组可以有多个模式。模式允许客户端将多个操作映射到单个 pad 功能。每个组只能有一个模式处于活动状态，但不同的组可以有不同的活动模式。"
+      },
+      "requests": {
+        "set_feedback": {
+          "description": {
+            "summary": "设置合成器反馈",
+            "text": "请求合成器使用与此按钮关联的提供的反馈字符串。此请求应在收到来自相应组的 zwp_tablet_pad_group_v2.mode_switch 事件后立即发出，或在按钮被映射到不同操作时发出。详情请参阅 zwp_tablet_pad_group_v2.mode_switch。\n\n鼓励客户端为与每个按钮关联的操作提供上下文相关的描述，合成器可以使用此信息提供关于按钮布局的视觉反馈（例如屏幕显示）。\n\n按钮索引从 0 开始。对合成器保留的按钮（即不属于任何 zwp_tablet_pad_group_v2）设置反馈字符串不会生成错误，但合成器可以忽略该请求。\n\n提供的字符串 'description' 是与此按钮关联的 UTF-8 编码字符串，被视为用户可见的；适用一般的国际化规则。\n\nserial 参数将是此按钮所在组收到的最后一个 zwp_tablet_pad_group_v2.mode_switch 事件的 serial。提供非最近 serial 的请求将被忽略。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 pad 对象",
+            "text": "销毁 zwp_tablet_pad_v2 对象。由此对象创建的对象不受影响，应单独销毁。"
+          }
+        }
+      },
+      "events": {
+        "group": {
+          "description": {
+            "summary": "组已宣告",
+            "text": "在 zwp_tablet_pad_v2 初始化时发送以宣告可用的组。为每个可用的 pad 组发送一个事件。\n\n此事件在 zwp_tablet_pad_v2.done 事件之前的初始事件迸发中发送。至少会宣告一个组。"
+          }
+        },
+        "path": {
+          "description": {
+            "summary": "设备路径",
+            "text": "指示此 zwp_tablet_pad_v2 背后设备的系统特定设备路径。此信息可用于获取关于设备的更多信息，例如通过 libwacom。\n\n路径的格式未指定，可能是设备节点、sysfs 路径或其他标识符。由客户端负责识别所提供的字符串。\n\n此事件在 zwp_tablet_pad_v2.done 事件之前的初始事件迸发中发送。"
+          }
+        },
+        "buttons": {
+          "description": {
+            "summary": "按钮已宣告",
+            "text": "在 zwp_tablet_pad_v2 初始化时发送以宣告可用的按钮。\n\n此事件在 zwp_tablet_pad_v2.done 事件之前的初始事件迸发中发送。仅当至少有一个按钮可用时才发送此事件。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "pad 描述事件序列完成",
+            "text": "此事件标志初始描述性事件迸发的结束。客户端可以认为 pad 的静态描述已完成并最终确定 pad 的初始化。"
+          }
+        },
+        "button": {
+          "description": {
+            "summary": "物理按钮状态",
+            "text": "每当按钮的物理状态变化时发送。"
+          }
+        },
+        "enter": {
+          "description": {
+            "summary": "进入事件",
+            "text": "通知此 pad 聚焦在指定的 surface 上。"
+          }
+        },
+        "leave": {
+          "description": {
+            "summary": "离开事件",
+            "text": "通知此 pad 不再聚焦在指定的 surface 上。"
+          }
+        },
+        "removed": {
+          "description": {
+            "summary": "pad 已移除事件",
+            "text": "当 pad 从系统中移除时发送。当数位板被移除时，其 pad 也会被移除。\n\n收到此事件时，客户端必须销毁此 pad 提供的所有触摸环、触摸条和组，并发出 zwp_tablet_pad_v2.destroy 销毁 pad 本身。"
+          }
+        }
+      },
+      "enums": {
+        "button_state": {
+          "description": {
+            "summary": "物理按钮状态",
+            "text": "描述导致按钮事件的按钮的物理状态。"
+          },
+          "entries": {
+            "released": {
+              "summary": "按钮未被按下"
+            },
+            "pressed": {
+              "summary": "按钮被按下"
+            }
+          }
+        }
+      }
+    },
+    "zwp_tablet_pad_dial_v2": {
+      "description": {
+        "summary": "pad 拨盘",
+        "text": "旋转控制器，例如拨盘或滚轮。\n\n拨盘上的事件由 zwp_tablet_pad_dial_v2.frame 事件逻辑分组。"
+      },
+      "requests": {
+        "set_feedback": {
+          "description": {
+            "summary": "设置合成器反馈",
+            "text": "请求合成器使用与此拨盘关联的提供的反馈字符串。此请求应在收到来自相应组的 zwp_tablet_pad_group_v2.mode_switch 事件后立即发出，或在拨盘被映射到不同操作时发出。详情请参阅 zwp_tablet_pad_group_v2.mode_switch。\n\n鼓励客户端为与拨盘关联的操作提供上下文相关的描述，合成器可以使用此信息提供关于按钮布局的视觉反馈（例如屏幕显示）。\n\n提供的字符串 'description' 是与此拨盘关联的 UTF-8 编码字符串，被视为用户可见的；适用一般的国际化规则。\n\nserial 参数将是此拨盘所在组收到的最后一个 zwp_tablet_pad_group_v2.mode_switch 事件的 serial。提供非最近 serial 的请求将被忽略。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁拨盘对象",
+            "text": "销毁客户端的此拨盘对象资源。"
+          }
+        }
+      },
+      "events": {
+        "delta": {
+          "description": {
+            "summary": "增量移动",
+            "text": "每当拨盘上的位置变化时发送。\n\n此事件携带滚轮增量值，以 120 的倍数或分数表示，每个 120 的倍数代表一个逻辑滚轮刻度。例如，axis_value120 为 30 表示正方向上四分之一个逻辑滚轮步长，value120 为 -240 表示同一硬件事件中负方向上两个逻辑滚轮步长。详情请参阅 wl_pointer.axis_value120。\n\nvalue120 不得为零。"
+          }
+        },
+        "frame": {
+          "description": {
+            "summary": "拨盘事件序列结束",
+            "text": "指示代表一个逻辑硬件拨盘事件的一组事件的结束。客户端应累积帧中所有事件的数据后再继续处理。\n\nzwp_tablet_pad_dial_v2.frame 事件之前的所有 zwp_tablet_pad_dial_v2 事件在逻辑上属于一起。\n\nzwp_tablet_pad_dial_v2.frame 事件为每个逻辑事件组发送，即使该组只包含单个 zwp_tablet_pad_dial_v2 事件。具体来说，客户端可能获得序列：delta, frame, delta, frame 等。"
+          }
+        }
+      }
+    }
+  }
+}

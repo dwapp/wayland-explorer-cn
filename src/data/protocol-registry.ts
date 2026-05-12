@@ -70,6 +70,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Stable,
         protocol: require('./protocols/tablet-v2.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/tablet-v2.json'),
+        },
     },
     {
         id: 'xdg-activation-v1',
