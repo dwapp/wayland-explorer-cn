@@ -209,6 +209,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/xdg-dialog-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xdg-dialog-v1.json'),
+        },
     },
     {
         id: 'alpha-modifier-v1',

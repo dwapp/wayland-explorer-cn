@@ -1,0 +1,59 @@
+{
+  "interfaces": {
+    "xdg_wm_dialog_v1": {
+      "description": {
+        "summary": "创建与其他顶层窗口关联的对话框",
+        "text": "xdg_wm_dialog_v1 接口作为一个全局对象暴露，允许将具有 xdg_toplevel 角色的 surface 注册为相对于另一个顶层窗口的\"对话框\"。\n\n合成器可以利用此关联来影响 surface 的放置、显示或交互方式。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会添加向后兼容的更改，并更新相应的接口版本。向后不兼容的更改只能通过创建新的扩展主版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁对话框管理器对象",
+            "text": "销毁 xdg_wm_dialog_v1 对象。这不会影响通过它创建的 xdg_dialog_v1 对象。"
+          }
+        },
+        "get_xdg_dialog": {
+          "description": {
+            "summary": "创建对话框对象",
+            "text": "为给定的顶层窗口创建 xdg_dialog_v1 对象。详情请参阅接口描述。\n\n如果客户端尝试为同一个 xdg_toplevel 创建多个 xdg_dialog_v1 对象，合成器必须触发 already_used 错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_used": {
+              "summary": "该 xdg_toplevel 对象已用于创建 xdg_dialog_v1"
+            }
+          }
+        }
+      }
+    },
+    "xdg_dialog_v1": {
+      "description": {
+        "summary": "对话框对象",
+        "text": "xdg_dialog_v1 对象是绑定到 xdg_toplevel 的辅助对象。其目的是向合成器提示该顶层窗口是相对于另一个顶层窗口的\"对话框\"（例如临时窗口）（参见 xdg_toplevel.set_parent）。如果 xdg_toplevel 被销毁，xdg_dialog_v1 将变为无效状态。\n\n通过此对象，客户端可以提供关于辅助顶层窗口用途的额外提示。此接口对未附加到父顶层窗口的顶层窗口没有效果。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁对话框对象",
+            "text": "销毁 xdg_dialog_v1 对象。如果此对象在关联的 xdg_toplevel 之前被销毁，合成器应取消其效果。"
+          }
+        },
+        "set_modal": {
+          "description": {
+            "summary": "将对话框标记为模态",
+            "text": "提示对话框具有\"模态\"行为。模态对话框通常要求用户完全处理（即关闭）后才能恢复与父顶层窗口的交互，并可能需要不同的呈现方式。\n\n客户端必须自行实现在父顶层窗口上过滤事件的逻辑。\n\n合成器可以选择任何事件传递策略，从不经过滤地传递所有事件，到将其用于内部处理。"
+          }
+        },
+        "unset_modal": {
+          "description": {
+            "summary": "将对话框标记为非模态",
+            "text": "取消此对话框具有\"模态\"行为的提示。详情请参阅 xdg_dialog_v1.set_modal。"
+          }
+        }
+      }
+    }
+  }
+}
