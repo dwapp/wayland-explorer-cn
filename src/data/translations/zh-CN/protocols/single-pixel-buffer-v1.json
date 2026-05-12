@@ -1,0 +1,28 @@
+{
+  "description": {
+    "summary": "单像素 buffer 工厂",
+    "text": "此协议扩展允许客户端创建单像素 buffer。\n\n支持此协议扩展的 compositor 也应该支持 viewporter 协议扩展。客户端可以使用 viewporter 将单像素 buffer 缩放到所需尺寸。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本提升一起添加。向后不兼容的更改只能通过创建此扩展的新主版本来进行。"
+  },
+  "interfaces": {
+    "wp_single_pixel_buffer_manager_v1": {
+      "description": {
+        "summary": "单像素 buffer 的全局工厂",
+        "text": "wp_single_pixel_buffer_manager_v1 接口是一个单像素 buffer 的工厂。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁该管理器",
+            "text": "销毁 wp_single_pixel_buffer_manager_v1 对象。\n\n通过此接口创建的子对象不受影响。"
+          }
+        },
+        "create_u32_rgba_buffer": {
+          "description": {
+            "summary": "从 32 位 RGBA 值创建 1×1 的 buffer",
+            "text": "从四个 32 位 RGBA 值创建一个单像素 buffer。\n\n除非在其他协议扩展中指定，否则 RGBA 值使用预乘 alpha (pre-multiplied alpha)。\n\nbuffer 的宽度和高度为 1。\n\nr、g、b 和 a 参数的有效范围从 UINT32_MIN (0) 到 UINT32_MAX (0xffffffff)。\n\n这些参数应被解释为百分比，即：\n- UINT32_MIN = 给定颜色分量的 0%\n- UINT32_MAX = 给定颜色分量的 100%"
+          }
+        }
+      }
+    }
+  }
+}

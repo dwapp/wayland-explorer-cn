@@ -114,6 +114,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/single-pixel-buffer-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/single-pixel-buffer-v1.json'),
+        },
     },
     {
         id: 'content-type-v1',
