@@ -63,6 +63,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Stable,
         protocol: require('./protocols/linux-dmabuf-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/linux-dmabuf-v1.json'),
+        },
     },
     {
         id: 'tablet-v2',

@@ -1,0 +1,206 @@
+{
+  "interfaces": {
+    "zwp_linux_dmabuf_v1": {
+      "description": {
+        "summary": "创建基于 dmabuf 的 wl_buffer 的工厂",
+        "text": "此接口提供了创建通用的基于 dmabuf 的 wl_buffer 的方法。\n\n有关 dmabuf 的更多信息，请参阅：\nhttps://www.kernel.org/doc/html/next/userspace-api/dma-buf-alloc-exchange.html\n\n客户端可以使用 get_surface_feedback 请求获取特定 surface 的 dmabuf 反馈。如果客户端想要获取不绑定到特定 surface 的反馈，可以使用 get_default_feedback 请求。\n\n对客户端有以下要求：\n\n- 客户端必须确保 dmabuf 中的所有数据对于所有后续读取访问是一致的，或者一致性由底层内核端 dmabuf 实现正确处理。\n\n- 将缓冲区发送给合成器后，不要再进行更多的附加操作。之后进行更多附加操作会增加合成器无法使用（重新导入）现有基于 dmabuf 的 wl_buffer 的风险。\n\n底层图形栈必须确保以下内容：\n\n- 传递给服务器的 dmabuf 文件描述符在 wl_buffer 的整个生命周期内保持有效。这意味着服务器可以随时使用这些 fd 将 dmabuf 导入到任何可能接受它的内核子系统中。\n\n然而，当底层图形栈未能兑现承诺时（例如由于设备热拔插引发内部错误），在 wl_buffer 已成功创建之后，如果 dmabuf 导入后来失败，合成器不得向客户端引发协议错误。\n\n要从一个或多个 dmabuf 创建 wl_buffer，客户端使用 zwp_linux_dmabuf_v1.create_params 请求创建 zwp_linux_buffer_params_v1 对象。使用 'add' 请求添加目标格式所需的所有平面。最后，发出 'create' 或 'create_immed' 请求，根据导入成功与否产生以下结果：\n\n对于 'create' 请求，\n- 成功时，触发 'created' 事件，向客户端提供最终的 wl_buffer。\n- 失败时，触发 'failed' 事件，表示服务器无法使用从客户端接收的 dmabuf。\n\n对于 'create_immed' 请求，\n- 成功时，服务器立即导入已添加的 dmabuf 以创建 wl_buffer。在这种情况下不会从服务器发送事件。\n- 失败时，服务器可以选择：\n  - 通过引发致命错误来终止客户端。\n  - 将 wl_buffer 标记为失败，并向客户端发送 'failed' 事件。如果客户端在任何请求中使用失败的 wl_buffer 作为参数，行为由合成器实现定义。\n\n对于所有 DRM 格式，除非在另一个协议扩展中指定，否则像素值使用预乘 alpha。\n\n除非在另一个协议扩展中另有指定，否则使用隐式同步。换句话说，合成器和客户端必须隐式地通过 DMA-BUF 的预留机制来等待和发出围栏信号。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "解绑工厂",
+            "text": "通过此接口创建的对象，特别是 wl_buffer，将保持有效。"
+          }
+        },
+        "create_params": {
+          "description": {
+            "summary": "创建用于缓冲区参数的临时对象",
+            "text": "此临时对象用于将多个 dmabuf 句柄收集到单个批次中以创建 wl_buffer。它只能使用一次，应在收到 'created' 或 'failed' 事件后销毁。"
+          }
+        },
+        "get_default_feedback": {
+          "description": {
+            "summary": "获取默认反馈",
+            "text": "此请求创建一个新的不绑定到特定 surface 的 wp_linux_dmabuf_feedback 对象。如果客户端不支持逐 surface 反馈（参见 get_surface_feedback），此对象将提供关于要使用的 dmabuf 参数的反馈。"
+          }
+        },
+        "get_surface_feedback": {
+          "description": {
+            "summary": "获取 surface 的反馈",
+            "text": "此请求为指定的 wl_surface 创建一个新的 wp_linux_dmabuf_feedback 对象。此对象将提供关于要用于附加到此 surface 的缓冲区的 dmabuf 参数的反馈。\n\n如果 surface 在 wp_linux_dmabuf_feedback 对象之前被销毁，反馈对象将变为无效。"
+          }
+        }
+      },
+      "events": {
+        "format": {
+          "description": {
+            "summary": "支持的缓冲区格式",
+            "text": "此事件通告服务器支持的一种缓冲区格式。所有支持的格式在客户端绑定到此接口时通告一次。绑定后的往返保证客户端已收到所有支持的格式。\n\n格式代码的定义，请参阅 zwp_linux_buffer_params_v1::create 请求。\n\n从版本 4 开始，format 事件已弃用，合成器不得发送。请改用 get_default_feedback 或 get_surface_feedback。"
+          }
+        },
+        "modifier": {
+          "description": {
+            "summary": "支持的缓冲区格式修饰符",
+            "text": "此事件通告服务器支持的格式以及每种格式支持的修饰符。所有支持的格式的所有支持的修饰符在客户端绑定到此接口时通告一次。绑定后的往返保证客户端已收到所有支持的格式-修饰符对。\n\n为了兼容旧版本，此事件中允许 DRM_FORMAT_MOD_INVALID（即 modifier_hi == 0x00ffffff 且 modifier_lo == 0xffffffff）。它表示服务器可以支持具有隐式修饰符的格式。当平面的修饰符为 DRM_FORMAT_MOD_INVALID 时，就像未指定显式修饰符一样。有效的修饰符将从 dmabuf 派生。\n\n对给定格式发送有效修饰符和 DRM_FORMAT_MOD_INVALID 的合成器同时支持显式修饰符和隐式修饰符。\n\n格式和修饰符代码的定义，请参阅 zwp_linux_buffer_params_v1::create 和 zwp_linux_buffer_params_v1::add 请求。\n\n从版本 4 开始，modifier 事件已弃用，合成器不得发送。请改用 get_default_feedback 或 get_surface_feedback。"
+          }
+        }
+      }
+    },
+    "zwp_linux_buffer_params_v1": {
+      "description": {
+        "summary": "创建基于 dmabuf 的 wl_buffer 的参数",
+        "text": "此临时对象是 dmabuf 和其他参数的集合，共同构成单个逻辑缓冲区。除非在请求 'create' 之前通过销毁它来取消，否则此临时对象最终将创建一个 wl_buffer。\n\n单平面格式只需要一个 dmabuf，但多平面格式可能需要多个 dmabuf。对于所有格式，必须为每个平面调用一次 'add' 请求（即使底层 dmabuf fd 相同）。\n\n必须使用从零到 drm_fourcc 格式代码使用的平面数的连续平面索引（'add' 的 'plane_idx' 参数）。格式所需的所有平面必须恰好提供一次，但可以以任何顺序提供。每个平面索引只能设置一次；使用已设置的平面索引进行后续调用将生成 plane_set 错误。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "删除此对象，无论是否使用",
+            "text": "清理发送给服务器的用于创建基于 dmabuf 的 wl_buffer 的临时数据。"
+          }
+        },
+        "add": {
+          "description": {
+            "summary": "向临时集合添加 dmabuf",
+            "text": "此请求向此 zwp_linux_buffer_params_v1 中的集合添加一个 dmabuf。\n\n由 modifier_hi 和 modifier_lo 组合而成的 64 位无符号值是 dmabuf 布局修饰符。DRM AddFB2 ioctl 称之为 fb 修饰符，在 Linux UAPI 的 drm_mode.h 中定义。这是一个不透明的令牌。驱动程序使用此令牌来表达对 DRM fourcc 代码定义的基础格式的平铺、压缩等驱动程序特定修改。\n\n从版本 4 开始，如果格式+修饰符对未通告为受支持，将发送 invalid_format 协议错误。\n\n从版本 5 开始，如果所有平面不使用相同的修饰符，将发送 invalid_format 协议错误。\n\n如果 plane_idx 太大，此请求将引发 PLANE_IDX 错误。如果尝试设置已设置的平面，将引发 PLANE_SET 错误。"
+          }
+        },
+        "create": {
+          "description": {
+            "summary": "从给定的 dmabuf 创建 wl_buffer",
+            "text": "这请求从已添加的 dmabuf 缓冲区创建 wl_buffer。wl_buffer 不会立即创建，而是在 dmabuf 共享成功时通过 'created' 事件返回。共享可能在运行时因客户端无法预测的原因而失败，在这种情况下会触发 'failed' 事件。\n\n'format' 参数是 DRM_FORMAT 代码，由 libdrm 的 drm_fourcc.h 定义。Linux 内核的 DRM 子系统是格式代码应如何工作的权威来源。\n\n'flags' 是枚举 \"flags\" 中定义的标志的位字段。'y_invert' 表示图像需要进行 y 翻转。\n\n标志 'interlaced' 表示缓冲区中的帧不是通常的逐行扫描，而是隔行扫描。此处支持的隔行扫描缓冲区必须始终包含顶场和底场。顶场始终从第一个像素行开始。除非指定 'bottom_first'，否则两个场之间的时间顺序是顶场优先。如果未设置 'interlaced'，'bottom_first' 是否被忽略是未定义的。\n\n此协议不传达关于场速率、持续时间或时序的任何信息，除了一个缓冲区中两个场之间的相对顺序。合成器可能需要从传入缓冲区速率估计预期的场速率。接收带有新缓冲区的 wl_surface.commit 的时间、应用 wl_surface 状态、wl_surface.frame 回调触发、呈现或合成器周期中的任何其他点，是用于测量帧或场时间的，这是未定义的。也不支持检测丢失或延迟的帧/场/缓冲区，也完全不支持与隔行扫描合成器输出的协作。\n\n使用隔行扫描缓冲区产生的合成图像质量明确为未定义。合成器可以使用精细的硬件功能或软件进行反交错并从隔行扫描输入缓冲区序列创建逐行扫描输出帧，也可以产生不标准的图像质量。然而，建议无法在所有情况下保证合理图像质量的合成器直接拒绝所有隔行扫描缓冲区。\n\n任何参数错误，包括非正宽度或高度、平面数与格式不匹配、格式错误、偏移或步幅错误，都可能通过致命协议错误指示：INCOMPLETE、INVALID_FORMAT、INVALID_DIMENSIONS、OUT_OF_BOUNDS。\n\n服务器中不是明显客户端错误的 dmabuf 导入错误通过 'failed' 事件作为非致命错误返回。这允许尝试 dmabuf 共享并在失败时在客户端中回退。\n\n此请求在对象的生命周期内只能发送一次，之后唯一合法的请求是 destroy。发出 'create' 请求后应销毁此对象。发出 'create' 后尝试使用此对象将引发 ALREADY_USED 协议错误。\n\n发出 'create' 不是强制性的。如果客户端想要取消缓冲区创建，只需销毁此对象即可。"
+          }
+        },
+        "create_immed": {
+          "description": {
+            "summary": "立即从给定的 dmabuf 创建 wl_buffer",
+            "text": "这请求通过导入已添加的 dmabuf 来立即创建 wl_buffer。\n\n导入成功时，不会从服务器发送事件，wl_buffer 即可供客户端使用。\n\n导入失败时，可能发生以下任一情况，由实现决定：\n- 客户端被以下致命协议错误之一终止：\n  - INCOMPLETE、INVALID_FORMAT、INVALID_DIMENSIONS、OUT_OF_BOUNDS，在参数错误（如平面数与格式不匹配、格式错误、非正宽度或高度、偏移或步幅错误）的情况下。\n  - INVALID_WL_BUFFER，在失败原因未知或特定于平台的情况下。\n- 服务器创建一个无效的 wl_buffer，将其标记为失败并向客户端发送 'failed' 事件。客户端在任何请求中使用此无效 wl_buffer 作为参数的结果由合成器实现定义。\n\n这采用与 'create' 请求相同的参数，并遵守相同的限制。"
+          }
+        }
+      },
+      "events": {
+        "created": {
+          "description": {
+            "summary": "缓冲区创建成功",
+            "text": "此事件表示尝试的缓冲区创建成功。它提供引用 dmabuf 的新 wl_buffer。\n\n收到此事件后，客户端应销毁 zwp_linux_buffer_params_v1 对象。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "缓冲区创建失败",
+            "text": "此事件表示尝试的缓冲区创建失败。这通常意味着某个 dmabuf 约束未得到满足。\n\n收到此事件后，客户端应销毁 zwp_linux_buffer_params_v1 对象。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_used": {
+              "summary": "dmabuf_batch 对象已用于创建 wl_buffer"
+            },
+            "plane_idx": {
+              "summary": "平面索引越界"
+            },
+            "plane_set": {
+              "summary": "平面索引已设置"
+            },
+            "incomplete": {
+              "summary": "平面缺失或过多，无法创建缓冲区"
+            },
+            "invalid_format": {
+              "summary": "格式不受支持"
+            },
+            "invalid_dimensions": {
+              "summary": "宽度或高度无效"
+            },
+            "out_of_bounds": {
+              "summary": "offset + stride * height 超出 dmabuf 边界"
+            },
+            "invalid_wl_buffer": {
+              "summary": "通过给定 buffer_params 的 create_immed 请求导入 dmabuf 导致无效的 wl_buffer"
+            }
+          }
+        },
+        "flags": {
+          "entries": {
+            "y_invert": {
+              "summary": "内容经过 y 翻转"
+            },
+            "interlaced": {
+              "summary": "内容为隔行扫描"
+            },
+            "bottom_first": {
+              "summary": "底场优先"
+            }
+          }
+        }
+      }
+    },
+    "zwp_linux_dmabuf_feedback_v1": {
+      "description": {
+        "summary": "dmabuf 反馈",
+        "text": "此对象通告 dmabuf 参数反馈。这包括首选设备和支持的格式/修饰符。\n\n参数在此对象创建时发送一次，并在参数变化时重新发送。在所有参数发送完毕后，始终发送一次 done 事件。当单个参数变化时，合成器会重新发送所有参数。\n\n当当前客户端缓冲区分配不是最优时，合成器可以重新发送参数。如果重新分配缓冲区不会产生更优的配置，合成器不应重新发送参数。特别是，合成器应避免连续多次发送完全相同的参数。\n\ntranche_target_device 和 tranche_formats 事件按偏好分组（tranche）。对于每个 tranche，发送一个 tranche_target_device、一个 tranche_flags 和一个或多个 tranche_formats 事件，后跟一个 tranche_done 事件完成列表。Tranche 按偏好降序发送。同一 tranche 中的所有格式和修饰符具有相同的偏好。\n\n要发送参数，合成器发送一个 main_device 事件、多个 tranche（每个 tranche 包括一个 tranche_target_device 事件、一个 tranche_flags 事件、tranche_formats 事件，然后是一个 tranche_done 事件），然后是一个 done 事件。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁反馈对象",
+            "text": "客户端可以使用此请求告诉服务器不再使用 wp_linux_dmabuf_feedback 对象。"
+          }
+        }
+      },
+      "events": {
+        "done": {
+          "description": {
+            "summary": "所有反馈已发送完毕",
+            "text": "在 wp_linux_dmabuf_feedback 对象的所有参数发送完毕后发送此事件。\n\n这允许将 wp_linux_dmabuf_feedback 参数的更改视为原子性的，即使它们通过多个事件发生。"
+          }
+        },
+        "format_table": {
+          "description": {
+            "summary": "格式和修饰符表",
+            "text": "此事件提供一个文件描述符，可以进行内存映射以访问格式和修饰符表。\n\n该表包含紧密排列的连续格式+修饰符对数组。每对宽 16 字节。它包含一个 32 位无符号整数的格式，后跟 4 字节的未使用填充，以及一个 64 位无符号整数的修饰符。使用本机字节序。\n\n客户端必须以只读私有模式映射文件描述符。\n\n发送此事件后，合成器不允许修改表文件内容。相反，合成器必须创建一个新的、单独的表文件并重新发送反馈参数。合成器允许在表中存储重复的格式+修饰符对。"
+          }
+        },
+        "main_device": {
+          "description": {
+            "summary": "首选主设备",
+            "text": "此事件通告当无法直接扫描输出到目标设备时服务器首选使用的主设备。通告的主设备对于每个 wp_linux_dmabuf_feedback 对象可能不同，并且可能随时间变化。\n\n只有一个主设备。合成器必须发送至少一个偏好 tranche，其 tranche_target_device 等于 main_device。\n\n客户端需要创建主设备可以导入和读取的缓冲区，否则创建 dmabuf wl_buffer 将失败（详情请参阅 wp_linux_buffer_params.create 和 create_immed 请求）。主设备也可能被合成器保持活跃状态，因此客户端可以使用它而不是唤醒另一个设备以节省功耗。\n\n通常设备是 DRM 节点。DRM 节点类型（主节点 vs 渲染节点）未指定。客户端不得依赖合成器发送特定的节点类型。客户端不能通过比较 dev_t 值来检查两个设备是否相等。\n\n如果不支持显式修饰符，且客户端在与主设备不同的设备上执行缓冲区分配，则客户端必须强制缓冲区具有线性布局。"
+          }
+        },
+        "tranche_done": {
+          "description": {
+            "summary": "一个偏好 tranche 已发送完毕",
+            "text": "此事件将 tranche_target_device 和 tranche_formats 事件按偏好 tranche 分隔。它在一组 tranche_target_device 和 tranche_formats 事件之后发送；它表示一个 tranche 的结束。下一个 tranche 的偏好将较低。"
+          }
+        },
+        "tranche_target_device": {
+          "description": {
+            "summary": "目标设备",
+            "text": "此事件通告服务器针对此 tranche 创建的缓冲区首选使用的目标设备。通告的目标设备对于每个偏好 tranche 可能不同，并且可能随时间变化。\n\n每个 tranche 恰好有一个目标设备。\n\n目标设备可以是扫描输出设备，例如如果合成器希望直接扫描输出由此 tranche 创建的缓冲区。目标设备可以是渲染设备，例如如果合成器希望从所述缓冲区进行纹理化。\n\n客户端可以使用此提示以使其可从目标设备（理想情况下是直接地）访问的方式来分配缓冲区。缓冲区仍然必须可从主设备访问，无论是通过直接导入还是通过可能更昂贵的回退路径。如果缓冲区不能从主设备直接导入，那么客户端必须准备好合成器更改 tranche 优先级或使 wl_buffer 创建失败（详情请参阅 wp_linux_buffer_params.create 和 create_immed 请求）。\n\n如果设备是 DRM 节点，DRM 节点类型（主节点 vs 渲染节点）未指定。客户端不得依赖合成器发送特定的节点类型。客户端不能通过比较 dev_t 值来检查两个设备是否相等。\n\n此事件与偏好 tranche 关联，参见 tranche_done 事件。"
+          }
+        },
+        "tranche_formats": {
+          "description": {
+            "summary": "支持的缓冲区格式修饰符",
+            "text": "此事件通告合成器支持的格式+修饰符组合。\n\n它携带索引数组，每个索引引用最后收到的格式表（参见 format_table 事件）中的一个格式+修饰符对。每个索引是本机字节序的 16 位无符号整数。\n\n为了兼容旧版本，DRM_FORMAT_MOD_INVALID 是允许的修饰符。它表示服务器可以支持具有隐式修饰符的格式。当缓冲区的修饰符为 DRM_FORMAT_MOD_INVALID 时，就像未指定显式修饰符一样。有效的修饰符将从 dmabuf 派生。\n\n对给定格式发送有效修饰符和 DRM_FORMAT_MOD_INVALID 的合成器同时支持显式修饰符和隐式修饰符。\n\n合成器不得在同一 tranche 内或具有相同目标设备和标志的两个不同 tranche 之间发送重复的格式+修饰符对。\n\n此事件与偏好 tranche 关联，参见 tranche_done 事件。\n\n格式和修饰符代码的定义，请参阅 wp_linux_buffer_params.create 请求。"
+          }
+        },
+        "tranche_flags": {
+          "description": {
+            "summary": "tranche 标志",
+            "text": "此事件设置 tranche 特定的标志。\n\nscanout 标志是一个提示，如果客户端适当地分配缓冲区，合成器可能会尝试在目标设备上直接扫描输出。如何分配可以在目标设备上扫描输出的缓冲区是实现定义的。\n\n此事件与偏好 tranche 关联，参见 tranche_done 事件。"
+          }
+        }
+      },
+      "enums": {
+        "tranche_flags": {
+          "entries": {
+            "scanout": {
+              "summary": "直接扫描输出 tranche"
+            }
+          }
+        }
+      }
+    }
+  }
+}
