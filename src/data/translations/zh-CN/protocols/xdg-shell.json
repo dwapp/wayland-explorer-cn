@@ -1,0 +1,588 @@
+{
+    "description": {
+        "summary": "创建桌面风格表面的协议",
+        "text": "xdg_shell 协议允许客户端在桌面环境中将其 wl_surfaces 转换为窗口。它定义了客户端和合成器创建可拖动、调整大小、最大化等操作的窗口所需的基本功能，以及创建弹出菜单等临时窗口的功能。"
+    },
+    "interfaces": {
+        "xdg_wm_base": {
+            "description": {
+                "summary": "创建桌面风格的表面",
+                "text": "xdg_wm_base 接口作为一个全局对象暴露，允许客户端在桌面环境中将其 wl_surface 转换为窗口。它定义了客户端和合成器创建可拖动、调整大小、最大化等操作的窗口所需的基本功能，以及创建弹出菜单等临时窗口的功能。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 xdg_wm_base",
+                        "text": "销毁此 xdg_wm_base 对象。\n\n在此 xdg_wm_base 对象实例创建的表面仍然存在时销毁绑定的 xdg_wm_base 对象是非法的，将导致 defunct_surfaces 错误。"
+                    }
+                },
+                "create_positioner": {
+                    "description": {
+                        "summary": "创建一个定位器对象",
+                        "text": "创建一个定位器对象。定位器对象用于设置表面相对于某个父表面的位置。详情请参阅接口描述和 xdg_surface.get_popup。"
+                    }
+                },
+                "get_xdg_surface": {
+                    "description": {
+                        "summary": "从表面创建外壳表面",
+                        "text": "为给定的表面创建一个 xdg_surface。虽然 xdg_surface 本身不是一个角色，但相应的表面只能被分配一个继承自 xdg_surface 的角色，如 xdg_toplevel 或 xdg_popup。为已经分配了角色的 wl_surface 创建 xdg_surface 是非法的，这将导致角色错误。\n\n这为给定的表面创建一个 xdg_surface。xdg_surface 用作向给定表面定义角色（如 xdg_toplevel 或 xdg_popup）的基础。它还管理基于 xdg_surface 的表面角色之间共享的功能。\n\n有关 xdg_surface 是什么以及如何使用的更多详细信息，请参阅 xdg_surface 的文档。"
+                    }
+                },
+                "pong": {
+                    "description": {
+                        "summary": "响应 ping 事件",
+                        "text": "客户端必须使用 pong 请求响应 ping 事件，否则客户端可能被视为无响应。参阅 xdg_wm_base.ping 和 xdg_wm_base.error.unresponsive。"
+                    }
+                }
+            },
+            "events": {
+                "ping": {
+                    "description": {
+                        "summary": "检查客户端是否存活",
+                        "text": "ping 事件询问客户端是否仍然存活。通过发送带有指定序列号的 \"pong\" 请求，将事件中指定的序列号传回合成器。参阅 xdg_wm_base.pong。\n\n合成器可以使用它来确定客户端是否仍然存活。如果客户端不响应 ping 请求或在什么时间内响应，其结果是未指定的。客户端应尝试在合理的时间内做出响应。为希望断开无响应客户端连接的合成器提供了 “unresponsive” 错误。\n\n合成器可以自由地以任何方式进行 ping，但客户端必须始终响应它创建的任何 xdg_wm_base 对象。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "role": {
+                            "summary": "给定的 wl_surface 已有另一个角色"
+                        },
+                        "defunct_surfaces": {
+                            "summary": "xdg_wm_base 在其子对象之前被销毁"
+                        },
+                        "not_the_topmost_popup": {
+                            "summary": "客户端尝试映射或销毁一个非顶层的弹出窗口"
+                        },
+                        "invalid_popup_parent": {
+                            "summary": "客户端指定了无效的弹出窗口父表面"
+                        },
+                        "invalid_surface_state": {
+                            "summary": "客户端提供了无效的表面状态"
+                        },
+                        "invalid_positioner": {
+                            "summary": "客户端提供了无效的定位器"
+                        },
+                        "unresponsive": {
+                            "summary": "客户端未及时响应 ping 事件"
+                        }
+                    }
+                }
+            }
+        },
+        "xdg_positioner": {
+            "description": {
+                "summary": "子表面定位器",
+                "text": "xdg_positioner 提供了一组用于子表面相对于父表面放置的规则。可以定义规则以确保子表面保持在可见区域的边界内，并指定子表面如何改变其位置，例如沿轴滑动或围绕矩形翻转。这些由定位器创建的规则受以下要求的约束：子表面必须与父表面相交或至少部分相邻。\n\n有关可能规则的详细信息，请参阅各种请求。\n\n在请求时，合成器会复制由 xdg_positioner 指定的规则。因此，在请求完成后，可以销毁或重复使用 xdg_positioner 对象；对对象的进一步更改将对以前的使用没有影响。\n\n为了使 xdg_positioner 对象被认为是完整的，它必须具有由 set_size 设置的非零大小，以及由 set_anchor_rect 设置的非零锚点矩形。在定位表面时传递不完整的 xdg_positioner 对象会引发 invalid_positioner 错误。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 xdg_positioner 对象",
+                        "text": "通知合成器 xdg_positioner 将不再使用。"
+                    }
+                },
+                "set_size": {
+                    "description": {
+                        "summary": "设置待定位矩形的大小",
+                        "text": "设置要使用定位器对象定位的表面的大小。大小以表面局部坐标表示，并对应于窗口几何结构。参阅 xdg_surface.set_window_geometry。\n\n如果设置了零或负大小，则引发 invalid_input 错误。"
+                    }
+                },
+                "set_anchor_rect": {
+                    "description": {
+                        "summary": "在父表面内设置锚点矩形",
+                        "text": "指定父表面内的锚点矩形，子表面将相对于该矩形放置。矩形相对于父表面的 xdg_surface.set_window_geometry 定义的窗口几何结构。\n\n当使用 xdg_positioner 对象定位子表面时，锚点矩形不得延伸到被定位子表面的父表面的窗口几何结构之外。\n\n如果设置了负大小，则引发 invalid_input 错误。"
+                    }
+                },
+                "set_anchor": {
+                    "description": {
+                        "summary": "设置锚点矩形的锚点",
+                        "text": "定义锚点矩形的锚点。指定的锚点用于导出子表面将相对于其定位的锚点。如果设置了角锚点（例如 'top_left' 或 'bottom_right'），则锚点将位于指定的角；否则，派生的锚点将位于指定边缘的中心，或者如果没有指定边缘，则位于锚点矩形的中心。"
+                    }
+                },
+                "set_gravity": {
+                    "description": {
+                        "summary": "设置子表面重心",
+                        "text": "定义表面相对于父表面的锚点应向哪个方向定位。如果指定了角重心（例如 'bottom_right' 或 'top_left'），则子表面将朝向指定的重心放置；否则，子表面将在任何未指定重心的轴上居中于锚点之上。如果重心不在 'gravity' 枚举中，则引发 invalid_input 错误。"
+                    }
+                },
+                "set_constraint_adjustment": {
+                    "description": {
+                        "summary": "设置受限时要执行的调整",
+                        "text": "指定如果最初预期的位置导致表面受限（即至少部分位于合成器设置的定位边界之外），应如何定位窗口。通过构造一个位掩码来设置调整，该位掩码描述了当表面在该轴上受限时要进行的调整。\n\n如果没有设置一个轴的位，合成器将假设子表面在受限时不应改变其在该轴上的位置。\n\n如果为一个轴设置了多个位，则应用调整的顺序在相应的调整描述中指定。\n\n默认调整为无。"
+                    }
+                },
+                "set_offset": {
+                    "description": {
+                        "summary": "设置表面位置偏移",
+                        "text": "指定相对于锚点矩形上的锚点位置和表面上的锚点位置的表面位置偏移。例如，如果锚点矩形的锚点在 (x, y)，表面具有重心 bottom|right，偏移量为 (ox, oy)，则计算出的表面位置将为 (x + ox, y + oy)。表面的偏移位置是用于约束测试的位置。参阅 set_constraint_adjustment。\n\n一个示例用例是将弹出菜单放在用户界面元素的顶部，同时将父表面的用户界面元素与放置在弹出表面某处的某些用户界面元素对齐。"
+                    }
+                },
+                "set_reactive": {
+                    "description": {
+                        "summary": "持续重新约束表面",
+                        "text": "当设置为响应式时，如果用于约束的条件发生变化（例如父窗口移动），则表面将重新受到约束。\n\n如果条件发生变化且弹出窗口重新受到约束，则会发送一个带有更新几何结构的 xdg_popup.configure 事件，随后是 xdg_surface.configure 事件。"
+                    }
+                },
+                "set_parent_size": {
+                    "description": {
+                        "summary": "",
+                        "text": "设置合成器在定位弹出窗口时应使用的父窗口几何结构。合成器可以使用此信息来确定弹出窗口将来应受到的约束状态。如果这与弹出窗口最终定位到的父表面的尺寸不匹配，则行为是未定义的。\n\n参数在表面局部坐标空间中给出。"
+                    }
+                },
+                "set_parent_configure": {
+                    "description": {
+                        "summary": "设置此响应所针对的父配置",
+                        "text": "设置此定位器将响应的 xdg_surface.configure 事件的序列号。合成器可以将此信息与 set_parent_size 结合使用，以确定弹出窗口将来应受到的约束状态。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "invalid_input": {
+                            "summary": "提供了无效输入"
+                        }
+                    }
+                },
+                "constraint_adjustment": {
+                    "description": {
+                        "summary": "约束调整",
+                        "text": "约束调整值定义了如果未调整的位置会导致表面部分受限，合成器将如何调整表面的位置。\n\n表面是否被视为“受限”由合成器决定。例如，表面可能部分位于合成器定义的“工作区”之外，因此需要调整子表面的位置，直到它完全位于工作区内。\n\n这些调整可以根据定义的优先级进行组合：1) 翻转，2) 滑动，3) 调整大小。"
+                    },
+                    "entries": {
+                        "none": {
+                            "summary": "受限时不移动子表面",
+                            "description": {
+                                "summary": "受限时不移动子表面",
+                                "text": "即使表面在某些轴上受限（例如部分位于输出边缘之外），也不要改变表面位置。"
+                            }
+                        },
+                        "slide_x": {
+                            "summary": "沿 x 轴移动直到不受限制",
+                            "description": {
+                                "summary": "沿 x 轴移动直到不受限制",
+                                "text": "沿 x 轴滑动表面，直到它不再受限。\n\n首先尝试向 x 轴上的重心方向滑动，直到重心相反方向的边缘不受限，或重心方向的边缘受限。\n\n然后尝试向 x 轴上重心的相反方向滑动，直到重心方向的边缘不受限，或重心相反方向的边缘受限。"
+                            }
+                        },
+                        "slide_y": {
+                            "summary": "沿 y 轴移动直到不受限制",
+                            "description": {
+                                "summary": "沿 y 轴移动直到不受限制",
+                                "text": "沿 y 轴滑动表面，直到它不再受限。\n\n首先尝试向 y 轴上的重心方向滑动，直到重心相反方向的边缘不受限，或重心方向的边缘受限。\n\n然后尝试向 y 轴上重心的相反方向滑动，直到重心方向的边缘不受限，或重心相反方向的边缘受限。"
+                            }
+                        },
+                        "flip_x": {
+                            "summary": "反转 x 轴上的锚点和重心",
+                            "description": {
+                                "summary": "反转 x 轴上的锚点和重心",
+                                "text": "如果表面在 x 轴上受限，则反转 x 轴上的锚点和重心。例如，如果表面的左边缘受限，重心是 'left'，锚点是 'left'，则将重心更改为 'right'，锚点更改为 'right'。\n\n如果调整后的位置最终也受限，则 flip_x 调整的结果位置将是调整前的位置。"
+                            }
+                        },
+                        "flip_y": {
+                            "summary": "反转 y 轴上的锚点和重心",
+                            "description": {
+                                "summary": "反转 y 轴上的锚点和重心",
+                                "text": "如果表面在 y 轴上受限，则反转 y 轴上的锚点和重心。例如，如果表面的底边缘受限，重心是 'bottom'，锚点是 'bottom'，则将重心更改为 'top'，锚点更改为 'top'。\n\n调整后的位置是根据原始锚点矩形和偏移量计算的，但使用了新的翻转锚点和重心值。\n\n如果调整后的位置最终也受限，则 flip_y 调整的结果位置将是调整前的位置。"
+                            }
+                        },
+                        "resize_x": {
+                            "summary": "水平调整表面大小",
+                            "description": {
+                                "summary": "水平调整表面大小",
+                                "text": "水平调整表面大小，使其完全不受限制。"
+                            }
+                        },
+                        "resize_y": {
+                            "summary": "垂直调整表面大小",
+                            "description": {
+                                "summary": "垂直调整表面大小",
+                                "text": "垂直调整表面大小，使其完全不受限制。"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "xdg_surface": {
+            "description": {
+                "summary": "桌面用户界面表面基础接口",
+                "text": "一个可以由 wl_surface 实现的接口，用于提供桌面风格用户界面的实现。\n\n它提供了一组构建需要由合成器管理的用户界面元素（如顶级窗口、菜单等）所需的基础功能。功能类型分为 xdg_surface 角色。\n\n创建 xdg_surface 不会为 wl_surface 设置角色。为了映射 xdg_surface，客户端必须使用例如 get_toplevel、get_popup 创建特定于角色的对象。任何给定 xdg_surface 的 wl_surface 最多只能有一个角色，并且不能分配任何不基于 xdg_surface 的角色。\n\n在对 xdg_surface 对象发出任何其他请求之前，必须分配一个角色。\n\n客户端必须在相应的 wl_surface 上调用 wl_surface.commit，以使 xdg_surface 状态生效。\n\n从已附加或提交缓冲区的 wl_surface 创建 xdg_surface 是客户端错误，客户端在第一次 xdg_surface.configure 调用之前尝试附加或操作缓冲区的任何行为也必须被视为错误。\n\n创建角色特定对象并进行设置（例如通过发送标题、应用 ID、大小约束、父对象等）后，客户端必须执行不附加任何缓冲区的初始提交。合成器将回复初始 wl_surface 状态（例如 wl_surface.preferred_buffer_scale），随后是 xdg_surface.configure 事件。客户端必须确认它，然后才允许附加缓冲区以映射表面。\n\n映射基于 xdg_surface 角色的表面被定义为使表面可以由合成器显示。请注意，映射后的表面并不能保证在映射后可见。\n\n为了让合成器映射 xdg_surface，必须满足以下条件：\n(1) 客户端已为表面分配了基于 xdg_surface 的角色\n(2) 客户端已设置并提交了 xdg_surface 状态..."
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 xdg_surface",
+                        "text": "销毁 xdg_surface 对象。xdg_surface 必须在其角色对象被销毁后才能被销毁，否则会引发 defunct_role_object 错误。"
+                    }
+                },
+                "get_toplevel": {
+                    "description": {
+                        "summary": "分配 xdg_toplevel 表面角色",
+                        "text": "这为给定的 xdg_surface 创建一个 xdg_toplevel 对象，并为关联的 wl_surface 分配 xdg_toplevel 角色。\n\n有关 xdg_toplevel 是什么以及如何使用的更多详细信息，请参阅 xdg_toplevel 的文档。"
+                    }
+                },
+                "get_popup": {
+                    "description": {
+                        "summary": "分配 xdg_popup 表面角色",
+                        "text": "这为给定的 xdg_surface 创建一个 xdg_popup 对象，并为关联的 wl_surface 分配 xdg_popup 角色。\n\n如果将 null 作为父对象传递，则在提交初始状态之前，必须使用某些其他协议指定父表面。\n\n有关 xdg_popup 是什么以及如何使用的更多详细信息，请参阅 xdg_popup 的文档。"
+                    }
+                },
+                "set_window_geometry": {
+                    "description": {
+                        "summary": "设置新的窗口几何结构",
+                        "text": "表面的窗口几何结构是从用户角度看的“可见边界”。客户端装饰通常具有不可见的部分（如投影），在对齐、放置和约束窗口时应忽略这些部分。请注意，在某些情况下，合成器可能会将渲染剪裁到窗口几何结构中，因此客户端应避免在其外部放置功能元素。\n\n窗口几何结构是双缓冲状态，参阅 wl_surface.commit。\n\n在保持位置时，合成器应将窗口几何结构的 (x, y) 坐标视为窗口的左上角。更改 (x, y) 窗口几何结构坐标的客户端通常不应改变窗口的位置。\n\n一旦设置了表面的窗口几何结构，就无法取消设置，并且在再次调用 set_window_geometry 之前它将保持不变，即使附加了新的子表面或缓冲区也是如此。\n\n如果从未设置，则该值为表面的完整边界，包括任何子表面。这在每次提交时动态更新。此取消设置是为极其简单的客户端准备的。\n\n参数在与此 xdg_surface 关联的 wl_surface 的表面局部坐标空间中给出，并且可能延伸到 wl_surface 本身之外，以将子表面树的部分标记为窗口几何结构的一部分。\n\n应用时，有效窗口几何结构将是设置的窗口几何结构，被限制在 xdg_surface 表面和关联子表面的组合几何结构的边界矩形内。\n\n除非再次调用 set_window_geometry 并随后应用新的挂起表面状态，否则不会重新计算有效几何结构。\n\n有效窗口几何结构的宽度和高度必须大于零。设置无效的大小将引发 invalid_size 错误。"
+                    }
+                },
+                "ack_configure": {
+                    "description": {
+                        "summary": "确认配置事件",
+                        "text": "收到 configure 事件后，如果客户端响应 configure 事件提交表面，则客户端必须在提交请求之前的某个时间发出 ack_configure 请求，并传递 configure 事件的序列号。\n\n例如，对于顶级表面，合成器可能仅在客户端为最大化或全屏状态绘制自身时才使用此信息将表面移动到左上角。\n\n如果客户端在能够响应一个 configure 事件之前收到多个 configure 事件，则它只需确认最后一个 configure 事件。确认从未发送过的 configure 事件会引发 invalid_serial 错误。\n\n客户端不需要在发送 ack_configure 请求后立即提交——它甚至可以在下一次表面提交之前多次执行 ack_configure。\n\n客户端可以在提交之前发送多个 ack_configure 请求，但只有提交前发送的最后一个请求指示客户端实际响应的是哪个 configure 事件。\n\n发送 ack_configure 请求会消耗随请求发送的序列号，以及在提交序列号引用的 configure 事件之前在此 xdg_surface 上发送的所有 configure 事件发送的序列号。\n\n发出多个引用来自同一 configure 事件的序列号的 ack_configure 请求，或发出引用在同一个 xdg_surface 的最后一次 ack_configure 请求标识的事件之前发布的 configure 事件的序列号的 ack_configure 请求都是错误的。这样做将引发 invalid_serial 错误。"
+                    }
+                }
+            },
+            "events": {
+                "configure": {
+                    "description": {
+                        "summary": "建议更改表面",
+                        "text": "configure 事件标志着配置序列的结束。配置序列是配置 xdg_surface 状态的一组或多个事件，包括最后的 xdg_surface.configure 事件。\n\n在适用情况下，xdg_surface 表面角色将在配置序列期间扩展此事件，作为在 xdg_surface.configure 事件之前作为事件发送的锁定状态。此类事件应被视为构成一组原子应用配置状态，其中 xdg_surface.configure 提交累积的状态。\n\n客户端应为其表面安排新状态，然后在提交新表面之前的某个时间点发送带有此 configure 事件中发送的序列号的 ack_configure 请求。\n\n如果客户端在能够响应一个事件之前收到多个 configure 事件，则它可以自由丢弃除收到的最后一个事件之外的所有事件。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "not_constructed": {
+                            "summary": "表面未完全构造"
+                        },
+                        "already_constructed": {
+                            "summary": "表面已构造"
+                        },
+                        "unconfigured_buffer": {
+                            "summary": "将缓冲区附加到未配置的表面"
+                        },
+                        "invalid_serial": {
+                            "summary": "确认配置事件时序列号无效"
+                        },
+                        "invalid_size": {
+                            "summary": "宽度或高度为零或负数"
+                        },
+                        "defunct_role_object": {
+                            "summary": "表面在其角色对象之前被销毁"
+                        }
+                    }
+                }
+            }
+        },
+        "xdg_toplevel": {
+            "description": {
+                "summary": "顶级表面",
+                "text": "此接口定义了一个 xdg_surface 角色，该角色允许表面执行以下操作：设置窗口属性（如最大化、全屏和最小化），设置特定于应用程序的元数据（如标题和 ID），以及触发用户交互操作（如交互式调整大小和移动）。\n\n默认情况下，xdg_toplevel 负责提供顶级窗口的完整预期视觉表示，根据窗口状态，这可能意味着标题栏、窗口控件和投影等内容。\n\n取消映射 xdg_toplevel 意味着在显式再次映射之前，合成器无法显示该表面。当 xdg_toplevel 表面取消映射时，所有活动操作（例如移动、调整大小）都将被取消，并且所有属性（例如标题、状态、堆叠等）都将被丢弃。xdg_toplevel 返回到它在执行 xdg_surface.get_toplevel 之后的状态。客户端可以通过在不附加任何缓冲区的情况下执行提交，等待 configure 事件并像往常一样处理它来重新映射顶级窗口（见 xdg_surface 描述）。\n\n向顶级窗口附加空缓冲区会取消映射该表面。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 xdg_toplevel",
+                        "text": "此请求销毁角色表面并取消映射表面；详情参阅接口部分的“取消映射”行为。"
+                    }
+                },
+                "set_parent": {
+                    "description": {
+                        "summary": "设置此表面的父对象",
+                        "text": "设置此表面的“父表面”。此表面应堆叠在父表面和所有其他祖先表面之上。\n\n应在对话框、工具箱或其他“辅助”表面上设置父表面，以便在升高对话框时升高父表面。\n\n为子表面设置空父对象会取消设置其父对象。为当前没有父对象的表面设置空父对象是不执行任何操作的（no-op）。\n\n只有映射的表面才能拥有子表面。设置一个未映射的父对象相当于设置一个空父对象。如果一个表面取消映射，其子表面的父对象将被设置为该取消映射表面的父对象。如果该取消映射表面没有父对象，则其子表面的父对象将被取消设置。如果该取消映射表面再次映射，其父子关系将不会恢复。\n\n父级顶级窗口不能是子级顶级窗口的后代，且父级必须与子级不同，否则会引发 invalid_parent 协议错误。"
+                    }
+                },
+                "set_title": {
+                    "description": {
+                        "summary": "设置表面标题",
+                        "text": "为表面设置一个简短标题。\n\n此字符串可用于在任务栏、窗口列表或合成器提供的其他用户界面元素中标识表面。\n\n字符串必须使用 UTF-8 编码。"
+                    }
+                },
+                "set_app_id": {
+                    "description": {
+                        "summary": "设置应用 ID",
+                        "text": "为表面设置应用标识符。\n\n应用 ID 标识了表面所属的应用通用类别。合成器可以使用它将多个表面分组，或确定如何启动新应用。\n\n对于支持 D-Bus 激活的应用，应用 ID 用作 D-Bus 服务名称。\n\n合成器外壳将尝试根据应用 ID 将应用表面分组。作为最佳实践，建议选择与应用 .desktop 文件的基准名称相匹配的应用 ID。例如，对于 .desktop 文件为 \"org.freedesktop.FooViewer.desktop\" 的应用，应用 ID 为 \"org.freedesktop.FooViewer\"。\n\n与其他属性一样，可以在映射 xdg_toplevel 之后发送 set_app_id 请求以更新该属性。\n\n有关应用标识符以及它们如何与知名的 D-Bus 名称和 .desktop 文件相关的更多详细信息，请参阅桌面入口规范 [0]。\n\n[0] https://standards.freedesktop.org/desktop-entry-spec/"
+                    }
+                },
+                "show_window_menu": {
+                    "description": {
+                        "summary": "显示窗口菜单",
+                        "text": "实现客户端装饰的客户端可能希望在右键单击装饰时显示上下文菜单，为用户提供一个可用于最大化或最小化窗口的菜单。\n\n此请求要求合成器在给定位置（相对于父表面的局部表面坐标）弹出此类窗口菜单。不保证窗口菜单包含哪些菜单项，甚至不保证是否会绘制窗口菜单。\n\n此请求必须用于响应某种用户操作，如按钮按下、按键按下或触摸按下事件。"
+                    }
+                },
+                "move": {
+                    "description": {
+                        "summary": "开始交互式移动",
+                        "text": "开始由用户驱动的表面交互式移动。\n\n此请求必须用于响应某种用户操作，如按钮按下、按键按下或触摸按下事件。传递的序列号用于确定交互式移动的类型（触摸、指针等）。\n\n服务器可能会根据表面的状态（例如全屏或最大化）或者传递的序列号是否不再有效来忽略移动请求。\n\n如果触发，表面将失去用于移动的设备（wl_pointer、wl_touch 等）的焦点。由合成器决定在移动过程中视觉指示移动正在进行，例如更新指针光标。不保证在移动完成后设备焦点会返回。"
+                    }
+                },
+                "resize": {
+                    "description": {
+                        "summary": "开始交互式调整大小",
+                        "text": "开始由用户驱动的表面交互式调整大小。\n\n此请求必须用于响应某种用户操作，如按钮按下、按键按下或触摸按下事件。传递的序列号用于确定交互式调整大小的类型（触摸、指针等）。\n\n服务器可能会根据表面的状态（例如全屏或最大化）忽略调整大小的请求。\n\n如果触发，客户端将收到带有 \"resize\" 状态枚举值和预期大小的配置事件。有关所需内容的更多详细信息，请参阅 \"resize\" 枚举值。客户端还必须使用 \"ack_configure\" 确认配置事件。调整大小完成后，客户端将收到另一个不带调整大小状态的 \"configure\" 事件。\n\n如果触发，表面也将失去用于调整大小的设备（wl_pointer、wl_touch 等）的焦点。由合成器决定在调整大小过程中视觉指示调整大小正在进行，例如更新指针光标。不保证在调整大小完成后设备焦点会返回。\n\nedges 参数指定如何调整表面的大小，它是 resize_edge 枚举值之一。不匹配枚举变体的值将导致 invalid_resize_edge 协议错误。合成器可以使用此信息来更新表面位置，例如在拖动左上角时。合成器还可以使用此信息来调整其行为，例如选择适当的光标图像。"
+                    }
+                },
+                "set_max_size": {
+                    "description": {
+                        "summary": "设置最大大小",
+                        "text": "为窗口设置最大大小。\n\n客户端可以指定最大大小，以便合成器不会尝试将窗口配置为超出此大小。\n\n宽度和高度参数采用窗口几何坐标。参阅 xdg_surface.set_window_geometry。\n\n以此方式设置的值是双缓冲的，参阅 wl_surface.commit。\n\n合成器可以使用此信息来允许或禁止不同的状态（如最大化或全屏）并绘制精确的动画。\n\n类似地，平铺窗口管理器可以使用此信息以更有效的方式放置和调整客户端窗口的大小。\n\n客户端不应依赖合成器遵守最大大小。合成器可能会决定忽略客户端设置的值并请求更大的尺寸。\n\n如果从未设置，或者请求中的值为零，则表示客户端在给定维度上没有预期的最大大小。因此，希望将最大大小重置为未指定状态的客户端可以在请求中为宽度和高度使用零。\n\n请求最大大小小于表面的最小大小是非法的，将导致 invalid_size 错误。\n\n宽度和高度必须大于或等于零。对宽度或高度使用负值将导致 invalid_size 错误。"
+                    }
+                },
+                "set_min_size": {
+                    "description": {
+                        "summary": "设置最小大小",
+                        "text": "为窗口设置最小大小。\n\n客户端可以指定最小大小，以便合成器不会尝试将窗口配置为低于此大小。\n\n宽度和高度参数采用窗口几何坐标。参阅 xdg_surface.set_window_geometry。\n\n以此方式设置的值是双缓冲的，参阅 wl_surface.commit。\n\n合成器可以使用此信息来允许或禁止不同的状态（如最大化或全屏）并绘制精确的动画。\n\n类似地，平铺窗口管理器可以使用此信息以更有效的方式放置和调整客户端窗口的大小。\n\n客户端不应依赖合成器遵守最小大小。合成器可能会决定忽略客户端设置的值并请求更小的尺寸。\n\n如果从未设置，或者请求中的值为零，则表示客户端在给定维度上没有预期的最小大小。因此，希望将最小大小重置为未指定状态的客户端可以在请求中为宽度和高度使用零。\n\n请求最小大小大于表面的最大大小是非法的，将导致 invalid_size 错误。\n\n宽度和高度必须大于或等于零。对宽度或高度使用负值将导致 invalid_size 错误。"
+                    }
+                },
+                "set_maximized": {
+                    "description": {
+                        "summary": "最大化窗口",
+                        "text": "最大化表面。\n\n在请求将表面最大化后，合成器将通过发出 configure 事件进行响应。此配置是否实际设置窗口最大化取决于合成器的策略。客户端随后必须更新其内容，在配置的状态下进行绘制。客户端在提交新内容时还必须确认配置（参阅 ack_configure）。\n\n由合成器决定如何以及在哪里最大化表面，例如应使用哪个输出以及屏幕的哪个区域。\n\n如果表面已经最大化，合成器仍将发出带有 \"maximized\" 状态的配置事件。\n\n如果表面处于全屏状态，则此请求没有直接影响。除非被合成器覆盖，否则它可能会更改表面在取消最大化时返回的状态。"
+                    }
+                },
+                "unset_maximized": {
+                    "description": {
+                        "summary": "取消最大化窗口",
+                        "text": "取消最大化表面。\n\n在请求取消最大化表面后，合成器将通过发出 configure 事件进行响应。这是否实际取消窗口最大化取决于合成器的策略。如果可用且适用，合成器将在配置事件中包含窗口在最大化之前的窗口几何尺寸。客户端随后必须更新其内容，在配置的状态下进行绘制。客户端在提交新内容时还必须确认配置（参阅 ack_configure）。\n\n合成器负责在取消最大化后定位表面；通常是表面最大化之前的位置（如果适用）。\n\n如果表面已经未处于最大化状态，合成器仍将发出一个不带 \"maximized\" 状态的配置事件。\n\n如果表面处于全屏状态，则此请求没有直接影响。除非被合成器覆盖，否则它可能会更改表面在取消最大化时返回的状态。"
+                    }
+                },
+                "set_fullscreen": {
+                    "description": {
+                        "summary": "在输出上将窗口设置为全屏",
+                        "text": "使表面全屏。\n\n在请求表面应全屏后，合成器将通过发出 configure 事件进行响应。客户端是否实际进入全屏状态取决于合成器的策略。客户端在提交新内容时还必须确认配置（参阅 ack_configure）。\n\n请求传递的输出指示客户端对在哪个显示器上设置全屏的偏好。如果此值为 NULL，则由合成器选择用于映射此表面的显示器。\n\n如果表面没有覆盖整个输出，合成器会将表面定位在输出的中心，并使用覆盖输出其余部分的边框填充进行补偿。边框填充的内容是未定义的，但应被假定为以某种方式尝试融入周围区域（例如纯黑色）。\n\n如果全屏表面不是不透明的，合成器必须确保不属于同一表面树（由子表面、弹出窗口或类似的耦合表面组成）的其他屏幕内容在全屏表面下方不可见。"
+                    }
+                },
+                "unset_fullscreen": {
+                    "description": {
+                        "summary": "取消窗口全屏设置",
+                        "text": "使表面不再全屏。\n\n在请求表面取消全屏后，合成器将通过发出 configure 事件进行响应。这是否实际移除客户端的全屏状态取决于合成器的策略。\n\n取消表面全屏会根据以下内容设置表面的状态：\n* 它在进入全屏之前可能具有的状态\n* 由合成器决定的任何状态\n* 客户端在全屏期间请求的任何状态\n\n如果适用，合成器可能会在配置事件中包含之前的窗口几何尺寸。\n\n客户端在提交新内容时还必须确认配置（参阅 ack_configure）。"
+                    }
+                },
+                "set_minimized": {
+                    "description": {
+                        "summary": "将窗口设置为最小化",
+                        "text": "请求合成器最小化您的表面。没有办法知道表面当前是否最小化，也没有办法在此表面上取消最小化。\n\n如果您希望在最小化时限制重绘，请改用 wl_surface.frame 事件，因为这在 Alt-Tab、Expose 或类似的合成器功能的窗口实时预览中也能正常工作。"
+                    }
+                }
+            },
+            "events": {
+                "configure": {
+                    "description": {
+                        "summary": "建议更改表面",
+                        "text": "此配置事件要求客户端调整其顶级表面的大小或更改其状态。配置的状态不应立即应用。参阅 xdg_surface.configure 了解详情。\n\n宽度和高度参数为窗口提供了关于如何在窗口几何坐标中调整其表面大小的提示。参阅 set_window_geometry。\n\n如果宽度或高度参数为零，则表示客户端应自行决定其窗口尺寸。当合成器需要配置表面的状态但没有任何关于之前或预期尺寸的信息时，可能会发生这种情况。\n\n事件中列出的状态指定了应如何解释宽度/高度参数，以及可能应如何绘制它。\n\n客户端必须发送 ack_configure 作为对此事件的响应。参阅 xdg_surface.configure 和 xdg_surface.ack_configure 了解详情。"
+                    }
+                },
+                "close": {
+                    "description": {
+                        "summary": "表面请求关闭",
+                        "text": "当用户希望关闭表面时，合成器发送 close 事件。这应相当于用户单击客户端装饰（如果您的应用有的话）中的关闭按钮。\n\n这只是用户打算关闭窗口的请求。客户端可以选择忽略此请求，或显示对话框要求用户保存数据等。"
+                    }
+                },
+                "configure_bounds": {
+                    "description": {
+                        "summary": "建议的窗口几何边界",
+                        "text": "configure_bounds 事件可能在 xdg_toplevel.configure 事件之前发送，以传达建议窗口几何尺寸受限的边界。\n\n传递的宽度和高度是在表面坐标空间中。如果宽度和高度为 0，则表示边界未知，相当于从未为该表面发送过 configure_bounds 事件。\n\n边界例如可以对应于显示器的尺寸，不包括任何面板或其他外壳组件，从而避免以无法容纳的方式创建表面。\n\n边界可能在任何时候发生变化，在这种情况下，将发送新的 xdg_toplevel.configure_bounds，随后是 xdg_toplevel.configure 和 xdg_surface.configure。"
+                    }
+                },
+                "wm_capabilities": {
+                    "description": {
+                        "summary": "合成器功能",
+                        "text": "此事件宣传合成器支持的功能。如果不支持某项功能，客户端应隐藏或禁用公开此功能的 UI 元素。例如，如果合成器不宣传支持最小化的顶级窗口，则不应显示触发 set_minimized 请求的按钮。\n\n合成器将忽略它不支持的请求。例如，不宣传支持最小化的合成器将忽略 set_minimized 请求。\n\n合成器必须在第一个 xdg_surface.configure 事件之前发送一次此事件。当功能发生变化时，合成器必须再次发送此事件，然后发送 xdg_surface.configure 事件。\n\n配置的状态不应立即应用。参阅 xdg_surface.configure 了解详情。\n\n功能以原生字节序的 32 位无符号整数数组的形式发送。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "invalid_resize_edge": {
+                            "summary": "提供的值不是 resize_edge 枚举的有效变体"
+                        },
+                        "invalid_parent": {
+                            "summary": "无效的父级顶级窗口"
+                        },
+                        "invalid_size": {
+                            "summary": "客户端提供了无效的最小或最大尺寸"
+                        }
+                    }
+                },
+                "resize_edge": {
+                    "description": {
+                        "summary": "用于调整大小的边缘值",
+                        "text": "这些值用于指示在调整大小操作中正在拖动表面的哪个边缘。"
+                    }
+                },
+                "state": {
+                    "description": {
+                        "summary": "表面的状态类型",
+                        "text": "表面上使用的不同状态值。这是为最大化、全屏等状态值设计的。它与配置事件配对，以确保客户端和合成器对状态的设置可以同步。\n\n以此方式设置的状态是双缓冲的，参阅 wl_surface.commit。"
+                    },
+                    "entries": {
+                        "maximized": {
+                            "summary": "表面已最大化",
+                            "description": {
+                                "summary": "表面已最大化",
+                                "text": "表面已最大化。客户端必须遵守配置事件中指定的窗口几何结构，否则会引发 xdg_wm_base.invalid_surface_state 错误。\n\n客户端应在窗口几何结构之外绘制，且不带阴影或其他装饰。"
+                            }
+                        },
+                        "fullscreen": {
+                            "summary": "表面处于全屏",
+                            "description": {
+                                "summary": "表面处于全屏",
+                                "text": "表面处于全屏。配置事件中指定的窗口几何结构是最大值；客户端不能调整到超过该大小。为了使表面覆盖整个全屏区域，客户端必须遵守几何尺寸。有关更多详细信息，请参阅 xdg_toplevel.set_fullscreen。"
+                            }
+                        },
+                        "resizing": {
+                            "summary": "表面正在调整大小",
+                            "description": {
+                                "summary": "表面正在调整大小",
+                                "text": "表面正在调整大小。配置事件中指定的窗口几何结构是最大值；客户端不能调整到超过该大小。但是，具有纵横比或单元格大小配置的客户端可以使用较小的大小。"
+                            }
+                        },
+                        "activated": {
+                            "summary": "表面现已激活",
+                            "description": {
+                                "summary": "表面现已激活",
+                                "text": "客户端窗口装饰应像窗口处于活动状态一样进行绘制。不要假设这意味着窗口实际上具有键盘或指针焦点。"
+                            }
+                        },
+                        "tiled_left": {
+                            "summary": "表面的左边缘已平铺",
+                            "description": {
+                                "summary": "表面的左边缘已平铺",
+                                "text": "窗口当前处于平铺布局中，左边缘被认为与平铺网格的另一部分相邻。\n\n客户端应在左边缘的窗口几何结构之外绘制，且不带阴影或其他装饰。"
+                            }
+                        },
+                        "tiled_right": {
+                            "summary": "表面的右边缘已平铺",
+                            "description": {
+                                "summary": "表面的右边缘已平铺",
+                                "text": "窗口当前处于平铺布局中，右边缘被认为与平铺网格的另一部分相邻。\n\n客户端应在右边缘的窗口几何结构之外绘制，且不带阴影或其他装饰。"
+                            }
+                        },
+                        "tiled_top": {
+                            "summary": "表面的顶边缘已平铺",
+                            "description": {
+                                "summary": "表面的顶边缘已平铺",
+                                "text": "窗口当前处于平铺布局中，顶边缘被认为与平铺网格的另一部分相邻。\n\n客户端应在顶边缘的窗口几何结构之外绘制，且不带阴影或其他装饰。"
+                            }
+                        },
+                        "tiled_bottom": {
+                            "summary": "表面的底边缘已平铺",
+                            "description": {
+                                "summary": "表面的底边缘已平铺",
+                                "text": "窗口当前处于平铺布局中，底边缘被认为与平铺网格的另一部分相邻。\n\n客户端应在底边缘的窗口几何结构之外绘制，且不带阴影或其他装饰。"
+                            }
+                        },
+                        "suspended": {
+                            "summary": "表面重绘已挂起",
+                            "description": {
+                                "summary": "表面重绘已挂起",
+                                "text": "表面当前通常不进行重绘；例如，因为它的内容被另一个窗口遮挡，或者由于屏幕锁定而关闭了输出。"
+                            }
+                        },
+                        "constrained_left": {
+                            "summary": "表面的左边缘受限",
+                            "description": {
+                                "summary": "表面的左边缘受限",
+                                "text": "窗口的左边缘当前受限，这意味着它不应尝试从该边缘调整大小。例如，它可以表示它在窗口受限侧平铺在显示器边缘旁边。"
+                            }
+                        },
+                        "constrained_right": {
+                            "summary": "表面的右边缘受限",
+                            "description": {
+                                "summary": "表面的右边缘受限",
+                                "text": "窗口的右边缘当前受限，这意味着它不应尝试从该边缘调整大小。例如，它可以表示它在窗口受限侧平铺在显示器边缘旁边。"
+                            }
+                        },
+                        "constrained_top": {
+                            "summary": "表面的顶边缘受限",
+                            "description": {
+                                "summary": "表面的顶边缘受限",
+                                "text": "窗口的顶边缘当前受限，这意味着它不应尝试从该边缘调整大小。例如，它可以表示它在窗口受限侧平铺在显示器边缘旁边。"
+                            }
+                        },
+                        "constrained_bottom": {
+                            "summary": "表面的底边缘受限",
+                            "description": {
+                                "summary": "表面的底边缘受限",
+                                "text": "窗口的底边缘当前受限，这意味着它不应尝试从该边缘调整大小。例如，它可以表示它在窗口受限侧平铺在显示器边缘旁边。"
+                            }
+                        }
+                    }
+                },
+                "wm_capabilities": {
+                    "entries": {
+                        "window_menu": {
+                            "summary": "show_window_menu 可用"
+                        },
+                        "maximize": {
+                            "summary": "set_maximized 和 unset_maximized 可用"
+                        },
+                        "fullscreen": {
+                            "summary": "set_fullscreen 和 unset_fullscreen 可用"
+                        },
+                        "minimize": {
+                            "summary": "set_minimized 可用"
+                        }
+                    }
+                }
+            }
+        },
+        "xdg_popup": {
+            "description": {
+                "summary": "用于菜单的短期弹出表面",
+                "text": "弹出表面是一个短期的临时表面。它可以用来实现例如菜单、弹出框、工具提示和其他类似的用户界面概念。\n\n可以使弹出窗口执行显式抓取。有关详细信息，请参阅 xdg_popup.grab。\n\n当弹出窗口被驳回时，将发送一个 popup_done 事件，同时表面将被取消映射。有关详细信息，请参阅 xdg_popup.popup_done 事件。\n\n显式销毁 xdg_popup 对象也将驳回弹出窗口并取消映射表面。希望在单击自己的另一个表面时驳回弹出窗口的客户端应使用销毁请求来驳回弹出窗口。\n\n新创建的 xdg_popup 将堆叠在与同一 xdg_toplevel 关联的所有先前创建的 xdg_popup 表面之上。\n\nxdg_popup 的父对象必须在 xdg_popup 本身之前映射（参阅 xdg_surface 描述）。\n\n客户端必须在相应的 wl_surface 上调用 wl_surface.commit，以使 xdg_popup 状态生效。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "移除 xdg_popup 接口",
+                        "text": "这将销毁弹出窗口。显式销毁 xdg_popup 对象也将驳回弹出窗口并取消映射表面。\n\n如果此 xdg_popup 不是“最顶层”的弹出窗口，则将发送 xdg_wm_base.not_the_topmost_popup 协议错误。"
+                    }
+                },
+                "grab": {
+                    "description": {
+                        "summary": "使弹出窗口执行显式抓取",
+                        "text": "此请求使创建的弹出窗口执行显式抓取。当用户驳回弹出窗口或客户端销毁 xdg_popup 时，显式抓取将被取消. 这可以通过用户在表面之外单击、使用键盘、甚至通过合盖或超时锁定屏幕来完成。\n\n如果合成器拒绝抓取，弹出窗口将立即被驳回。\n\n此请求必须用于响应某种用户操作，如按钮按下、按键按下或触摸按下事件。事件的序列号应作为 'serial' 传递。\n\n执行抓取的弹出窗口的父级必须是 xdg_toplevel 表面或另一个具有显式抓取的 xdg_popup。如果父级是另一个 xdg_popup，这意味着弹出窗口是嵌套的，此时此弹出窗口成为最顶层的弹出窗口。\n\n嵌套的弹出窗口必须按其创建顺序的逆序销毁，例如，您在任何时候唯一允许销毁的弹出窗口是最顶层的一个。\n\n当合成器选择驳回弹出窗口时，它们也可能会驳回每一个嵌套的抓取弹出窗口。当合成器驳回弹出窗口时，它将遵循与客户端要求的相同的驳回顺序。\n\n如果最顶层的抓取弹出窗口被销毁，如果该弹出窗口的父级之前具有显式抓取，则抓取将返回给该父级。\n\n如果父级是已经被驳回的抓取弹出窗口，则此弹出窗口将立即被驳回。如果父级是未执行显式抓取的弹出窗口，则会引发错误。\n\n在弹出窗口抓取期间，拥有抓取的客户端将像往常一样接收其所有表面的指针和触摸事件（类似于 X11 术语中的 \"owner-events\" 抓取），而最顶层的抓取弹出窗口将始终具有键盘焦点。"
+                    }
+                },
+                "reposition": {
+                    "description": {
+                        "summary": "重新计算弹出窗口的位置",
+                        "text": "重新定位已映射的弹出窗口。将根据传递的 xdg_positioner 对象中的详细信息放置弹出窗口，并发出 xdg_popup.repositioned，随后是 xdg_popup.configure 和 xdg_surface.configure 以作为响应。先前定位器设置的任何参数都将被丢弃。\n\n传递的令牌将在相应的 xdg_popup.repositioned 事件中发送。在客户端确认相应的配置事件之前，新的弹出位置不会生效。详情请参阅 xdg_popup.repositioned。令牌本身是不透明的，没有其他特殊含义。\n\n如果发送了多个重新定位请求，合成器可能会跳过除最后一个之外的所有请求。\n\n如果弹出窗口是响应其父级的配置事件而重新定位的，则客户端应发送 xdg_positioner.set_parent_configure 并可能发送 xdg_positioner.set_parent_size 请求，以允许合成器正确约束弹出窗口。\n\n如果弹出窗口与正在调整大小的父级一起重新定位，但不是为了响应配置事件，则客户端应发送 xdg_positioner.set_parent_size 请求。"
+                    }
+                }
+            },
+            "events": {
+                "configure": {
+                    "description": {
+                        "summary": "配置弹出表面",
+                        "text": "此事件要求弹出表面根据配置进行自我配置。配置的状态不应立即应用。参阅 xdg_surface.configure 了解详情。\n\nx 和 y 参数表示根据 xdg_positioner 规则放置弹出窗口的位置，相对于父表面窗口几何结构的左上角。\n\n对于版本 2 或更早版本，xdg_popup 的配置事件仅在初始配置时发送一次。从版本 3 开始，如果弹出窗口是使用请求了 set_reactive 的 xdg_positioner 设置的，或者响应 xdg_popup.reposition 请求，则可能会再次发送它。"
+                    }
+                },
+                "popup_done": {
+                    "description": {
+                        "summary": "弹出窗口交互已完成",
+                        "text": "当弹出窗口被合成器驳回时，发送 popup_done 事件。客户端此时应销毁 xdg_popup 对象。"
+                    }
+                },
+                "repositioned": {
+                    "description": {
+                        "summary": "信号重新定位请求完成",
+                        "text": "repositioned 事件作为弹出窗口配置序列的一部分发送，与 xdg_popup.configure 以及最后的 xdg_surface.configure 一起发送，以通知重新定位请求的完成。\n\nrepositioned 事件用于通知 xdg_popup.reposition 请求的完成。token 参数是在 xdg_popup.reposition 请求中传递的令牌。\n\n发出此事件后，将立即发送带有更新的大小 and 位置以及新配置序列号的 xdg_popup.configure 和 xdg_surface.configure。\n\n客户端应选择性地更新弹出窗口的内容，但必须确认新的弹出窗口配置，以便新位置生效。参阅 xdg_surface.ack_configure 了解详情。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "invalid_grab": {
+                            "summary": "映射后尝试抓取"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
