@@ -53,6 +53,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Stable,
         protocol: require('./protocols/xdg-shell.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xdg-shell.json'),
+        },
     },
     {
         id: 'linux-dmabuf-v1',
@@ -196,6 +199,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/xdg-toplevel-icon-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xdg-toplevel-icon-v1.json'),
+        },
     },
     {
         id: 'xdg-dialog-v1',

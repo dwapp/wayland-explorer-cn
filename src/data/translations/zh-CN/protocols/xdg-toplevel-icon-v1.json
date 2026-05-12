@@ -1,0 +1,89 @@
+{
+  "description": {
+    "summary": "为顶层窗口分配图标的协议",
+    "text": "此协议允许客户端通过 XDG 图标库（使用图标名称）或像素数据为其顶层 surface 设置图标。\n\n顶层窗口图标代表单个顶层窗口（与代表整个应用程序的应用程序图标或启动器图标不同），可能会显示在窗口切换器、窗口概览和任务栏等列出各个窗口的位置。\n\n本文档在使用\"必须\"（must）、\"应该\"（should）、\"可以\"（may）等词语时遵循 RFC 2119。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会添加向后兼容的更改，并更新相应的接口版本。向后不兼容的更改只能通过创建新的扩展主版本来完成。"
+  },
+  "interfaces": {
+    "xdg_toplevel_icon_manager_v1": {
+      "description": {
+        "summary": "管理顶层窗口图标的接口",
+        "text": "此接口允许客户端创建顶层窗口图标，并将其设置到顶层窗口上以显示给用户。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁顶层窗口图标管理器",
+            "text": "销毁顶层窗口图标管理器。\n这不会销毁通过该管理器创建的对象。"
+          }
+        },
+        "create_icon": {
+          "description": {
+            "summary": "创建新的图标实例",
+            "text": "创建一个新的图标对象。该图标随后可以通过 'set_icon' 请求附加到 xdg_toplevel 上。"
+          }
+        },
+        "set_icon": {
+          "description": {
+            "summary": "为顶层窗口设置图标",
+            "text": "此请求将图标 'icon' 分配给 'toplevel'，或者在 'icon' 为 null 时清除顶层窗口的图标。\n此状态是双缓冲的，在下一次 wl_surface.commit 时应用。\n\n调用此请求后，作为 'icon' 提供的 xdg_toplevel_icon_v1 可以被客户端销毁，而 'toplevel' 不会丢失其图标。从此时起，xdg_toplevel_icon_v1 变为不可变的，任何后续更改尝试都必须触发 'xdg_toplevel_icon_v1.immutable' 协议错误。\n\n合成器必须使用图标提供的像素数据，或通过图标名称加载系统图标来设置顶层窗口图标。详情请参阅 'xdg_toplevel_icon_v1' 的描述。\n\n如果 'icon' 被设置为 null，对应顶层窗口的图标将重置为默认图标（通常是应用程序的图标，从其 desktop-entry 文件获取，或使用占位符图标）。\n如果此请求传入了一个没有分配像素缓冲区或图标的图标，则该图标必须像 'icon' 为 null 一样被重置。"
+          }
+        }
+      },
+      "events": {
+        "icon_size": {
+          "description": {
+            "summary": "描述支持且首选的图标尺寸",
+            "text": "此事件指示合成器希望客户端提供的图标尺寸（如果客户端拥有可缩放图标并能渲染任意尺寸）。\n\n创建 'xdg_toplevel_icon_manager_v1' 对象后，合成器可以发送一个或多个 'icon_size' 事件来描述首选的图标尺寸列表。如果合成器没有尺寸偏好，可以不发送任何 'icon_size' 事件，由客户端自行决定合适的图标尺寸。\n\n一系列 'icon_size' 事件必须以 'done' 事件结束。如果合成器没有尺寸偏好，它仍然必须发送 'done' 事件，即使前面没有任何 'icon_size' 事件。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "所有信息已发送完毕",
+            "text": "在所有 'icon_size' 事件发送完毕后发送此事件。"
+          }
+        }
+      }
+    },
+    "xdg_toplevel_icon_v1": {
+      "description": {
+        "summary": "顶层窗口图标",
+        "text": "此接口定义了一个顶层窗口图标。\n图标可以有一个名称和多个缓冲区。\n为了被应用，图标必须具有名称或至少一个缓冲区。将空图标（没有缓冲区或名称）应用到顶层窗口应将其图标重置为默认图标。\n\n优先使用缓冲区还是通过名称加载图标由合成器策略决定。详情请参阅 'set_name' 和 'add_buffer'。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁图标对象",
+            "text": "销毁 'xdg_toplevel_icon_v1' 对象。\n在顶层窗口图标被显式重置之前，该图标必须仍然保留在其被分配到的所有顶层窗口上。"
+          }
+        },
+        "set_name": {
+          "description": {
+            "summary": "设置图标名称",
+            "text": "此请求为此图标分配一个图标名称。\n任何先前设置的名称将被覆盖。\n\n合成器必须根据 XDG 图标主题规范 [1] 中描述的查找规则，使用当前环境的图标主题来解析 'icon_name'。\n\n如果合成器不支持图标名称或无法根据 XDG 图标主题规范解析 'icon_name'，则必须回退到使用像素缓冲区数据。\n\n如果在图标已通过 'set_icon' 分配给顶层窗口后调用此请求，必须触发 'immutable' 错误。\n\n[1]: https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html"
+          }
+        },
+        "add_buffer": {
+          "description": {
+            "summary": "从像素缓冲区添加图标数据",
+            "text": "此请求将作为 wl_buffer 提供的像素数据添加到图标中。\n\n客户端应为其能提供的所有图标尺寸和缩放比例添加像素数据，或为合成器通过 xdg_toplevel_icon_manager_v1 的 'icon_size' 事件明确请求的尺寸添加数据。\n\n作为 'buffer' 提供像素数据的 wl_buffer 必须由 wl_shm 支持，且必须为正方形（宽度和高度相等）。\n如果这些缓冲区要求中的任何一项未满足，必须触发 'invalid_buffer' 错误。\n\n如果此图标实例已有一个来自先前 'add_buffer' 请求的相同尺寸和缩放比例的缓冲区，最后一次请求的数据将覆盖已有的像素数据。\n\n在与之关联的 xdg_toplevel_icon 未被销毁之前，wl_buffer 必须保持存活，否则将触发 'no_buffer' 错误。缓冲区内容在分配给图标后不得修改。因此，wl_shm_pool 底层存储中用于 wl_buffer 的区域在此请求发送后不得修改。wl_buffer.release 事件未被使用。\n\n如果在图标已通过 'set_icon' 分配给顶层窗口后调用此请求，必须触发 'immutable' 错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_buffer": {
+              "summary": "提供的缓冲区不满足要求"
+            },
+            "immutable": {
+              "summary": "图标已被分配给顶层窗口，不可更改"
+            },
+            "no_buffer": {
+              "summary": "提供的缓冲区在顶层窗口图标被销毁前已被销毁"
+            }
+          }
+        }
+      }
+    }
+  }
+}
