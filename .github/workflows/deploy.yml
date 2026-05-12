@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
     group: pages
-    cancel-in-progress: false
+    cancel-in-progress: true
 
 jobs:
     build:
@@ -26,11 +26,15 @@ jobs:
                   path: build/protocols
 
     deploy:
-        needs: build
-        runs-on: ubuntu-latest
         environment:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}
+        runs-on: ubuntu-latest
+        needs: build
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
         steps:
             - id: deployment
               uses: actions/deploy-pages@v4
