@@ -1,0 +1,24 @@
+{
+  "interfaces": {
+    "xdg_system_bell_v1": {
+      "description": {
+        "summary": "系统铃声",
+        "text": "此全局接口允许客户端触发系统铃声。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会添加向后兼容的更改，并更新相应的接口版本。向后不兼容的更改只能通过创建新的扩展主版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁系统铃声对象",
+            "text": "通知此对象将不再被使用。"
+          }
+        },
+        "ring": {
+          "description": {
+            "summary": "触发系统铃声",
+            "text": "此请求代表客户端触发系统铃声。铃声的具体实现方式由合成器决定，可以是声音、某种视觉反馈、或其他任何形式，也可以什么都不做。\n\n传入的 surface 应具有类似 toplevel 的 surface 角色，或为 null，表示客户端没有要关联铃声触发的特定 toplevel。请参阅 xdg-shell 协议扩展了解 toplevel 类似的 surface 角色。"
+          }
+        }
+      }
+    }
+  }
+}

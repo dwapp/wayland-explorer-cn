@@ -238,6 +238,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/xdg-system-bell-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xdg-system-bell-v1.json'),
+        },
     },
     {
         id: 'ext-workspace-v1',
