@@ -1,0 +1,165 @@
+{
+  "interfaces": {
+    "ext_workspace_manager_v1": {
+      "description": {
+        "summary": "列出和控制工作区",
+        "text": "工作区（workspace），也称为虚拟桌面，是 surface 的分组。具有工作区概念的 compositor 可能一次只显示某些此类 surface 分组（那些“活动”工作区）。“激活”工作区是指请求 compositor 正常显示该工作区的 surface，而 compositor 可能会隐藏或以其他方式淡化仅与“非活动”工作区关联的 surface。\n工作区根据它们对应的 output 集合进行分组，并且只能包含来自这些 output 的 surface。通过这种方式，可以为每个 output 设置自己的一组工作区，或者让所有 output（或任何其他任意分组）共享工作区。compositor 可以选择在概念上将每组工作区排列在 N 维网格中。\n\n此协议的目的是通过向任务栏和 dock 提供工作区及其属性的列表，并允许它们激活和停用工作区，从而实现它们的创建。\n\n在客户端绑定 ext_workspace_manager_v1 之后，每个工作区都将通过 workspace 事件发送。"
+      },
+      "requests": {
+        "commit": {
+          "description": {
+            "summary": "有关工作区的所有请求均已发送",
+            "text": "客户端必须在完成发送其他请求后发送此请求。compositor 必须原子地处理在 commit 请求之前的一系列请求。\n\n这允许对工作区属性的更改被视为原子操作，即使它们通过多个事件发生，甚至即使它们涉及多个 ext_workspace_handle_v1 对象，例如，停用一个工作区并激活另一个工作区。"
+          }
+        },
+        "stop": {
+          "description": {
+            "summary": "停止发送事件",
+            "text": "指示客户端不再希望接收新工作区组的事件。但是，compositor 可能会发出更多工作区事件，直到发出 finished 事件。一旦处理了 stop 请求，compositor 预计将最终发送 finished 事件。\n\n客户端不得在此请求之后发送任何请求，这样做将引发 wl_display invalid_object 错误。"
+          }
+        }
+      },
+      "events": {
+        "workspace_group": {
+          "description": {
+            "summary": "已创建一个工作区组",
+            "text": "每当创建新的工作区组时都会发出此事件。\n\n工作区组的所有初始详细信息（output）将在此事件之后立即通过 ext_workspace_group_handle_v1 和 ext_workspace_handle_v1 中的相应事件发送。"
+          }
+        },
+        "workspace": {
+          "description": {
+            "summary": "工作区已创建",
+            "text": "每当创建新的工作区并将其添加到属于该管理器的组中时，都会发出此事件。\n\n工作区的所有初始详细信息（名称、坐标、状态）将在此事件之后立即通过 ext_workspace_handle_v1 中的相应事件发送。\n\n接收此事件的管理器应假定该工作区尚未通过调用其销毁事件而被销毁。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "所有初始工作区已发送",
+            "text": "此事件在所有的 ext_workspace_group_handle_v1 和 ext_workspace_handle_v1 对象初始创建后发送。\n\n一旦发出此事件，客户端就可以假定其具备了一组完整的工作区。"
+          }
+        },
+        "finished": {
+          "description": {
+            "summary": "compositor 已完成协议",
+            "text": "此事件表示 compositor 完成了向客户端发送事件。这可能发生在响应 ext_workspace_manager_v1.stop 请求时。\n\n接收到此事件后，客户端应当销毁此对象并放弃所有相关的状态。"
+          }
+        }
+      },
+      "enums": {}
+    },
+    "ext_workspace_group_handle_v1": {
+      "description": {
+        "summary": "一组工作区",
+        "text": "一个工作区组代表了一组在概念上相互分组的、并且共享同一组 output 的工作区。它们也可以在一个多维网格中彼此相邻地概念性排列。\n\n属于该组的工作区将通过 ext_workspace_manager_v1.workspace 事件发出。\n\n当所有与该组关联的工作区都被销毁后，应当销毁此对象。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁工作区组",
+            "text": "销毁工作区组对象。"
+          }
+        }
+      },
+      "events": {
+        "output_enter": {
+          "description": {
+            "summary": "工作区组分配给某个 output",
+            "text": "当工作区组被分配给特定的 output 时发送此事件。这意味着该组中的工作区包含了来自此 output 的 surface。\n\n这在此对象的整个生命周期中可能会发生变化。在客户端收到对应的输出离开事件之前，它应该假设工作区组与此 output 关联。"
+          }
+        },
+        "output_leave": {
+          "description": {
+            "summary": "工作区组已从 output 中移除",
+            "text": "当工作区组不再被分配给特定的 output 时发送此事件。这意味着该组中的工作区不再包含来自此 output 的 surface。"
+          }
+        },
+        "remove": {
+          "description": {
+            "summary": "工作区组被移除",
+            "text": "此事件意味着该工作区组已被销毁。客户端应发送一个 destory 请求并响应其放弃与该组相关的所有状态。\n\ncompositor 应该在触发此事件之前销毁组中的所有工作区。"
+          }
+        }
+      }
+    },
+    "ext_workspace_handle_v1": {
+      "description": {
+        "summary": "一个工作区",
+        "text": "工作区是一个概念性的 surface 组。在任何给定时间，单个工作区（并且可能只有一个）可能是“活动的”，这意味着属于它的 surface 正常渲染。\n\n当其他工作区未被激活时，可以隐藏其内容以不渲染或以不同的视觉样式呈现。\n\n工作区在所有相关的 output 上渲染。属于同一组的工作区共享相同的 output 集。\n\n此协议仅允许客户端观察 compositor 的工作区及其属性，并请求使某个工作区处于活动状态。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁工作区句柄",
+            "text": "此对象不再被需要。这并不影响 compositor 端的底层工作区。"
+          }
+        },
+        "activate": {
+          "description": {
+            "summary": "请求激活工作区",
+            "text": "请求 compositor 使此工作区成为“活动”状态。该请求是一个提示（hint），compositor 可以选择忽略它。"
+          }
+        },
+        "deactivate": {
+          "description": {
+            "summary": "请求使该工作区进入非活动状态",
+            "text": "请求 compositor 使此工作区变为非活动状态。这是一个提示，compositor 可能选择忽略。"
+          }
+        }
+      },
+      "events": {
+        "name": {
+          "description": {
+            "summary": "工作区的名称",
+            "text": "发送此事件以提供或更新工作区的名称。\n\n名称是用于标识工作区的字符串。它可以是一个数字，也可以是像“开发”或“网页浏览”这样的名称。名称不应包含换行符或其他控制字符。\n\n工作区名称不一定唯一。"
+          }
+        },
+        "coordinates": {
+          "description": {
+            "summary": "工作区的坐标",
+            "text": "发送此事件以向工作区分配一个 N 维坐标，该坐标旨在将其与其他工作区在其组的 N 维网格中关联。\n\n数组包含 32 位无符号整数，表示坐标。由于每个坐标必须在数组中作为无符号整数表示，并且坐标原点对于组中的所有工作区必须相同，因此它们只能是表示其在空间中相对位置的离散值。如果没有另外传达，应假定具有坐标数组 [0] 的工作区位于 N 维空间的原点。\n\n通过比较它们的数组并基于数组中的索引关联坐标维度（例如，索引 0 代表 X 坐标，索引 1 代表 Y 坐标），可以将一个坐标分配给每个轴。客户端不需要支持任何特定数量的维度，尽管二维网格是最常见的。\n\n发送此事件也是可选的；compositor 可以选择不将工作区排列在网格中，并仅依赖于接收到的创建事件来排序它们。"
+          }
+        },
+        "state": {
+          "description": {
+            "summary": "工作区的状态",
+            "text": "发送此事件以提供或更新工作区的状态。\n\n数组包含一组表示工作区当前状态的枚举值。"
+          }
+        },
+        "remove": {
+          "description": {
+            "summary": "工作区被销毁",
+            "text": "此事件意味着工作区已被销毁。客户端应当响应性地使用 destory 请求并丢弃所有与该工作区相关的状态。"
+          }
+        }
+      },
+      "enums": {
+        "state": {
+          "description": {
+            "summary": "工作区状态的类型",
+            "text": "描述工作区各种状态的枚举值。"
+          },
+          "entries": {
+            "active": {
+              "description": {
+                "summary": "工作区是处于活动状态的",
+                "text": "该工作区当前已激活并且其内容正在被渲染。"
+              }
+            },
+            "urgent": {
+              "description": {
+                "summary": "工作区需要引起关注",
+                "text": "此工作区中的某个 surface 已请求获取注意力（例如，有新消息或警报），但该工作区当前并未被激活。"
+              }
+            },
+            "hidden": {
+              "description": {
+                "summary": "工作区是隐藏的",
+                "text": "此工作区处于隐藏状态，它不会出现在通常的显示中，例如，它不应该显示在工作区切换器中。客户端不需要支持隐藏的工作区，或者可以以不同的方式展示它们。"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

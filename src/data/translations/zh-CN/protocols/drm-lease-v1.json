@@ -1,0 +1,169 @@
+{
+  "interfaces": {
+    "wp_drm_lease_device_v1": {
+      "description": {
+        "summary": "租赁设备",
+        "text": "此协议由作为 Direct Rendering Manager (DRM) master 的 Wayland compositor 使用，以将 DRM 资源租赁给 Wayland 客户端。\n\ncompositor 将为每个 DRM 节点广播一个 wp_drm_lease_device_v1 全局对象。在客户端绑定 wp_drm_lease_device_v1 全局对象之后的一段时间，compositor 将发送 drm_fd 事件，随后发送零个、一个或多个 connector 事件。在所有当前可用的 connector 都发送完毕后，compositor 将发送 wp_drm_lease_device_v1.done 事件。\n\n当可供租赁的 connector 列表发生更改时，compositor 将为添加的 connector 发送 wp_drm_lease_device_v1.connector 事件，为移除的 connector 发送 wp_drm_lease_connector_v1.withdrawn 事件，随后发送 wp_drm_lease_device_v1.done 事件。\n\ncompositor 将通过 wl_registry.global_remove 事件移除全局对象来指示设备已被移除。收到此事件后，客户端应销毁任何匹配的 wp_drm_lease_device_v1 对象。\n\n要销毁 wp_drm_lease_device_v1 对象，客户端必须首先发出 release 请求。收到此请求后，compositor 将立即发送 released 事件并销毁该对象。在收到 released 事件之前，客户端必须继续处理并丢弃 drm_fd 和 connector 事件。收到 released 事件后，客户端可以安全地清理任何客户端资源。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本提升一起添加。向后不兼容的更改只能通过创建扩展的新主版本来完成。"
+      },
+      "requests": {
+        "create_lease_request": {
+          "description": {
+            "summary": "创建租赁请求对象",
+            "text": "创建一个租赁请求对象。\n\n有关详细信息，请参阅 wp_drm_lease_request_v1 的文档。"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "释放此对象",
+            "text": "指示客户端不再希望使用此对象。作为响应，compositor 将立即发送 released 事件并销毁此对象。但是它不能保证客户端在 released 事件之前不会收到 connector 事件。客户端不得在此请求之后发送任何请求，这样做将引发 wl_display 错误。\n现有的 connector、租赁请求和租赁将不受影响。"
+          }
+        }
+      },
+      "events": {
+        "drm_fd": {
+          "description": {
+            "summary": "为此 DRM 节点打开一个非 master 的 fd",
+            "text": "当绑定 wp_drm_lease_device_v1 全局对象时，compositor 将发送此事件，尽管无法保证这需要多长时间 - compositor 可能需要等待直到重新获得 DRM master。\n包含的 fd 是为此设备打开的非 master DRM 文件描述符，compositor 不得验证它。\n此事件的目的是使客户端能够查询 DRM 节点的详细信息。除非从有效的租赁中获得，否则客户端不得在此 fd 上执行具有 DRM master 特权的操作。即使在客户端的 wp_drm_lease_device_v1 被释放之后，该 fd 也可继续使用。\n一旦客户端完成了查询并准备清理，就有责任关闭此文件描述符。\n\ncompositor 最多发送一次此事件，如果 compositor 无法打开并获取文件描述符，则可能根本不发送。"
+          }
+        },
+        "connector": {
+          "description": {
+            "summary": "广播可用于租赁的 connector",
+            "text": "compositor 将使用此事件广播可供客户端租赁的 connector。该对象可以传递到租赁请求中，以指示客户端想要租赁该 connector，详见 wp_drm_lease_request_v1.request_connector。虽然 compositor 会尽最大努力不发送断开连接的 connector，但无法提供保证。\n\ncompositor 必须在发送 connector 之前发送 drm_fd 事件。在 drm_fd 事件之后，它将发送所有可用的 connector，但可以随时发送其他的 connector。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "标志着 connector 事件的完成",
+            "text": "compositor 将发送此事件以指示它已完成所有由于当前绑定 wp_drm_lease_device_v1 对象而触发的当前活动中的连接器事件，或者当一组由硬件变化（例如热插拔）引起的连接器更改事件已完成时。它不保证在发送 done 事件之前，任何特定的 connector 事件都会被发送。"
+          }
+        },
+        "released": {
+          "description": {
+            "summary": "compositor 已完成对设备的使用",
+            "text": "此事件是为了响应 release 请求而发送的，表示 compositor 已销毁 wp_drm_lease_device_v1 对象。此事件之后将不会发送其他事件。"
+          }
+        }
+      },
+      "enums": {}
+    },
+    "wp_drm_lease_connector_v1": {
+      "description": {
+        "summary": "可租赁的 DRM connector",
+        "text": "租赁连接器对象表示一个在所有者设备中可供租赁的 DRM connector。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁租赁连接器",
+            "text": "客户端调用此请求以指明它不再需要使用此租赁连接器。在请求此内容之后，客户端将不会收到任何其他事件，并且 compositor 将销毁该对象。"
+          }
+        }
+      },
+      "events": {
+        "name": {
+          "description": {
+            "summary": "名称",
+            "text": "compositor 发送此事件以指明连接器名称。"
+          }
+        },
+        "description": {
+          "description": {
+            "summary": "描述",
+            "text": "compositor 发送此事件以指明连接器描述。"
+          }
+        },
+        "connector_id": {
+          "description": {
+            "summary": "连接器 ID",
+            "text": "compositor 发送此事件以指示该连接器的 DRM 对象 ID。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "标志着事件的完成",
+            "text": "compositor 将发送此事件以指示它已发送包含该连接器属性的所有事件。"
+          }
+        },
+        "withdrawn": {
+          "description": {
+            "summary": "已撤回",
+            "text": "compositor 发送此事件以指明由于某种原因，连接器不再可供租赁（例如被系统征用）。此后将不再为此对象发送其他事件。"
+          }
+        }
+      },
+      "enums": {}
+    },
+    "wp_drm_lease_request_v1": {
+      "description": {
+        "summary": "租赁请求对象",
+        "text": "租赁请求对象用于收集要进行租赁申请的 connector 列表。"
+      },
+      "requests": {
+        "request_connector": {
+          "description": {
+            "summary": "为该租赁请求一个 connector",
+            "text": "此请求用于请求租赁该 DRM connector。\n如果该 connector 之前已被请求，则不会发生任何事情。如果该 connector 已被撤回（withdrawn 事件被发出），则会导致 wp_drm_lease_request_v1 错误。此请求不能在该对象的 submit 被请求后被发出。"
+          }
+        },
+        "submit": {
+          "description": {
+            "summary": "提交租赁请求",
+            "text": "提交租赁请求，随后必须在此之后销毁此对象。此后不得发出任何其他请求。收到该请求后，compositor 将尝试为请求中的所有 connector 进行租赁，或由于某些原因无法满足条件（如 compositor 策略或某些 connector 被撤回等）而使操作失败。\n如果此请求成功，compositor 将发送 wp_drm_lease_v1 对象的 lease_fd 事件。如果请求失败，将不会发送此事件，并且直接发送 wp_drm_lease_v1 的 finished 事件。如果没有任何 connector 在此时被请求时，将会导致 wp_drm_lease_request_v1 错误。"
+          }
+        }
+      },
+      "events": {},
+      "enums": {
+        "error": {
+          "entries": {
+            "wrong_state": {
+              "description": {
+                "summary": "错误状态"
+              }
+            },
+            "empty_lease": {
+              "description": {
+                "summary": "空租赁"
+              }
+            },
+            "wrong_device": {
+              "description": {
+                "summary": "错误设备"
+              }
+            }
+          }
+        }
+      }
+    },
+    "wp_drm_lease_v1": {
+      "description": {
+        "summary": "DRM 租赁",
+        "text": "租赁对象用于向客户端提供新租赁的 DRM 资源信息，并提供了一种在客户端决定不再需要这些资源时归还它们的途径。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁租赁对象",
+            "text": "客户端调用此请求以释放租赁的 DRM 资源，并交还给 compositor。\ncompositor 稍后将会发出 lease 的 finished 事件。\n这并不影响之前此租赁对象已经发送的 lease_fd，如果客户端仍在引用 fd，这些资源上的活动仍可能继续。即使在此对象被销毁之后。需要明确的是，必须确保客户端释放 fd。此请求只是提示 compositor 在合适的时机去关闭自身的 fd 并且收回资源。"
+          }
+        }
+      },
+      "events": {
+        "lease_fd": {
+          "description": {
+            "summary": "共享 DRM 文件描述符",
+            "text": "此事件返回一个适合通过 DRM API 操作所租赁对象的文件描述符。客户端有责任关闭这个文件描述符。\n在 fd 被释放之前，它不会有其它事件发送。此事件只会发送一次。"
+          }
+        },
+        "finished": {
+          "description": {
+            "summary": "当租赁被撤销时发送",
+            "text": "compositor 使用此事件拒绝租赁请求，或者如果在发送了 lease_fd 事件后由于任何原因取消了租赁资源，例如 compositor 需要资源，或者客户端调用了 revoke 请求，或者发生了诸如用户拔出了所租赁 connector 引起的硬件事件。收到此事件后，客户端应当销毁 wp_drm_lease_v1 对象。\n\n如果有 lease_fd，在收到此事件时仍然可以使用它，但可能不支持所有先前的操作（例如不再支持将缓冲区附着到屏幕等）。"
+          }
+        }
+      },
+      "enums": {}
+    }
+  }
+}

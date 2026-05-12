@@ -1,0 +1,122 @@
+{
+  "description": {
+    "summary": "提供显式同步的协议",
+    "text": "此协议允许客户端请求 buffer 的显式同步。它与 Linux DRM 同步对象（synchronization object）框架绑定。\n\n同步是指协调在 buffer 上执行的流水线操作。大多数 GPU 客户端会调度一个异步操作来向 buffer 渲染，然后立即将该 buffer 发送给 compositor 附加到 surface 上。\n\n在隐式同步（implicit synchronization）中，确保渲染操作在 compositor 显示 buffer 之前完成是一个由内核或用户空间图形驱动程序处理的实现细节。\n\n相比之下，在显式同步（explicit synchronization）中，DRM 同步对象的时间线点标志着异步操作的完成时间。在提交 buffer 时，客户端提供一个时间线点，compositor 在访问 buffer 之前将等待该点，并提供另一个时间线点，compositor 在不再需要为了 surface 提交而访问 buffer 内容时会发出信号。\n\nLinux DRM 同步对象的文档见：\nhttps://dri.freedesktop.org/docs/drm/gpu/drm-mm.html#drm-sync-objects\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本提升一起添加。向后不兼容的更改只能通过创建该扩展的新主版本来完成。"
+  },
+  "interfaces": {
+    "wp_linux_drm_syncobj_manager_v1": {
+      "description": {
+        "summary": "提供显式同步的全局对象",
+        "text": "此全局对象是一个工厂接口，允许客户端在每个 surface 的基础上请求 buffer 的显式同步。\n\n详情请参见 wp_linux_drm_syncobj_surface_v1。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁显式同步工厂对象",
+            "text": "销毁此显式同步工厂对象。其他对象不受此请求的影响。"
+          }
+        },
+        "get_surface": {
+          "description": {
+            "summary": "为显式同步扩展 surface 接口",
+            "text": "实例化给定 wl_surface 的接口扩展以提供显式同步。\n\n如果给定的 wl_surface 已经关联了一个显式同步对象，则引发 surface_exists 协议错误。\n\n像 EGL 或 Vulkan 这样的图形 API 本身会管理 buffer 队列和 wl_surface 提交，它们很可能在内部使用此扩展。如果客户端对一个 wl_surface 使用这样的 API，它不应在该 surface 上直接使用此扩展，以避免引发 surface_exists 协议错误。"
+          }
+        },
+        "import_timeline": {
+          "description": {
+            "summary": "导入一个 DRM 同步对象时间线",
+            "text": "实例化一个与提供的 DRM 同步对象文件描述符绑定的 wp_linux_drm_syncobj_timeline_v1 对象。\n\nfd 的所有权转移给了 compositor，compositor 会在完成读取后立即关闭它。\n\n如果 fd 不能被导入为 DRM 同步对象时间线，则引发 invalid_timeline 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "surface_exists": {
+              "description": {
+                "summary": "显式同步对象已经与表面关联"
+              }
+            },
+            "invalid_timeline": {
+              "description": {
+                "summary": "给定的对象不是一个有效的 DRM 同步对象时间线"
+              }
+            }
+          }
+        }
+      }
+    },
+    "wp_linux_drm_syncobj_timeline_v1": {
+      "description": {
+        "summary": "同步对象时间线",
+        "text": "此对象代表一个显式的从用户空间或由于等待特定硬件事件而发出信号的同步原语。\n\n在此对象上分发的大多数请求和事件期望一个时间线点。这些点将时间线分割成一条单调递增的整数线。对于时间线上不按严格单调顺序请求的每个点，都会引发 invalid_point 协议错误。\n\n对于给定的时间线点，当关联的异步操作已累积完成时，可以说对应的同步基元（synchronization primitive）已经“触发（signaled）”。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁时间线对象",
+            "text": "销毁同步对象时间线。\n\n所有在销毁时尚未“触发（signaled）”的 compositor 等待的引用的时间线点仍将被挂起，对于任何 compositor 承诺触发的引用的时间线点，一旦相关操作完成，仍然会触发。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_point": {
+              "description": {
+                "summary": "提供的时间线点不是严格单调增加的"
+              }
+            }
+          }
+        }
+      }
+    },
+    "wp_linux_drm_syncobj_surface_v1": {
+      "description": {
+        "summary": "每个 surface 的显式同步支持",
+        "text": "此对象是 wp_linux_drm_syncobj_manager_v1 提供的关联 wl_surface 的扩展。\n\n当此对象被销毁时，正在等待的 acquire 点以及 compositor 承诺触发的 release 点不会受到影响。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 surface 显式同步对象",
+            "text": "销毁 surface 显式同步对象。\n\n对表面状态没有任何改变。"
+          }
+        },
+        "set_acquire_point": {
+          "description": {
+            "summary": "设置下一个连接 buffer 的 acquire（获取）时间线点",
+            "text": "设置附加到此 surface 状态的用于获取 buffer 的时间线点。随后的 wl_surface.commit 请求将在等待对应于给定时间线的获取点之后再访问此 buffer。这允许客户端在 buffer 能够被读取前就提交，只要有相关的获取点在读取之前被“触发”。\n\n如果在同一 surface 提交上已经设置了 acquire 时间线点，引发 conflicting_point 协议错误。\n\n如果在此 wl_surface 已经接收到一个 wl_surface.commit 且 acquire 点尚未被等待（未“触发”）的情况下附加任何 buffer，引发 no_buffer 协议错误。"
+          }
+        },
+        "set_release_point": {
+          "description": {
+            "summary": "设置下一个连接 buffer 的 release（释放）时间线点",
+            "text": "设置附加到此 surface 状态的用于释放 buffer 的时间线点。随后的 wl_surface.commit 请求将使得当这个 buffer 不再由于此次提交而被使用时触发给定时间线的释放点。\n\n对于给定的时间线点，只有当没有任何 compositor 侧的读取操作与此提交相关正在进行时，才会触发。\n\n如果在此 wl_surface 已经接收到一个 wl_surface.commit 时设置了 release 时间线点，引发 conflicting_point 协议错误。\n\n如果同一 surface 的一次提交中没有 buffer，且提供了 release 点，引发 no_buffer 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "conflicting_point": {
+              "description": {
+                "summary": "同一类型的点已经被设置"
+              }
+            },
+            "no_buffer": {
+              "description": {
+                "summary": "对于一个包含显式同步请求的提交，没有附加 buffer"
+              }
+            },
+            "unsupported_buffer": {
+              "description": {
+                "summary": "buffer 类型不支持显式同步"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

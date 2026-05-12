@@ -1,0 +1,46 @@
+{
+  "interfaces": {
+    "xdg_toplevel_drag_manager_v1": {
+      "description": {
+        "summary": "在拖拽期间移动窗口",
+        "text": "此协议增强了常规的拖拽功能，增加了同时移动窗口的能力。这允许窗口拥有可分离的部分，当拖出这些部分时它们会变成一个新窗口，并且可以被拖拽到一个现有窗口上以重新附加。\n\n一个典型的工作流是：当用户开始在窗口的可分离部分顶部进行拖拽时，客户端会创建一个 wl_data_source 和一个 xdg_toplevel_drag_v1 对象，并通过 wl_data_device.start_drag 像正常一样开始拖拽。一旦客户端确定可分离窗口的内容应该从原窗口中分离，它就会使用这些内容创建一个新的 xdg_toplevel，并在映射它之前发出 xdg_toplevel_drag_v1.attach 请求。从现在开始，在拖拽期间，这个新窗口会被 compositor 移动，就像客户端调用了 xdg_toplevel.move 一样。\n\n拖拽现有窗口也是类似的。客户端创建一个 xdg_toplevel_drag_v1 对象，并在开始拖拽之前附加现有的 toplevel。\n\n客户端使用现有的拖放机制来检测何时可以停靠或取消停靠窗口。如果客户端想要将一个窗口吸附到父窗口中，它应该删除或取消映射被拖拽的 top-level。如果内容需要再次分离，它会像上面描述的那样附加一个新的 toplevel。如果拖拽操作被取消而没有被放下，客户端应该恢复到之前的状态，适当地删除任何新创建的窗口。当拖拽操作结束（如 wl_data_source.dnd_drop_performed 所示）时，被拖拽的 toplevel 窗口的最终位置会被确定，就像 xdg_toplevel_move 操作结束时一样。\n\n警告！此文件中描述的协议目前处于测试阶段。可以与相应的接口版本提升一起添加向后兼容的更改。向后不兼容的更改只能通过创建该扩展的新主要版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xdg_toplevel_drag_manager_v1 对象",
+            "text": "销毁此 xdg_toplevel_drag_manager_v1 对象。其他对象，包括由此工厂创建的 xdg_toplevel_drag_v1 对象，不受此请求的影响。"
+          }
+        },
+        "get_xdg_toplevel_drag": {
+          "description": {
+            "summary": "为 wl_data_source 获取一个 xdg_toplevel_drag",
+            "text": "为一个将要使用 data_source 开始的拖放操作创建一个 xdg_toplevel_drag。\n\n此请求只能在用于拖放的源上进行，因此必须在 wl_data_device.start_drag 之前执行。尝试将该源用于拖放以外的其他用途（如 wl_data_device.set_selection）将引发 invalid_source 错误。\n\n在 toplevel 附加到 xdg_toplevel_drag 时销毁 data_source 的行为是未定义的。"
+          }
+        }
+      },
+      "events": {}
+    },
+    "xdg_toplevel_drag_v1": {
+      "description": {
+        "summary": "管理附带拖拽的顶层窗口",
+        "text": "此接口由 xdg_toplevel_drag_manager_v1.get_xdg_toplevel_drag 请求创建。\n\n它用于将一个 xdg_toplevel 附加到现有的底层拖拽操作。这样的拖拽操作将一直伴随着一个常规的拖拽直到结束。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xdg_toplevel_drag_v1 对象",
+            "text": "销毁此 xdg_toplevel_drag_v1 对象。此请求只能在底层的 wl_data_source 拖拽结束后调用，如 dnd_drop_performed 或 cancelled 事件所示。在任何其他情况下，将引发 ongoing_drag 错误。"
+          }
+        },
+        "attach": {
+          "description": {
+            "summary": "通过拖拽操作移动一个 toplevel",
+            "text": "请求在拖拽操作期间窗口将与光标一起移动。偏移量是对 compositor 的一个提示，指示 toplevel 相对于光标热点在表面本地坐标系中应如何定位，以及相对于被附加的 toplevel 几何形状应如何定位。请参阅 xdg_surface.set_window_geometry。例如，它可能仅在附加未映射窗口时使用。被附加的窗口不参与拖拽目标的选择。\n\n如果在被附加时 toplevel 被取消映射，它会自动从拖拽中分离。在这种情况下，如果窗口在重新映射后应被附加，则必须再次调用此请求。\n\n此请求可以被多次调用，但是在有一个具有活动角色（active role）的 toplevel 被附加时发出该请求将引发 toplevel_attached 错误。"
+          }
+        }
+      },
+      "events": {}
+    }
+  }
+}

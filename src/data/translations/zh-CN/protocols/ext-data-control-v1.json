@@ -1,0 +1,148 @@
+{
+  "description": {
+    "summary": "控制 data devices",
+    "text": "此协议允许特权客户端控制 data devices。特别是，客户端将能够管理当前的 selection 并承担 clipboard manager 的角色。\n\n警告！此文件中描述的协议目前处于测试阶段。可以结合相应的 interface 版本号提升添加向后兼容的更改。只能通过创建该 extension 的新主要版本来进行向后不兼容的更改。"
+  },
+  "interfaces": {
+    "ext_data_control_manager_v1": {
+      "description": {
+        "summary": "控制 data devices 的 manager",
+        "text": "此 interface 是一个允许创建每个 seat 的 data device 控件的 manager。"
+      },
+      "requests": {
+        "create_data_source": {
+          "description": {
+            "summary": "创建一个新的 data source",
+            "text": "创建一个新的 data source。"
+          }
+        },
+        "get_data_device": {
+          "description": {
+            "summary": "获取 seat 的 data device",
+            "text": "创建一个可用于管理 seat 的 selection 的 data device。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 manager",
+            "text": "由 manager 创建的所有对象都将保持有效，直到调用其相应的 destroy 请求。"
+          }
+        }
+      }
+    },
+    "ext_data_control_device_v1": {
+      "description": {
+        "summary": "管理 seat 的 data device",
+        "text": "此 interface 允许客户端管理 seat 的 selection。\n\n当 seat 被销毁时，此对象变为无效（inert）。"
+      },
+      "requests": {
+        "set_selection": {
+          "description": {
+            "summary": "将数据复制到 selection",
+            "text": "此请求要求 compositor 代表客户端将 selection 设置为来自 source 的数据。\n\n给定的 source 不能用于任何进一步的 set_selection 或 set_primary_selection 请求。尝试使用以前使用的 source 会触发 used_source 协议错误。\n\n要取消设置 selection，请将 source 设置为 NULL。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁此 data device",
+            "text": "销毁 data device 对象。"
+          }
+        },
+        "set_primary_selection": {
+          "description": {
+            "summary": "将数据复制到 primary selection",
+            "text": "此请求要求 compositor 代表客户端将 primary selection 设置为来自 source 的数据。\n\n给定的 source 不能用于任何进一步的 set_selection 或 set_primary_selection 请求。尝试使用以前使用的 source 会触发 used_source 协议错误。\n\n要取消设置 primary selection，请将 source 设置为 NULL。\n\n如果 compositor 不支持 primary selection，则会忽略此请求。"
+          }
+        }
+      },
+      "events": {
+        "data_offer": {
+          "description": {
+            "summary": "引入一个新的 ext_data_control_offer",
+            "text": "data_offer 事件引入了一个新的 ext_data_control_offer 对象，该对象随后将用于 ext_data_control_device.selection 事件（用于常规剪贴板 selection）或 ext_data_control_device.primary_selection 事件（用于主剪贴板 selection）。在 ext_data_control_device.data_offer 事件之后，新的 data_offer 对象将立即发出 ext_data_control_offer.offer 事件以描述它提供的 MIME 类型。"
+          }
+        },
+        "selection": {
+          "description": {
+            "summary": "通告新的 selection",
+            "text": "selection 事件发出以通知客户端有关此设备的 selection 的新 ext_data_control_offer。在发送此事件之前，会立即发出 ext_data_control_device.data_offer 和 ext_data_control_offer.offer 事件以引入 data offer 对象。当设置新的 selection 时，会将 selection 事件发送给客户端。在收到新的 ext_data_control_offer 或 NULL 之前，ext_data_control_offer 始终有效。收到此事件时，客户端必须销毁以前的 selection ext_data_control_offer（如果有）。无论如何，一旦收到新的 selection ext_data_control_offer，以前的 selection 都将被忽略。\n\n第一个 selection 事件在绑定 ext_data_control_device 对象时发送。"
+          }
+        },
+        "finished": {
+          "description": {
+            "summary": "此 data control 不再有效",
+            "text": "此 data control 对象不再有效，应该由客户端销毁。"
+          }
+        },
+        "primary_selection": {
+          "description": {
+            "summary": "通告新的 primary selection",
+            "text": "primary_selection 事件发出以通知客户端有关此设备的 primary selection 的新 ext_data_control_offer。在发送此事件之前，会立即发出 ext_data_control_device.data_offer 和 ext_data_control_offer.offer 事件以引入 data offer 对象。当设置新的 primary selection 时，会将 primary_selection 事件发送给客户端。在收到新的 ext_data_control_offer 或 NULL 之前，ext_data_control_offer 始终有效。收到此事件时，客户端必须销毁以前的 primary selection ext_data_control_offer（如果有）。无论如何，一旦收到新的 primary selection ext_data_control_offer，以前的 primary selection 都将被忽略。\n\n如果 compositor 支持 primary selection，则在绑定 ext_data_control_device 对象时发送第一个 primary_selection 事件。"
+          }
+        }
+      }
+    },
+    "ext_data_control_source_v1": {
+      "description": {
+        "summary": "提供传输数据",
+        "text": "ext_data_control_source 对象是 ext_data_control_offer 的 source 端。它是由数据传输中的 source 客户端创建的，提供了一种描述提供的数据的方法以及响应传输数据的请求的方法。"
+      },
+      "requests": {
+        "offer": {
+          "description": {
+            "summary": "添加提供的 MIME 类型",
+            "text": "此请求将 MIME 类型添加到通告给 target 的 MIME 类型集中。可以被多次调用以提供多种类型。\n\n在 ext_data_control_device.set_selection 之后调用此方法会导致协议错误。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁此 source",
+            "text": "销毁 data source 对象。"
+          }
+        }
+      },
+      "events": {
+        "send": {
+          "description": {
+            "summary": "发送数据",
+            "text": "请求客户端的数据。通过传递的 file descriptor 将数据作为指定的 MIME 类型发送，然后关闭它。"
+          }
+        },
+        "cancelled": {
+          "description": {
+            "summary": "selection 被取消",
+            "text": "此 data source 不再有效。该 data source 已被另一个 data source 替换。\n\n客户端应清理并销毁此 data source。"
+          }
+        }
+      }
+    },
+    "ext_data_control_offer_v1": {
+      "description": {
+        "summary": "提供传输数据",
+        "text": "ext_data_control_offer 表示由另一个客户端（source 客户端）提供传输的数据。该 offer 描述了数据可以转换为的不同 MIME 类型，并提供了直接从 source 客户端传输数据的机制。"
+      },
+      "requests": {
+        "receive": {
+          "description": {
+            "summary": "请求传输数据",
+            "text": "要传输提供的 data，客户端发出此请求并指示它想要接收的 MIME 类型。传输通过传递的 file descriptor（通常通过 pipe 系统调用创建）发生。source 客户端以请求的 MIME 类型格式写入数据，然后关闭 file descriptor。\n\n接收端客户端从 pipe 的读取端读取，直到 EOF，然后关闭其读取端，此时传输完成。\n\n对于不同的 MIME 类型，此请求可能会发生多次。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁此 offer",
+            "text": "销毁 data offer 对象。"
+          }
+        }
+      },
+      "events": {
+        "offer": {
+          "description": {
+            "summary": "通告提供的 MIME 类型",
+            "text": "在创建 ext_data_control_offer 对象后立即发送。\n每个提供的 MIME 类型一个事件。"
+          }
+        }
+      }
+    }
+  }
+}

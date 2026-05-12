@@ -1,0 +1,175 @@
+{
+  "interfaces": {
+    "wp_cursor_shape_manager_v1": {
+      "description": {
+        "summary": "光标形状管理器",
+        "text": "此全局对象提供了一种可选的光标图像设置替代方法。这种新方法使用枚举光标，而不是像 wl_pointer.set_cursor 那样使用 wl_surface。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本提升一起添加。向后不兼容的更改只能通过创建扩展的新主版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "销毁光标形状管理器。"
+          }
+        },
+        "get_pointer": {
+          "description": {
+            "summary": "管理指针设备的光标形状",
+            "text": "获取 wl_pointer 对象的 wp_cursor_shape_device_v1。\n\n当指针功能从 wl_seat 中移除时，wp_cursor_shape_device_v1 对象将变得无效（inert）。"
+          }
+        },
+        "get_tablet_tool_v2": {
+          "description": {
+            "summary": "管理平板工具设备的光标形状",
+            "text": "获取 zwp_tablet_tool_v2 对象的 wp_cursor_shape_device_v1。\n\n当 zwp_tablet_tool_v2 被移除时，wp_cursor_shape_device_v1 对象将变得无效（inert）。"
+          }
+        }
+      }
+    },
+    "wp_cursor_shape_device_v1": {
+      "description": {
+        "summary": "设备的光标形状",
+        "text": "此接口允许客户端设置光标形状。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁光标形状设备",
+            "text": "销毁光标形状设备。\n\n设备光标形状保持不变。"
+          }
+        },
+        "set_shape": {
+          "description": {
+            "summary": "将设备光标设置为该形状",
+            "text": "将设备光标设置为指定的形状。合成器（compositor）将根据指定的形状更改光标图像。\n\n仅当输入设备焦点位于请求客户端的 surface 之一时，光标才会真正发生变化。如果有的话，之前的光标图像（surface 或形状）将被替换。\n\n\"shape\" 参数必须是有效的枚举条目，否则会引发 invalid_shape 协议错误。\n\n这类似于 wl_pointer.set_cursor 和 zwp_tablet_tool_v2.set_cursor 请求，但是此请求接受的是一个形状，而不是表面（surface）形式的内容。客户端可以混合使用 set_cursor 和 set_shape 请求。\n\nserial 参数必须与发送到客户端的最新 wl_pointer.enter 或 zwp_tablet_tool_v2.proximity_in 序列号匹配。否则，该请求将被忽略。"
+          }
+        }
+      },
+      "enums": {
+        "shape": {
+          "description": {
+            "summary": "光标形状",
+            "text": "此枚举描述了光标形状。\n\n名称取自 CSS W3C 规范：\nhttps://w3c.github.io/csswg-drafts/css-ui/#cursor\n并做了一些补充。\n\n请注意，某些光标形状组是相关的：\n第一组是拖放（drag-and-drop）光标，用于指示 dnd 操作期间选择的动作。第二组是调整大小的光标，用于指示窗口边框上的调整大小和移动可能性。建议这些组中的形状使用视觉上兼容的图像和隐喻。"
+          },
+          "entries": {
+            "default": {
+              "summary": "默认光标"
+            },
+            "context_menu": {
+              "summary": "光标下的对象有可用的上下文菜单"
+            },
+            "help": {
+              "summary": "光标下的对象有可用的帮助"
+            },
+            "pointer": {
+              "summary": "指示链接或其他交互元素的指针"
+            },
+            "progress": {
+              "summary": "进度指示器"
+            },
+            "wait": {
+              "summary": "程序正忙，用户应等待"
+            },
+            "cell": {
+              "summary": "可以选择一个单元格或一组单元格"
+            },
+            "crosshair": {
+              "summary": "简单的十字准星"
+            },
+            "text": {
+              "summary": "文本可以被选择"
+            },
+            "vertical_text": {
+              "summary": "垂直文本可以被选择"
+            },
+            "alias": {
+              "summary": "拖放：将要创建某物的别名/快捷方式"
+            },
+            "copy": {
+              "summary": "拖放：将要复制某物"
+            },
+            "move": {
+              "summary": "拖放：将要移动某物"
+            },
+            "no_drop": {
+              "summary": "拖放：拖动的项目不能在当前光标位置放下"
+            },
+            "not_allowed": {
+              "summary": "拖放：请求的动作将不会被执行"
+            },
+            "grab": {
+              "summary": "拖放：可以抓取某物"
+            },
+            "grabbing": {
+              "summary": "拖放：某物正在被抓取"
+            },
+            "e_resize": {
+              "summary": "调整大小：将要移动东边框"
+            },
+            "n_resize": {
+              "summary": "调整大小：将要移动北边框"
+            },
+            "ne_resize": {
+              "summary": "调整大小：将要移动东北角"
+            },
+            "nw_resize": {
+              "summary": "调整大小：将要移动西北角"
+            },
+            "s_resize": {
+              "summary": "调整大小：将要移动南边框"
+            },
+            "se_resize": {
+              "summary": "调整大小：将要移动东南角"
+            },
+            "sw_resize": {
+              "summary": "调整大小：将要移动西南角"
+            },
+            "w_resize": {
+              "summary": "调整大小：将要移动西边框"
+            },
+            "ew_resize": {
+              "summary": "调整大小：将要移动东西边框"
+            },
+            "ns_resize": {
+              "summary": "调整大小：将要移动南北边框"
+            },
+            "nesw_resize": {
+              "summary": "调整大小：将要移动东北和西南角"
+            },
+            "nwse_resize": {
+              "summary": "调整大小：将要移动西北和东南角"
+            },
+            "col_resize": {
+              "summary": "调整大小：项目/列可以水平调整大小"
+            },
+            "row_resize": {
+              "summary": "调整大小：项目/行可以垂直调整大小"
+            },
+            "all_scroll": {
+              "summary": "某物可以在任何方向滚动"
+            },
+            "zoom_in": {
+              "summary": "可以放大某物"
+            },
+            "zoom_out": {
+              "summary": "可以缩小某物"
+            },
+            "dnd_ask": {
+              "summary": "拖放：用户将选择要执行哪个动作（非 CSS 值）"
+            },
+            "all_resize": {
+              "summary": "调整大小：某物可以在任何方向上移动或调整大小（非 CSS 值）"
+            }
+          }
+        },
+        "error": {
+          "entries": {
+            "invalid_shape": {
+              "summary": "指定的形状值无效"
+            }
+          }
+        }
+      }
+    }
+  }
+}

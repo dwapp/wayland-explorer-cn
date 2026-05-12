@@ -1,0 +1,73 @@
+{
+  "description": {
+    "summary": "将 X11 窗口关联到 wl_surface 的协议",
+    "text": "本协议添加了一个 xwayland_surface 角色，允许 Xwayland 服务器将 X11 窗口关联到一个 wl_surface。\n\n在本协议出现之前，这通常通过 Xwayland 服务器在 X 窗口上使用具有 WL_SURFACE_ID atom 的 client message 提供 wl_surface 的 resource id 来完成。\n这种做法存在问题，因为如果与窗口的 WL_SURFACE_ID 关联的 wl_surface 在 compositor 处理 client message 之前被销毁，并且另一个 surface（或其他对象）由于回收而占用了其 id，则可能发生竞争条件。\n\n本协议通过将“将 X11 窗口关联到 wl_surface” 的步骤移动到 Wayland 端来解决该问题，这意味着该关联过程不会与 wl_surface 的资源生命周期发生不同步。\n\n本协议通过在 wl_surface（通过 xwayland_surface_v1 的 set_serial 方法）和 X11 窗口（通过 `WL_SURFACE_SERIAL` client message）上设置完全唯一的非零单调递增序列号 (serial number)，可用于关联它们并同步这两个时间线，从而避免在另一侧重复该竞争问题。\n\n本文档中的关键字“must”、“must not”、“required”、“shall”、“shall not”、“should”、“should not”、“recommended”、“may”和“optional”应按照 IETF RFC 2119 中的描述进行解释。\n\n警告！此文件中描述的协议目前处于测试阶段。可以随着相应的接口版本号增加而添加向后兼容的更改。向后不兼容的更改只能通过创建该扩展的一个新的主要版本来进行。"
+  },
+  "interfaces": {
+    "xwayland_shell_v1": {
+      "description": {
+        "summary": "Xwayland shell 的上下文对象",
+        "text": "xwayland_shell_v1 是一个单例全局对象，提供了为给定的 wl_surface 创建 xwayland_surface_v1 对象的功能。\n\n此接口旨在由 Xwayland 服务器绑定。\n\ncompositor 不得允许除 Xwayland 之外的 client 绑定此接口。compositor 应该从其他 client 的 wl_registry 中隐藏这个全局对象。\n不被 compositor 认为是 Xwayland 服务器的 client 试图绑定此接口将导致实现定义的错误 (implementation-defined error)。\n\n已绑定此接口的 Xwayland 服务器不得在窗口上设置 `WL_SURFACE_ID` atom。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 Xwayland shell 对象",
+            "text": "销毁 xwayland_shell_v1 对象。\n\n通过此接口创建的子对象不受影响。"
+          }
+        },
+        "get_xwayland_surface": {
+          "description": {
+            "summary": "分配 xwayland_surface 表面角色",
+            "text": "为给定的 wl_surface 对象创建一个 xwayland_surface_v1 接口，并为其分配 xwayland_surface 角色。\n\n客户端多次调用此方法对同一个 wl_surface 对象是违法的。\n如果给定的 wl_surface 已经有了另一个角色，这也会引发错误。"
+          },
+          "args": {
+            "id": {
+              "summary": "新的 xwayland_surface_v1 对象"
+            },
+            "surface": {
+              "summary": "要分配角色的 wl_surface"
+            }
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "role": {
+              "summary": "给定 wl_surface 已经有了角色"
+            }
+          }
+        }
+      }
+    },
+    "xwayland_surface_v1": {
+      "description": {
+        "summary": "将 X11 窗口关联到 wl_surface 的接口",
+        "text": "Xwayland 关联 wl_surface 到 X11 窗口的接口。\n\n通过此接口，Xwayland 关联的 wl_surface 与普通的 wl_surface 没有任何不同，在没有收到进一步状态改变时，除非使用其他扩展（如 wp_tearing_control_v1）或者有 compositor 特定保证存在，不应认为它是隐式映射的。"
+      },
+      "requests": {
+        "set_serial": {
+          "description": {
+            "summary": "将序列号与 wl_surface 关联",
+            "text": "将单调递增的序列号与 wl_surface 相关联。\n\nXwayland 服务器可以通过在相关联的 X11 窗口上发送带有该序列号（由 64 位无符号整数构成的两个 32 位值，低 32 位优先）作为 `WL_SURFACE_SERIAL` client message 来将 wl_surface 关联到一个 X11 窗口。\n\n时间线、起始点及产生此序列号的语义未定义，仅需保证所使用的序列号在一个 X11 客户端的生命周期内从不重复单次（64 位循环后可重复），并且必须为非零值。"
+          },
+          "args": {
+            "serial_lo": {
+              "summary": "序列号的低 32 位"
+            },
+            "serial_hi": {
+              "summary": "序列号的高 32 位"
+            }
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 xwayland_surface_v1 对象",
+            "text": "销毁 xwayland_surface_v1 对象。\n\n与该对象相关联的 wl_surface 及其拥有的其他关联状态不再关联。\n只要没有对 wl_surface 进行其他修改，此请求就不会引起任何进一步的改变。"
+          }
+        }
+      }
+    }
+  }
+}

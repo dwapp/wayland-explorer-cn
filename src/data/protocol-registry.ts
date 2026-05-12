@@ -93,6 +93,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/drm-lease-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/drm-lease-v1.json'),
+        },
     },
     {
         id: 'linux-drm-syncobj-v1',
@@ -100,6 +103,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/linux-drm-syncobj-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/linux-drm-syncobj-v1.json'),
+        },
     },
     {
         id: 'ext-session-lock-v1',
@@ -107,6 +113,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/ext-session-lock-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ext-session-lock-v1.json'),
+        },
     },
     {
         id: 'single-pixel-buffer-v1',
@@ -124,6 +133,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/content-type-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/content-type-v1.json'),
+        },
     },
     {
         id: 'ext-idle-notify-v1',
@@ -131,6 +143,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/ext-idle-notify-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ext-idle-notify-v1.json'),
+        },
     },
     {
         id: 'ext-image-capture-source-v1',
@@ -138,6 +153,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/ext-image-capture-source-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ext-image-capture-source-v1.json'),
+        },
     },
     {
         id: 'ext-image-copy-capture-v1',
@@ -145,6 +163,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/ext-image-copy-capture-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ext-image-copy-capture-v1.json'),
+        },
     },
     {
         id: 'tearing-control-v1',
@@ -152,6 +173,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/tearing-control-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/tearing-control-v1.json'),
+        },
     },
     {
         id: 'xwayland-shell-v1',
@@ -159,6 +183,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/xwayland-shell-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xwayland-shell-v1.json'),
+        },
     },
     {
         id: 'fractional-scale-v1',
@@ -166,6 +193,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/fractional-scale-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/fractional-scale-v1.json'),
+        },
     },
     {
         id: 'cursor-shape-v1',
@@ -173,6 +203,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/cursor-shape-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cursor-shape-v1.json'),
+        },
     },
     {
         id: 'ext-foreign-toplevel-list-v1',
@@ -180,6 +213,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/ext-foreign-toplevel-list-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ext-foreign-toplevel-list-v1.json'),
+        },
     },
     {
         id: 'security-context-v1',
@@ -187,6 +223,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/security-context-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/security-context-v1.json'),
+        },
     },
     {
         id: 'ext-transient-seat-v1',
@@ -194,6 +233,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/ext-transient-seat-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ext-transient-seat-v1.json'),
+        },
     },
     {
         id: 'xdg-toplevel-drag-v1',
@@ -201,6 +243,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/xdg-toplevel-drag-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xdg-toplevel-drag-v1.json'),
+        },
     },
     {
         id: 'xdg-toplevel-icon-v1',
@@ -228,6 +273,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/alpha-modifier-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/alpha-modifier-v1.json'),
+        },
     },
     {
         id: 'commit-timing-v1',
@@ -235,6 +283,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/commit-timing-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/commit-timing-v1.json'),
+        },
     },
     {
         id: 'ext-data-control-v1',
@@ -242,6 +293,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/ext-data-control-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ext-data-control-v1.json'),
+        },
     },
     {
         id: 'fifo-v1',
@@ -249,6 +303,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/fifo-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/fifo-v1.json'),
+        },
     },
     {
         id: 'xdg-system-bell-v1',
@@ -266,6 +323,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/ext-workspace-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ext-workspace-v1.json'),
+        },
     },
     {
         id: 'color-management-v1',
@@ -280,6 +340,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/color-representation-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/color-representation-v1.json'),
+        },
     },
     {
         id: 'xdg-toplevel-tag-v1',
@@ -297,6 +360,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/pointer-warp-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/pointer-warp-v1.json'),
+        },
     },
     {
         id: 'ext-background-effect-v1',
@@ -304,6 +370,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/ext-background-effect-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ext-background-effect-v1.json'),
+        },
     },
     {
         id: 'xx-input-method-v2',

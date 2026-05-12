@@ -1,0 +1,62 @@
+{
+  "interfaces": {
+    "wp_alpha_modifier_v1": {
+      "description": {
+        "summary": "surface alpha 修饰符管理器",
+        "text": "该接口允许客户端为 surface 上的 alpha 值设置一个系数，这可用于将此类操作卸载（offload）给 compositor，而 compositor 也可以进而将其卸载给 KMS。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本增加一起添加。向后不兼容的更改只能通过创建该扩展的一个新主要版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 alpha 修饰符管理器对象",
+            "text": "销毁 alpha 修饰符管理器。这不会销毁使用该管理器创建的对象。"
+          }
+        },
+        "get_surface": {
+          "description": {
+            "summary": "创建一个新的 alpha 修饰符 surface 对象",
+            "text": "创建一个与给定的 wl_surface 关联的新的 alpha 修饰符 surface 对象。如果该 wl_surface 已经关联了这样一个对象，则会引发 already_constructed 错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_constructed": {
+              "summary": "wl_surface 已经有一个 alpha 修饰符对象"
+            }
+          }
+        }
+      }
+    },
+    "wp_alpha_modifier_surface_v1": {
+      "description": {
+        "summary": "surface 的 alpha 修饰符对象",
+        "text": "该接口允许客户端为 surface 上的 alpha 值设置一个系数，这可用于将此类操作卸载给 compositor。默认系数为 UINT32_MAX。\n\n此对象必须在关联的 wl_surface 之前销毁。一旦 wl_surface 被销毁，对此对象的所有请求都将引发 no_surface 错误。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 alpha 修饰符对象",
+            "text": "这将销毁该对象，且等同于将值设置为 UINT32_MAX 的 set_multiplier，具有与 set_multiplier 相同的双缓冲语义。"
+          }
+        },
+        "set_multiplier": {
+          "description": {
+            "summary": "指定 alpha 乘数",
+            "text": "设置 surface 的 alpha 乘数。alpha 乘数是双缓冲状态，详情请参阅 wl_surface.commit。\n\n此系数应用于 compositor 的混合空间（blending space），作为在处理 wl_surface 的每像素 alpha 值之后的一个额外步骤。因此，除非在其他扩展中指定了混合空间，否则该系数的确切含义是未定义的。\n\n即使附加到 wl_surface 的 buffer 没有 alpha 通道，此乘数也会被应用；在这种情况下，将使用 1 作为 alpha 值。\n\n零表示完全透明，UINT32_MAX 表示完全不透明。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "no_surface": {
+              "summary": "wl_surface 已被销毁"
+            }
+          }
+        }
+      }
+    }
+  }
+}

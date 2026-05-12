@@ -1,0 +1,75 @@
+{
+  "interfaces": {
+    "wp_tearing_control_manager_v1": {
+      "description": {
+        "summary": "撕裂控制协议",
+        "text": "对于游戏或绘图板等用例，通过使用异步页面翻转（page flip）接受撕裂以降低延迟是有意义的。该全局对象是一个工厂接口，允许客户端通知其 surface 内容适合哪种类型的呈现。\n\n像 EGL 或 Vulkan 这样自行管理 buffer 队列和 wl_surface 提交的图形 API，很可能会在内部使用此扩展。如果客户端正在为 wl_surface 使用这样的 API，则不应直接在该 surface 上使用此扩展，以避免引发 tearing_control_exists 协议错误。\n\n警告！本文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本提升一起添加。向后不兼容的更改只能通过创建扩展的新主版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁撕裂控制工厂对象",
+            "text": "销毁此撕裂控制工厂对象。其他对象，包括由此工厂创建的 wp_tearing_control_v1 对象，不受此请求的影响。"
+          }
+        },
+        "get_tearing_control": {
+          "description": {
+            "summary": "为撕裂控制扩展 surface 接口",
+            "text": "为给定的 wl_surface 实例化一个接口扩展，以请求用于呈现的异步页面翻转。\n\n如果给定的 wl_surface 已经关联了 wp_tearing_control_v1 对象，则引发 tearing_control_exists 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "tearing_control_exists": {
+              "summary": "surface 已经关联了撕裂对象"
+            }
+          }
+        }
+      }
+    },
+    "wp_tearing_control_v1": {
+      "description": {
+        "summary": "每 surface 撕裂控制接口",
+        "text": "对 wl_surface 对象的一个附加接口，允许客户端向合成器（compositor）提示 surface 上的内容是否适合使用撕裂进行呈现。\n默认的呈现提示是 vsync。有关更多详细信息，请参阅 presentation_hint。\n\n如果关联的 wl_surface 被销毁，此对象将变得惰性（inert）并且应当被销毁。"
+      },
+      "requests": {
+        "set_presentation_hint": {
+          "description": {
+            "summary": "设置呈现提示",
+            "text": "设置关联 wl_surface 的呈现提示。此状态是双缓冲的，请参阅 wl_surface.commit。\n\n合成器可以自由地根据各种条件（如硬件功能、surface 状态和用户偏好）动态遵守或忽略此提示。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁撕裂控制对象",
+            "text": "销毁此 surface 撕裂对象并将呈现提示恢复为 vsync。该更改将在下一次 wl_surface.commit 时应用。"
+          }
+        }
+      },
+      "enums": {
+        "presentation_hint": {
+          "description": {
+            "summary": "呈现提示值",
+            "text": "此枚举提供了有关客户端提交的帧是否可以伴随撕裂进行呈现的信息。"
+          },
+          "entries": {
+            "vsync": {
+              "description": {
+                "summary": "无撕裂呈现",
+                "text": "此 surface 的内容旨在与垂直消隐周期（vertical blanking period）同步。这不应导致可见的撕裂，并且可能会导致 surface 提交被呈现之前的延迟。"
+              }
+            },
+            "async": {
+              "description": {
+                "summary": "异步呈现",
+                "text": "此 surface 的内容旨在以最小的延迟呈现，并且可以接受撕裂。"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

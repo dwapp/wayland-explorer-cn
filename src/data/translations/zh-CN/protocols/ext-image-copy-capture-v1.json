@@ -1,0 +1,226 @@
+{
+  "description": {
+    "summary": "将图像捕获到客户端 buffer 中",
+    "text": "此协议允许客户端请求 compositor 将 output 和 toplevel 等图像源捕获到用户提交的 buffer 中。\n\n警告！本文件中描述的协议目前处于测试阶段。可能会在更新接口版本的同时添加向后兼容的更改。向后不兼容的更改只能通过创建扩展的新主版本来进行。"
+  },
+  "interfaces": {
+    "ext_image_copy_capture_manager_v1": {
+      "description": {
+        "summary": "通知客户端并开始捕获的 manager",
+        "text": "此对象是一个 manager，提供从 source 开始捕获的 request。"
+      },
+      "requests": {
+        "create_session": {
+          "description": {
+            "summary": "捕获一个图像捕获 source",
+            "text": "为图像捕获 source 创建一个捕获 session。\n\n如果设置了 paint_cursors 选项，光标应合并到捕获的 frame 上。如果未设置此标志，则光标不得合并到 frame 上。\n\n如果 options 位段无效，则发送 invalid_option 协议错误。"
+          }
+        },
+        "create_pointer_cursor_session": {
+          "description": {
+            "summary": "捕获图像捕获 source 的指针光标",
+            "text": "为图像捕获 source 的指针创建一个光标捕获 session。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 manager",
+            "text": "销毁 manager 对象。\n\n通过此接口创建的其他对象不受影响。"
+          }
+        }
+      }
+    },
+    "ext_image_copy_capture_session_v1": {
+      "description": {
+        "summary": "图像复制捕获 session",
+        "text": "此对象表示一个活动的图像复制捕获 session。\n\n在创建捕获 session 后，compositor 将发出 buffer 约束事件，以告诉客户端支持从该 session 读取的 buffer 类型和格式。只要 buffer 约束事件发生变化，compositor 就可以重新发送它们。\n\n为了通告 buffer 约束，compositor 必须以不特定的顺序发送：零个或多个 shm_format 和 dmabuf_format 事件、零个或一个 dmabuf_device 事件，以及恰好一个 buffer_size 事件。然后 compositor 必须发送 done 事件。\n\n当客户端收到所有 buffer 约束后，它可以相应地创建一个 buffer，使用 attach_buffer request 将其附加到捕获 session，使用 damage_buffer request 设置 buffer 损坏区域，然后发送 capture request。"
+      },
+      "requests": {
+        "create_frame": {
+          "description": {
+            "summary": "创建一个 frame",
+            "text": "为此 session 创建一个捕获 frame。\n\n任何时候对于给定的 session 最多只能存在一个 frame 对象。如果客户端在先前的 frame 对象被销毁之前发送 create_frame request，则会引发 duplicate_frame 协议错误。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "删除此对象",
+            "text": "销毁 session。此 request 可由客户端随时发送。\n\n此 request 不影响由此对象创建的 ext_image_copy_capture_frame_v1 对象。"
+          }
+        }
+      },
+      "events": {
+        "buffer_size": {
+          "description": {
+            "summary": "图像捕获 source 尺寸",
+            "text": "提供源图像在 buffer 像素坐标中的尺寸。\n\n客户端必须附加匹配此大小的 buffer。"
+          }
+        },
+        "shm_format": {
+          "description": {
+            "summary": "shm buffer 格式",
+            "text": "提供必须用于共享内存 buffer 的格式。\n\n此 event 可能会多次发出，在这种情况下，客户端可以选择任何给定的格式。"
+          }
+        },
+        "dmabuf_device": {
+          "description": {
+            "summary": "dma-buf 设备",
+            "text": "此 event 通告必须在之上分配 dma-buf buffer 的设备。\n\n通常设备是一个 DRM 节点。DRM 节点类型（主要 vs. 渲染）未指定。客户端不得依赖 compositor 发送特定的节点类型。客户端不能通过比较 dev_t 值来检查两个设备是否相等。"
+          }
+        },
+        "dmabuf_format": {
+          "description": {
+            "summary": "dma-buf format",
+            "text": "Provides the format that must be used for dma-buf buffers.\n\nThe client may choose any of the modifiers advertised in the array of\n64-bit unsigned integers.\n\nThis event may be emitted multiple times, in which case the client may\nchoose any given format."
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "所有约束已发送",
+            "text": "This event is sent once when all buffer constraint events have been\nsent.\n\nThe compositor must always end a batch of buffer constraint events with\nthis event, regardless of whether it sends the initial constraints or\nan update."
+          }
+        },
+        "stopped": {
+          "description": {
+            "summary": "session 不再可用",
+            "text": "This event indicates that the capture session has stopped and is no\nlonger available. This can happen in a number of cases, e.g. when the\nunderlying source is destroyed, if the user decides to end the image\ncapture, or if an unrecoverable runtime error has occurred.\n\nThe client should destroy the session after receiving this event."
+          }
+        }
+      }
+    },
+    "ext_image_copy_capture_frame_v1": {
+      "description": {
+        "summary": "image capture frame",
+        "text": "This object represents an image capture frame.\n\nThe client should attach a buffer, damage the buffer, and then send a\ncapture request.\n\nIf the capture is successful, the compositor must send the frame metadata\n(transform, damage, presentation_time in any order) followed by the ready\nevent.\n\nIf the capture fails, the compositor must send the failed event."
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "destroy this object",
+            "text": "Destroys the frame. This request can be sent at any time by the\nclient."
+          }
+        },
+        "attach_buffer": {
+          "description": {
+            "summary": "attach buffer to session",
+            "text": "Attach a buffer to the session.\n\nThe wl_buffer.release request is unused.\n\nThe new buffer replaces any previously attached buffer.\n\nThis request must not be sent after capture, or else the\nalready_captured protocol error is raised."
+          }
+        },
+        "damage_buffer": {
+          "description": {
+            "summary": "损坏 buffer",
+            "text": "Apply damage to the buffer which is to be captured next. This request\nmay be sent multiple times to describe a region.\n\nThe client indicates the accumulated damage since this wl_buffer was\nlast captured. During capture, the compositor will update the buffer\nwith at least the union of the region passed by the client and the\nregion advertised by ext_image_copy_capture_frame_v1.damage.\n\nWhen a wl_buffer is captured for the first time, or when the client\ndoesn't track damage, the client must damage the whole buffer.\n\nThis is for optimisation purposes. The compositor may use this\ninformation to reduce copying.\n\nThese coordinates originate from the upper left corner of the buffer.\n\nIf x or y are strictly negative, or if width or height are negative or\nzero, the invalid_buffer_damage protocol error is raised.\n\nThis request must not be sent after capture, or else the\nalready_captured protocol error is raised."
+          }
+        },
+        "capture": {
+          "description": {
+            "summary": "捕获一个 frame",
+            "text": "Capture a frame.\n\nUnless this is the first successful captured frame performed in this\nsession, the compositor may wait an indefinite amount of time for the\nsource content to change before performing the copy.\n\nThis request may only be sent once, or else the already_captured\nprotocol error is raised. A buffer must be attached before this request\nis sent, or else the no_buffer protocol error is raised."
+          }
+        }
+      },
+      "events": {
+        "transform": {
+          "description": {
+            "summary": "buffer transform",
+            "text": "This event is sent before the ready event and holds the transform that\nthe compositor has applied to the buffer contents."
+          }
+        },
+        "damage": {
+          "description": {
+            "summary": "buffer damaged region",
+            "text": "This event is sent before the ready event. It may be generated multiple\ntimes to describe a region.\n\nThe first captured frame in a session will always carry full damage.\nSubsequent frames' damaged regions describe which parts of the buffer\nhave changed since the last ready event.\n\nThese coordinates originate in the upper left corner of the buffer."
+          }
+        },
+        "presentation_time": {
+          "description": {
+            "summary": "presentation time of the frame",
+            "text": "This event indicates the time at which the frame is presented to the\noutput in system monotonic time. This event is sent before the ready\nevent.\n\nThe timestamp is expressed as tv_sec_hi, tv_sec_lo, tv_nsec triples,\neach component being an unsigned 32-bit value. Whole seconds are in\ntv_sec which is a 64-bit value combined from tv_sec_hi and tv_sec_lo,\nand the additional fractional part in tv_nsec as nanoseconds. Hence,\nfor valid timestamps tv_nsec must be in [0, 999999999]."
+          }
+        },
+        "ready": {
+          "description": {
+            "summary": "frame 可供读取",
+            "text": "在复制 frame 时立即调用，指示其可供读取。\n\n在此 event 之后，客户端可以重复使用该 buffer。\n\n收到此 event 后，客户端必须销毁该对象。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "capture failed",
+            "text": "This event indicates that the attempted frame copy has failed.\n\nAfter receiving this event, the client must destroy the object."
+          }
+        }
+      },
+      "enums": {
+        "failure_reason": {
+          "entries": {
+            "unknown": {
+              "description": {
+                "summary": "未知的运行时错误",
+                "text": "An unspecified runtime error has occurred. The client may retry."
+              }
+            },
+            "buffer_constraints": {
+              "description": {
+                "summary": "buffer constraints mismatch",
+                "text": "客户端提交的 buffer 不匹配最新的 session 约束。客户端应重新分配其 buffer 并重试。"
+              }
+            },
+            "stopped": {
+              "description": {
+                "summary": "session 不再可用",
+                "text": "session 已停止。参见 ext_image_copy_capture_session_v1.stopped。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ext_image_copy_capture_cursor_session_v1": {
+      "description": {
+        "summary": "光标捕获 session",
+        "text": "此对象表示一个光标捕获 session。它通过光标特定的元数据扩展了基本捕获 session。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "删除此对象",
+            "text": "销毁 session。此 request 可由客户端随时发送。\n\n此 request 不影响由此对象创建的 ext_image_copy_capture_frame_v1 对象。"
+          }
+        },
+        "get_capture_session": {
+          "description": {
+            "summary": "get image copy capturer session",
+            "text": "Gets the image copy capture session for this cursor session.\n\nThe session will produce frames of the cursor image. The compositor may\npause the session when the cursor leaves the captured area.\n\nThis request must not be sent more than once, or else the\nduplicate_session protocol error is raised."
+          }
+        }
+      },
+      "events": {
+        "enter": {
+          "description": {
+            "summary": "cursor entered captured area",
+            "text": "Sent when a cursor enters the captured area. It shall be generated\nbefore the \"position\" and \"hotspot\" events when and only when a cursor\nenters the area.\n\nThe cursor enters the captured area when the cursor image intersects\nwith the captured area. Note, this is different from e.g.\nwl_pointer.enter."
+          }
+        },
+        "leave": {
+          "description": {
+            "summary": "光标离开捕获区域",
+            "text": "Sent when a cursor leaves the captured area. No \"position\" or \"hotspot\"\nevent is generated for the cursor until the cursor enters the captured\narea again."
+          }
+        },
+        "position": {
+          "description": {
+            "summary": "位置已更改",
+            "text": "图像捕获 source 之外的光标不会被捕获，并且不会为它们生成 event。\n\n给定的位置是光标的 hotspot 位置，它是相对于主 buffer 左上角的已变换 buffer 像素坐标。坐标可以是负数或大于主 buffer 大小。"
+          }
+        },
+        "hotspot": {
+          "description": {
+            "summary": "hotspot 更改",
+            "text": "hotspot 描述了光标图像与输入设备位置之间的偏移量。\n\n给定的坐标是 hotspot 在 buffer 坐标中相对于原点的偏移量。\n\n客户端不应立即应用 hotspot：hotspot 会在收到下一个 ext_image_copy_capture_frame_v1.ready event 时生效。\n\nCompositor 可能会延迟此 event，直到客户端捕获新 frame。"
+          }
+        }
+      }
+    }
+  }
+}

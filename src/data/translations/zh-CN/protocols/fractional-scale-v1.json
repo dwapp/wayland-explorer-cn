@@ -1,0 +1,50 @@
+{
+  "description": {
+    "summary": "请求分数级 surface 缩放的协议",
+    "text": "此协议允许 compositor 建议 surface 以分数级缩放进行渲染。\n\n客户端可以通过使用 wp_viewport 来提交缩放后的内容。这可以通过为 surface 创建一个 wp_viewport 对象，并在应用缩放因子之前将目标矩形设置为 surface 大小来实现。\n\n缓冲区大小是通过将 surface 大小乘以预期的缩放来计算的。\n\nwl_surface 缓冲区缩放应该保持设置为 1。\n\n如果一个 surface 的本地大小为 100 px 乘 50 px，并希望以 1.5 的缩放提交缓冲区，那么应该使用一个 150px 乘 75 px 的缓冲区，并且 wp_viewport 目标矩形应该是 100 px 乘 50 px。\n\n对于 toplevel surface，大小按远离零的半值舍入（rounded halfway away from zero）。对于 subsurface 位置和大小的舍入算法未定义。"
+  },
+  "interfaces": {
+    "wp_fractional_scale_manager_v1": {
+      "description": {
+        "summary": "分数级 surface 缩放信息",
+        "text": "一个全局接口，用于请求 surface 使用分数级缩放。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "解除绑定分数级 surface 缩放接口",
+            "text": "通知服务器客户端将不再使用此协议对象。这不会影响任何其他对象，包括 wp_fractional_scale_v1 对象。"
+          }
+        },
+        "get_fractional_scale": {
+          "description": {
+            "summary": "扩展 surface 接口以获取缩放信息",
+            "text": "为 wl_surface 创建一个附加对象，以让 compositor 请求分数级缩放。如果给定的 wl_surface 已经关联了一个 wp_fractional_scale_v1 对象，则会引发 fractional_scale_exists 协议错误。"
+          }
+        }
+      }
+    },
+    "wp_fractional_scale_v1": {
+      "description": {
+        "summary": "wl_surface 的分数级缩放接口",
+        "text": "wl_surface 对象的一个附加接口，允许 compositor 通知客户端首选的缩放。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "移除 surface 的 surface 缩放信息",
+            "text": "销毁分数级缩放对象。当此对象被销毁时，将不再发送 preferred_scale 事件。"
+          }
+        }
+      },
+      "events": {
+        "preferred_scale": {
+          "description": {
+            "summary": "通知新的首选缩放",
+            "text": "通知 compositor 建议客户端应该使用的此 surface 的新首选缩放。\n\n发送的缩放是分母为 120 的分数的分子。"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "description": {
+    "summary": "不透明的图像捕获源对象",
+    "text": "本协议作为捕获协议与潜在的图像捕获源（如 output 和 toplevel）之间的中介。\n\n未来可以扩展本协议以支持更多图像捕获源，从而将这些图像捕获源添加到使用图像捕获源对象的其他协议中，而无需修改那些协议。\n\n警告！此文件中描述的协议目前处于测试阶段。可以结合相应的接口版本增加来添加向后兼容的更改。只能通过创建扩展的新主要版本来进行向后不兼容的更改。"
+  },
+  "interfaces": {
+    "ext_image_capture_source_v1": {
+      "description": {
+        "summary": "不透明的图像捕获源对象",
+        "text": "图像捕获源对象是可捕获资源的不透明描述符。此资源可以是任何可从中派生图像的实体。\n\n注意，由于 ext_image_capture_source_v1 对象是由多个独立的工厂接口创建的，因此 ext_image_capture_source_v1 接口冻结在版本 1。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "删除此对象",
+            "text": "销毁图像捕获源。客户端可以随时发送此 request。"
+          }
+        }
+      }
+    },
+    "ext_output_image_capture_source_manager_v1": {
+      "description": {
+        "summary": "用于 output 的图像捕获源管理器",
+        "text": "用于为 wl_output 对象创建图像捕获源对象的管理器。"
+      },
+      "requests": {
+        "create_source": {
+          "description": {
+            "summary": "为 output 创建源对象",
+            "text": "为一个 output 创建源对象。从此源捕获的图像将显示与该 output 相同的内容。可能会省略某些元素，例如被标记为对捕获透明的光标和叠加层（overlay）。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "删除此对象",
+            "text": "销毁此管理器。客户端可以随时发送此 request，该管理器创建的对象在其被销毁后仍将保持有效。"
+          }
+        }
+      }
+    },
+    "ext_foreign_toplevel_image_capture_source_manager_v1": {
+      "description": {
+        "summary": "用于外部 toplevel 的图像捕获源管理器",
+        "text": "用于为 ext_foreign_toplevel_handle_v1 对象创建图像捕获源对象的管理器。"
+      },
+      "requests": {
+        "create_source": {
+          "description": {
+            "summary": "为外部 toplevel 创建源对象",
+            "text": "为一个外部 toplevel 句柄创建源对象。从此源捕获的图像将显示与该 toplevel 相同的内容。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "删除此对象",
+            "text": "销毁此管理器。客户端可以随时发送此 request，该管理器创建的对象在其被销毁后仍将保持有效。"
+          }
+        }
+      }
+    }
+  }
+}

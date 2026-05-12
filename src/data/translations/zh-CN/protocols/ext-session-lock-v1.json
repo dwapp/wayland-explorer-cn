@@ -1,0 +1,96 @@
+{
+  "description": {
+    "summary": "带有任意图形的安全会话锁定",
+    "text": "此协议允许拥有特权的 Wayland 客户端锁定会话并在会话锁定期间显示任意图形。\n\ncompositor 可以选择将此协议限制为由 compositor 本身启动的特定客户端，或者向所有特权客户端公开，这是 compositor 策略。\n\n客户端负责执行身份验证并在应解锁会话时通知 compositor。如果客户端在会话锁定时终止，会话将保持锁定状态，可能会永久锁定，这取决于 compositor 策略。\n\n本文档中的关键字“must”、“must not”、“required”、“shall”、“shall not”、“should”、“should not”、“recommended”、“may”和“optional”将按照 IETF RFC 2119 中的描述进行解释。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本增加一起添加。向后不兼容的更改只能通过创建扩展的新主要版本来完成。"
+  },
+  "interfaces": {
+    "ext_session_lock_manager_v1": {
+      "description": {
+        "summary": "用于锁定会话",
+        "text": "此接口用于请求锁定会话。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁会话锁管理器对象",
+            "text": "这会通知 compositor 会话锁管理器对象将不再使用。通过此接口创建的现有对象仍然有效。"
+          }
+        },
+        "lock": {
+          "description": {
+            "summary": "尝试锁定会话",
+            "text": "此请求创建一个会话锁并要求 compositor 锁定会话。compositor 将响应此请求并在创建的对象上发送 ext_session_lock_v1.locked 或 ext_session_lock_v1.finished 事件。"
+          }
+        }
+      }
+    },
+    "ext_session_lock_v1": {
+      "description": {
+        "summary": "管理锁状态并创建锁表面",
+        "text": "响应此对象的创建，compositor 必须发送 locked 或 finished 事件。\n\nlocked 事件表明会话已被锁定。这意味着 compositor 必须停止向普通客户端渲染并提供输入。相反，compositor 必须使用不透明颜色空白所有输出，以便其正常内容被完全隐藏。\n\n在会话锁定期间应该渲染的唯一表面是通过此接口创建的锁表面，并且 compositor 可以自行决定是否渲染特殊的特权表面，例如输入法或桌面 shell UI 的一部分。\n\n在新的“锁定”帧（来自会话锁表面或 compositor 自身的空白）提交之前，不得发送 locked 事件。\n\nfinished 事件表明会话无法被锁定，该客户端失去其焦点，或者是 compositor 决定终止会话锁定。在收到 finished 事件时，客户端必须立即销毁此对象并在适用的情况下使用相同的接口重试锁操作。\n\n一旦发送了 locked 事件，它就是不可撤销的。如果在客户端由于 compositor 断开连接或崩溃而被强制终止的情况下仍持有不可撤销的锁，或者此对象被销毁，则该会话应保持锁定状态。可以通过重新连接相同或另一个客户端来进行重新获取锁操作，以重新夺回锁对象。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁会话锁对象",
+            "text": "这会通知 compositor 会话锁对象将不再使用。通过此接口创建的现有对象仍然有效。"
+          }
+        },
+        "get_lock_surface": {
+          "description": {
+            "summary": "为输出创建锁表面",
+            "text": "客户端通过发送此请求并提供目标 wl_output 对象来创建与该输出相关联的锁表面。"
+          }
+        },
+        "unlock_and_destroy": {
+          "description": {
+            "summary": "解锁会话并销毁对象",
+            "text": "此请求表明会话应该被解锁，同时销毁相关的锁对象。compositor 必须接收解锁请求并在适当的条件满足时恢复正常状态。"
+          }
+        }
+      },
+      "events": {
+        "locked": {
+          "description": {
+            "summary": "会话成功锁定",
+            "text": "此事件表明会话已经被成功锁定。"
+          }
+        },
+        "finished": {
+          "description": {
+            "summary": "锁定会话失败或锁定已结束",
+            "text": "此事件表明会话的锁定请求未能满足，或者当前的锁已经被 compositor 终止。"
+          }
+        }
+      }
+    },
+    "ext_session_lock_surface_v1": {
+      "description": {
+        "summary": "锁表面对象",
+        "text": "此对象表示在锁定状态期间显示内容的表面。这是一个特殊的表面，仅在 ext_session_lock_v1 对象的上下文中有效。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁锁表面",
+            "text": "这会通知 compositor 客户端不再需要此锁表面。"
+          }
+        },
+        "ack_configure": {
+          "description": {
+            "summary": "确认配置事件",
+            "text": "确认已经处理了一个配置事件。这在后续的 wl_surface.commit 中被确认。"
+          }
+        }
+      },
+      "events": {
+        "configure": {
+          "description": {
+            "summary": "建议表面大小配置",
+            "text": "compositor 发送此事件以建议表面所需的宽度和高度。"
+          }
+        }
+      }
+    }
+  }
+}

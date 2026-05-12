@@ -1,0 +1,52 @@
+{
+  "description": {
+    "summary": "创建临时 seat 的协议",
+    "text": "特权客户端可以使用 transient seat 协议创建独立的 seat，当客户端销毁其 transient seat 时，该 seat 会从 compositor 中移除。\n\n本协议旨在与虚拟输入协议（例如 \"virtual_keyboard_unstable_v1\" 或 \"wlr_virtual_pointer_unstable_v1\"）配合使用，这两种协议都允许用户选择一个 seat。\n\n由该协议创建的 \"wl_seat\" global 本身不会生成输入事件，也不具备任何能力，除非其他协议扩展（如上述提到的扩展）分配给它。\n\n例如，远程桌面服务器可以为每个新连接遵循以下步骤，为每个远程用户创建一个带有虚拟输入的 seat：\n* 创建一个 transient seat\n* 等待 transient seat 创建完成\n* 找到名称匹配的 \"wl_seat\" global\n* 使用生成的 \"wl_seat\" global 创建虚拟输入"
+  },
+  "interfaces": {
+    "ext_transient_seat_manager_v1": {
+      "description": {
+        "summary": "transient seat 管理器",
+        "text": "transient seat manager 用于创建生命周期较短的 seat。"
+      },
+      "requests": {
+        "create": {
+          "description": {
+            "summary": "创建一个 transient seat",
+            "text": "创建一个新的 seat，当客户端的 transient seat 对象被销毁时，该 seat 也会被移除。\n\n实际的 seat 可能会更早被移除，在这种情况下，transient seat 对象将变得无效。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "销毁 manager。\n\n由该 manager 创建的所有对象都将保持有效，直到它们自身被销毁。"
+          }
+        }
+      }
+    },
+    "ext_transient_seat_v1": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 transient seat",
+            "text": "当客户端销毁 transient seat 对象时，compositor 创建的关联 seat 也会被销毁。"
+          }
+        }
+      },
+      "events": {
+        "ready": {
+          "description": {
+            "summary": "transient seat 已就绪",
+            "text": "此事件通告了与 wl_registry_bind 一起使用的 wl_seat 的 global 名称。\n\n当且仅当允许创建 transient seat 时，它会在 transient seat 创建完毕且新的 \"wl_seat\" global 被通告后立即发送且仅发送一次。"
+          }
+        },
+        "denied": {
+          "description": {
+            "summary": "transient seat 创建被拒绝",
+            "text": "该事件通知客户端，compositor 拒绝了其创建 transient seat 的请求。\n\n当且仅当创建 transient seat 被拒绝时，它会在 transient seat 对象创建后立即发送且仅发送一次。\n\n收到此事件后，客户端应销毁该对象。"
+          }
+        }
+      }
+    }
+  }
+}

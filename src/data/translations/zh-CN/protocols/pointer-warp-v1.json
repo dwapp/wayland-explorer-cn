@@ -1,0 +1,24 @@
+{
+  "interfaces": {
+    "wp_pointer_warp_v1": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 warp manager",
+            "text": "销毁 pointer warp manager。"
+          }
+        },
+        "warp_pointer": {
+          "description": {
+            "summary": "重新定位表面上的指针",
+            "text": "请求 compositor 将指针移动到表面局部位置。\ncompositor 是否接受该请求由具体实现决定，但它应该：\n- 如果表面具有指针焦点，则接受该请求，包括它具有隐式指针抓取的情况\n- 如果 enter serial 不正确，则拒绝该请求\n- 如果请求的位置在表面外部，则拒绝该请求\n\n请注意，enter serial 对于客户端的任何表面都是有效的，并且不必来自指针被 warp 到的表面。"
+          }
+        }
+      },
+      "description": {
+        "summary": "将指针重新定位到表面上的某个位置",
+        "text": "此全局接口允许应用程序请求将指针移动到相对于 wl_surface 的位置。\n\n请注意，如果所需行为是将指针限制在某个区域或锁定在某个位置，则此协议无法提供可靠的方法来实现。在这些用例中，应改用指针约束（pointer constraint）和指针锁定（pointer lock）协议。\n\n警告！此文件中描述的协议当前处于测试阶段。向后兼容的更改可能会与相应的接口版本升级一起添加。向后不兼容的更改只能通过创建扩展的新主要版本来完成。"
+      }
+    }
+  }
+}

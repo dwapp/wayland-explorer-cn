@@ -1,0 +1,78 @@
+{
+  "interfaces": {
+    "wp_content_type_manager_v1": {
+      "description": {
+        "summary": "surface 内容类型管理器",
+        "text": "此接口允许客户端描述 surface 将显示的内容种类，以允许 compositor 为其优化行为。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本增加一起添加。向后不兼容的更改只能通过创建扩展的新主版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁内容类型管理器对象",
+            "text": "销毁内容类型管理器。这不会销毁使用该管理器创建的对象。"
+          }
+        },
+        "get_surface_content_type": {
+          "description": {
+            "summary": "创建新的内容类型对象",
+            "text": "创建与给定 surface 关联的新内容类型对象。\n\n从已附加内容类型对象的 wl_surface 创建 wp_content_type_v1 会导致客户端错误：already_constructed。"
+          }
+        }
+      }
+    },
+    "wp_content_type_v1": {
+      "description": {
+        "summary": "surface 的内容类型对象",
+        "text": "内容类型对象允许 compositor 针对 surface 上显示的内容类型进行优化。例如，compositor 可以使用它来设置相关的 drm 属性（如“内容类型”）。\n\n客户端可以随时请求切换到另一种内容类型。\n当关联的 surface 被销毁时，此对象将变得无效，客户端应将其销毁。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁内容类型对象",
+            "text": "切换回未指定此 surface 的内容类型。这等效于将内容类型设置为 none，包括双缓冲语义。有关详细信息，请参阅 set_content_type。"
+          }
+        },
+        "set_content_type": {
+          "description": {
+            "summary": "指定内容类型",
+            "text": "设置 surface 内容类型。这会通知 compositor 客户端认为它正在显示匹配此内容类型的 buffer。\n\n这纯粹是为 compositor 提供的一个提示，可用于调整其行为或硬件设置，以最适合所呈现的内容。\n\n内容类型是双缓冲状态，有关详细信息，请参阅 wl_surface.commit。"
+          }
+        }
+      },
+      "enums": {
+        "type": {
+          "description": {
+            "summary": "可能的内容类型",
+            "text": "这些值描述了 surface 的可用内容类型。"
+          },
+          "entries": {
+            "none": {
+              "description": {
+                "summary": "没有适用的内容类型",
+                "text": "内容类型 none 意味着应用程序没有关于内容类型的数据，或者内容不适合其他任何类别。"
+              }
+            },
+            "photo": {
+              "description": {
+                "summary": "photo 内容类型",
+                "text": "内容类型 photo 描述了源自数码静态图片的内容，可以以最少的处理来呈现。"
+              }
+            },
+            "video": {
+              "description": {
+                "summary": "video 内容类型",
+                "text": "内容类型 video 描述了视频或动画，可以以更准确的时序呈现，以避免卡顿。在需要缩放时，可能会使用更适合视频的缩放方法。"
+              }
+            },
+            "game": {
+              "description": {
+                "summary": "game 内容类型",
+                "text": "内容类型 game 描述了正在运行的游戏。其内容可以以较低的延迟呈现。"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

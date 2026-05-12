@@ -1,0 +1,65 @@
+{
+    "interfaces": {
+        "wp_commit_timing_manager_v1": {
+            "description": {
+                "summary": "提交时序 (commit timing)",
+                "text": "当合成器（compositor）锁定新的内容更新时，它会检查可用内容更新的任意数量要求（例如所有缓冲区的同步栅栏均已触发），以认为更新已就绪。\n\n此协议提供了一种为 surface（表面）内容添加时间约束的方法。此约束向合成器指示内容更新应尽可能接近但不早于指定的时间进行呈现（presentation）。\n\n此协议不改变 Wayland 内容更新按接收顺序应用（apply）的属性，即使某些内容更新包含时间戳而其他不包含。\n\n要提供时间戳，必须使用此全局工厂接口（global factory interface）为 surface 获取一个 `wp_commit_timing_v1` 对象，然后可将其用于为提交（commits）提供时间戳信息。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本提升一起添加。向后不兼容的更改只能通过创建此扩展的新主版本来完成。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "解除绑定提交时序接口",
+                        "text": "通知服务器客户端将不再使用此协议对象。由此对象创建的现有对象不受影响。"
+                    }
+                },
+                "get_timer": {
+                    "description": {
+                        "summary": "请求 surface 的提交计时器接口",
+                        "text": "为 surface 建立时序控制器（timing controller）。\n\n一个 surface 只能创建一个提交计时器（commit timer），否则将生成 `commit_timer_exists` 协议错误。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "commit_timer_exists": {
+                            "summary": "surface 已存在提交计时器"
+                        }
+                    }
+                }
+            }
+        },
+        "wp_commit_timer_v1": {
+            "description": {
+                "summary": "surface 提交计时器",
+                "text": "用于为 surface 上的内容更新设置时间约束的对象。"
+            },
+            "requests": {
+                "set_timestamp": {
+                    "description": {
+                        "summary": "设置具有指定时间的计时器",
+                        "text": "为 surface 内容更新提供时序约束。\n\n可以在 `wl_surface.commit` 之前发出 `set_timestamp` 请求，以告知合成器该内容旨在尽可能接近但不早于指定时间进行呈现（presentation）。时间处于合成器 presentation 时钟的域内。\n\n对于无效的 `tv_nsec`，将生成 `invalid_timestamp` 错误。\n\n如果在没有新内容更新的情况下提供了时间戳，将生成 `no_update` 错误。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "销毁计时器对象",
+                        "text": "销毁计时器对象。由于此对象设置的计时器状态是双缓冲的（double-buffered），因此销毁计时器对象可以在提交时间戳之前移除由该计时器对象设置的挂起（pending）且未提交（uncommitted）的时间戳。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "invalid_timestamp": {
+                            "summary": "无效的时间戳"
+                        },
+                        "no_update": {
+                            "summary": "没有内容更新"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

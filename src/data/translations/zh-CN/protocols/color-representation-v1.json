@@ -1,0 +1,253 @@
+{
+  "description": {
+    "summary": "颜色表示（color representation）协议扩展",
+    "text": "此协议扩展提供了定义 alpha 模式、颜色模型、子采样和量化范围所需的元数据，用于在解释 buffer 内容时使用。其主要用例是定义 YCbCr 系列像素格式如何转换为 RGB。\n\n请注意，此协议未定义结果 RGB 通道/三刺激值的色度学 (colorimetry)。在没有其他扩展辅助的情况下，最终的色度学是由实现定义的。\n\n如果未使用此扩展，所使用的颜色表示由 compositor 的实现定义。\n\nITU-T H.273 建议书 \"Coding-independent code points for video signal type identification\" 在此简称为 H.273。"
+  },
+  "interfaces": {
+    "wp_color_representation_manager_v1": {
+      "description": {
+        "summary": "颜色表示管理器单例",
+        "text": "一个用于为 wl_surface 获取颜色表示扩展的单例全局 interface。该扩展接口允许设置 surface 的颜色表示。\n\nCompositor 绝不应移除此全局对象。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "销毁 wp_color_representation_manager_v1 对象。这不会以任何方式影响其他任何对象。"
+          }
+        },
+        "get_surface": {
+          "description": {
+            "summary": "为 wl_surface 创建一个颜色表示接口",
+            "text": "如果给定的 wl_surface 已经存在一个 wp_color_representation_surface_v1 对象，则引发协议错误 surface_exists。\n\n这会为给定的 wl_surface 创建一个新的颜色 wp_color_representation_surface_v1 对象。\n\n有关更多详细信息，请参阅 wp_color_representation_surface_v1 interface。"
+          },
+          "args": {}
+        }
+      },
+      "events": {
+        "supported_alpha_mode": {
+          "description": {
+            "summary": "支持的 alpha 模式",
+            "text": "当创建此对象时，它应立即向每个 compositor 支持的 alpha 模式发送一次此 event。\n\n有关支持的值的定义，请参阅 wp_color_representation_surface_v1::alpha_mode enum。"
+          },
+          "args": {
+            "alpha_mode": {
+              "summary": "支持的 alpha 模式"
+            }
+          }
+        },
+        "supported_coefficients_and_ranges": {
+          "description": {
+            "summary": "支持的矩阵系数和范围",
+            "text": "当创建此对象时，它应立即向每种 compositor 支持的矩阵系数和颜色范围组合发送一次此 event。\n\n有关支持的值的定义，请参阅 wp_color_representation_surface_v1::coefficients 和 wp_color_representation_surface_v1::range enum。"
+          },
+          "args": {
+            "coefficients": {
+              "summary": "支持的矩阵系数"
+            },
+            "range": {
+              "summary": "支持的颜色范围"
+            }
+          }
+        },
+        "supported_chroma_locations": {
+          "description": {
+            "summary": "支持的色度位置",
+            "text": "当创建此对象时，它应立即向每个 compositor 支持的色度位置发送一次此 event。\n\n有关支持的值的定义，请参阅 wp_color_representation_surface_v1::chroma_location enum。"
+          },
+          "args": {
+            "chroma_location": {
+              "summary": "支持的色度位置"
+            }
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "非法的创建请求",
+            "text": ""
+          },
+          "entries": {
+            "surface_exists": {
+              "summary": "对于 wl_surface，wp_color_representation_surface_v1 已经存在"
+            }
+          }
+        }
+      }
+    },
+    "wp_color_representation_surface_v1": {
+      "description": {
+        "summary": "基于 wl_surface 的颜色表示扩展接口",
+        "text": "此 interface 用于设置 surface 的颜色表示。\n\n最初，此 interface 将没有关联的颜色表示。这会导致 surface 表现为好像这个对象从未被创建一样。\n\n当此对象的销毁或颜色表示设置导致 surface 失去其关联的颜色表示时，其状态重置回该 interface 未使用时的状态。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁颜色表示扩展",
+            "text": "销毁 wp_color_representation_surface_v1 对象。这相当于清除状态并调用此对象的 destroy。然后状态将在下一个 wl_surface.commit 时应用。\n\n如果底层 wl_surface 已经被销毁，在此 request 之前未提交的状态将被丢弃。"
+          }
+        },
+        "set_alpha_mode": {
+          "description": {
+            "summary": "设置 alpha 模式",
+            "text": "此 request 将 surface 的 alpha 模式状态更新为在下一次 wl_surface.commit 时应用的值。\n\n如果在调用此 request 时附带了不支持的 alpha_mode（即从未通过 wp_color_representation_manager_v1::supported_alpha_mode 发送过），则 compositor 应发送 unsupported_alpha_mode 协议错误。\n\n此状态的初始值为 straight（直通）。"
+          },
+          "args": {
+            "alpha_mode": {
+              "summary": "用于 surface 的新 alpha 模式"
+            }
+          }
+        },
+        "set_color_representation": {
+          "description": {
+            "summary": "设置颜色表示",
+            "text": "此 request 将 surface 的颜色表示状态更新为在下一次 wl_surface.commit 时应用的值。\n\n如果在调用此 request 时附带了 compositor 不支持的参数组合，则 compositor 应发送 unsupported_color_representation 协议错误。\n\n要得到支持，其系数组合和颜色范围必须通过 wp_color_representation_manager_v1.supported_coefficients_and_ranges 发送。同样，色度位置必须通过 wp_color_representation_manager_v1.supported_chroma_location 发送。\n\n此状态没有默认值，因为这些值主要只在基于 YUV 的像素格式中有意义。相反，对于大多数像素格式，由于没有提供它们应该被假设的默认值，这会在应用颜色空间和电光转换函数（EOTF）之前影响像素值如何被解释的过程留给了 compositor（如 H.273 所指定的矩阵系数定义的那样）。\n\n然而，基于 YUV 的格式不能安全地依赖于对任何特定像素格式所假定的内容，这正是最初制定此协议的原因。\n\n具有预定义的与 H.273 中定义的等效语义（例如，带有 drm_fourcc 中预定义范围和色度位置的 YCbCr 或 YUV）的像素格式可以通过此状态覆盖其语义。客户端仍然必须能够发送被认为等同于这些定义的属性。如果不这样做，compositor 可能会向客户端发送 unsupported_color_representation 错误。\n\n由于在应用下一次具有有效颜色表示所需有效负载的 wl_surface.commit 之前此状态没有用处，因此不需要将它与 wl_surface 对象本身的使用一起初始化。\n\ncompositor 应该实现所有系数、颜色范围和色度位置参数的组合（它们通过这些各自的 event 单独宣布支持），但可能因为例如硬件限制而不这样做。"
+          },
+          "args": {
+            "coefficients": {
+              "summary": "用于 surface 的新矩阵系数"
+            },
+            "range": {
+              "summary": "用于 surface 的新颜色范围"
+            },
+            "chroma_location": {
+              "summary": "用于 surface 的新色度位置"
+            }
+          }
+        }
+      },
+      "enums": {
+        "alpha_mode": {
+          "description": {
+            "summary": "alpha 模式",
+            "text": "指定表面 buffer 上的 alpha 通道的值如何与颜色分量相关联。请注意，当附带的 buffer 不提供 alpha 通道或者其颜色未定义时，这些都不会有任何效果。"
+          },
+          "entries": {
+            "straight": {
+              "summary": "颜色通道与 alpha 不相关。渲染等效于 src_color * src_alpha + dst_color * (1 - src_alpha)",
+              "description": {
+                "summary": "颜色通道与 alpha 不相关",
+                "text": "非预乘 (non-premultiplied)。这是通过 wl_surface 和 wl_subsurface 处理 alpha 时隐式采用的设置。在这种情况下，最终混合时的颜色将按给定源和其对应的不透明度因子进行加权。\n\n使用这种模式意味着如果附带颜色的颜色模型需要，源可以安全地将非线性变换直接应用于这些颜色分量（而不是使用 pre-multiplied（预乘）模式，后者只能在颜色为线性时工作）。\n\n数学上，渲染如下进行：src_color * src_alpha + dst_color * (1 - src_alpha)。"
+              }
+            },
+            "premultiplied": {
+              "summary": "颜色通道已经与 alpha 预先相乘。渲染等效于 src_color + dst_color * (1 - src_alpha)",
+              "description": {
+                "summary": "颜色通道与 alpha 预先相乘",
+                "text": "在这种情况下，源颜色被认为是事先由生成它的图形 API 使用 alpha 值进行加权过的。\n\n由于预乘涉及颜色操作，只有在颜色处于线性空间时（在将适当的 EOTF 应用于非线性颜色分量之后），源颜色才应应用预乘。\n\n数学上，渲染如下进行：src_color + dst_color * (1 - src_alpha)。"
+              }
+            }
+          }
+        },
+        "coefficients": {
+          "description": {
+            "summary": "矩阵系数",
+            "text": "指定从 YCbCr 等系列转换为 RGB 等系列时使用的矩阵系数枚举。如 ITU-T H.273 中所指定的。"
+          },
+          "entries": {
+            "identity": {
+              "summary": "Identity"
+            },
+            "bt709": {
+              "summary": "ITU-R BT.709-6"
+            },
+            "unspecified": {
+              "summary": "Image characteristics are unknown or are determined by the application."
+            },
+            "fcc": {
+              "summary": "United States Federal Communications Commission Title 47 Code of Federal Regulations"
+            },
+            "bt470bg": {
+              "summary": "ITU-R BT.470-6 System B, G"
+            },
+            "smpte170m": {
+              "summary": "SMPTE ST 170"
+            },
+            "smpte240m": {
+              "summary": "SMPTE ST 240"
+            },
+            "ycgco": {
+              "summary": "YCgCo"
+            },
+            "bt2020": {
+              "summary": "ITU-R BT.2020-2 (non-constant luminance)"
+            },
+            "bt2020_constant": {
+              "summary": "ITU-R BT.2020-2 (constant luminance)"
+            },
+            "smpte2085": {
+              "summary": "SMPTE ST 2085"
+            },
+            "chromaticity_derived_ncl": {
+              "summary": "Chromaticity-derived non-constant luminance system"
+            },
+            "chromaticity_derived_cl": {
+              "summary": "Chromaticity-derived constant luminance system"
+            },
+            "ictcp": {
+              "summary": "ITU-R BT.2100-2 ICtCp"
+            }
+          }
+        },
+        "range": {
+          "description": {
+            "summary": "颜色范围",
+            "text": "指定正在显示的颜色分量应该如何根据为它们所表示的内容保留的最大边界或位数被进行量化。如 ITU-T H.273 中所指定的。"
+          },
+          "entries": {
+            "limited": {
+              "summary": "Limited/Narrow range"
+            },
+            "full": {
+              "summary": "Full range"
+            }
+          }
+        },
+        "chroma_location": {
+          "description": {
+            "summary": "色度位置",
+            "text": "这些基于基于像素下采样如何完成所确定的值进行枚举。如 ITU-T H.273 中所指定的。"
+          },
+          "entries": {
+            "unspecified": {
+              "summary": "未指定"
+            },
+            "left": {
+              "summary": "左"
+            },
+            "center": {
+              "summary": "中心"
+            },
+            "top_left": {
+              "summary": "左上"
+            },
+            "top": {
+              "summary": "上"
+            },
+            "bottom_left": {
+              "summary": "左下"
+            },
+            "bottom": {
+              "summary": "下"
+            }
+          }
+        },
+        "error": {
+          "description": {
+            "summary": "颜色表示错误",
+            "text": "这些错误可能在违反由该 interface 或通过 compositor 未宣布的受支持属性引起的状态改变请求产生时发出。"
+          },
+          "entries": {
+            "unsupported_alpha_mode": {
+              "summary": "设置了不支持的 alpha 模式"
+            },
+            "unsupported_color_representation": {
+              "summary": "设置了不支持的颜色表示"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "interfaces": {
+    "ext_background_effect_manager_v1": {
+      "description": {
+        "summary": "背景效果工厂",
+        "text": "该协议提供了一种通过在半透明表面后面应用模糊等效果来改善其视觉效果的方法。\n\n当绑定全局对象时以及每次功能发生变化时，都会发送功能。请注意，当该功能不可用时，合成器将不再应用相应的效果，即使它之前已设置。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本升级一起添加。向后不兼容的更改只能通过创建扩展的新主要版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁背景效果管理器",
+            "text": "通知服务器客户端将不再使用此协议对象。此对象创建的现有对象不受影响。"
+          }
+        },
+        "get_background_effect": {
+          "description": {
+            "summary": "获取背景效果对象",
+            "text": "为给定的 wl_surface 实例化一个接口扩展，以为其后面的背景添加模糊等效果。\n\n如果给定的 wl_surface 已经关联了一个 ext_background_effect_surface_v1 对象，则会引发 background_effect_exists 协议错误。"
+          }
+        }
+      },
+      "events": {
+        "capabilities": {
+          "description": {
+            "summary": "合成器的功能"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "background_effect_exists": {
+              "summary": "表面已经有一个背景效果对象"
+            }
+          }
+        },
+        "capability": {
+          "entries": {
+            "blur": {
+              "summary": "合成器支持应用模糊"
+            }
+          }
+        }
+      }
+    },
+    "ext_background_effect_surface_v1": {
+      "description": {
+        "summary": "表面的背景效果",
+        "text": "背景效果对象提供了一种方法来指定表面后面的一个区域，该区域应应用背景效果（如模糊）。\n\n如果与 ext_background_effect_surface_v1 对象关联的 wl_surface 已被销毁，则此对象变为无效（inert）。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "释放模糊对象",
+            "text": "通知服务器客户端将不再使用此协议对象。效果区域将在下一次提交时被移除。"
+          }
+        },
+        "set_blur_region": {
+          "description": {
+            "summary": "设置模糊区域",
+            "text": "此请求设置表面中将其背景模糊的区域。\n\n模糊区域在表面局部坐标中指定，并由合成器裁剪为表面大小。\n\n模糊区域的初始值为空。设置挂起的模糊区域具有复制语义，并且 wl_region 对象可以在此请求之后立即销毁。如果提供 null wl_region，则它被视为包含在表面中的空区域。\n\n模糊区域是双重缓冲的状态，请参阅 wl_surface.commit。\n\n背景模糊应用于背景和在此表面之上任何部分但在低于应用此效果的合成表面（如桌面小部件或弹出窗口）之下的效果。因此，如果半透明表面的任何部分在不透明窗口上方，则该区域将被模糊。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "surface_destroyed": {
+              "summary": "关联的表面已被销毁"
+            }
+          }
+        }
+      }
+    }
+  }
+}

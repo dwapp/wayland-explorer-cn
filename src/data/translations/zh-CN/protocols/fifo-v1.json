@@ -1,0 +1,76 @@
+{
+  "interfaces": {
+    "wp_fifo_manager_v1": {
+      "description": {
+        "summary": "用于 fifo 约束的协议",
+        "text": "当 Wayland compositor 考虑应用内容更新时，\n它必须确保满足所有更新的就绪约束（栅栏等）。\n\n该协议提供了一种方法，将显示刷新周期的完成\n用作额外的就绪约束。\n\n警告！此文件中描述的协议目前处于测试阶段。\n向后兼容的更改可能会与相应的接口版本增加一起添加。\n向后不兼容的更改只能通过创建扩展的新主版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "解除与管理器接口的绑定",
+            "text": "通知服务器客户端将不再使用此协议对象。\n由该对象创建的现有对象不受影响。"
+          }
+        },
+        "get_fifo": {
+          "description": {
+            "summary": "为 surface 请求 fifo 接口",
+            "text": "为一个 surface 建立一个 fifo 对象，该对象可用于向\n内容更新添加显示刷新约束。\n\n一个 surface 只能存在一个此类对象，如果试图\n创建多个对象，则会导致 already_exists 协议错误。\n如果一个 surface 被多个软件组件操作，\n一般的最佳实践是只有执行 wl_surface.attach 操作的组件才应该使用此协议。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "致命的呈现错误",
+            "text": "可能会响应非法请求而发出这些致命的协议错误。"
+          },
+          "entries": {
+            "already_exists": {
+              "summary": "surface 的 fifo 管理器已存在"
+            }
+          }
+        }
+      }
+    },
+    "wp_fifo_v1": {
+      "description": {
+        "summary": "fifo 接口",
+        "text": "一个用于 surface 的 fifo 对象，可用于向内容更新添加显示刷新约束。"
+      },
+      "requests": {
+        "set_barrier": {
+          "description": {
+            "summary": "设置 fifo 约束的起点",
+            "text": "当应用包含 \"set_barrier\" 的内容更新时，\n它会在与 fifo 对象关联的 surface 上设置 \"fifo_barrier\" 条件。\n在随后的非撕裂（non-tearing）呈现的锁存截止时间（latching deadline）之后，\n该条件将立即被清除。\n\n如果为了确保客户端能够向前推进假设（forward progress assumptions），\ncompositor 可以提前清除该条件。\n\n要等待此条件清除，请使用 \"wait_barrier\" 请求。\n\n\"set_barrier\" 是双缓冲状态，请参阅 wl_surface.commit。\n\n在 fifo 对象的 surface 被销毁后请求 set_barrier，\n将产生 \"surface_destroyed\" 错误。"
+          }
+        },
+        "wait_barrier": {
+          "description": {
+            "summary": "向内容更新添加 fifo 约束",
+            "text": "指示当 surface 上存在 \"fifo_barrier\" 条件时，\n此内容更新尚未就绪。\n\n这意味着当包含 \"set_barrier\" 的内容更新在锁存截止时间变为活动状态时，\n它将至少在一个刷新周期内保持活动状态。如果允许撕裂的内容更新，\n如果在截止时间没有内容更新变为活动状态，\n则它可能会在锁存截止时间之后变为活动状态。\n\n如果 surface 是处于同步模式的子表面（subsurface），\n则必须忽略该约束。如果 surface 未被 compositor 更新（屏幕外、被遮挡），\n则 compositor 可以忽略该约束。客户端必须使用额外的机制\n（如帧回调或时间戳）来确保在所有条件下发生节流。\n\n\"wait_barrier\" 是双缓冲状态，请参阅 wl_surface.commit。\n\n在 fifo 对象的 surface 被销毁后请求 \"wait_barrier\"，\n将产生 \"surface_destroyed\" 错误。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 fifo 接口",
+            "text": "通知服务器客户端将不再使用此协议对象。\n\n此协议之前对 surface 状态所做的更改\n不受此对象销毁的影响。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "致命错误",
+            "text": "可能会响应非法请求而发出这些致命的协议错误。"
+          },
+          "entries": {
+            "surface_destroyed": {
+              "summary": "关联的 surface 不复存在"
+            }
+          }
+        }
+      }
+    }
+  }
+}

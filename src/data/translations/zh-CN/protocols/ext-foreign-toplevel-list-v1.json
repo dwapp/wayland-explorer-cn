@@ -1,0 +1,88 @@
+{
+  "description": {
+    "summary": "列出 toplevel",
+    "text": "本协议旨在提供 toplevel 的协议对象句柄，这些 toplevel 可能源自其他客户端。\n\n本协议有意保持极简，并期望在扩展协议中实现其他功能（例如，从 toplevel 句柄创建截屏源、获取关于 toplevel 状态的信息）。\n\ncompositor 可以选择将此协议限制为由 compositor 自身启动的特殊客户端，或将其暴露给所有客户端，这是 compositor 的策略。\n\n本文档中的关键字“must”、“must not”、“required”、“shall”、“shall not”、“should”、“should not”、“recommended”、“may”和“optional”按 IETF RFC 2119 中的描述进行解释。\n\n警告！此文件中描述的协议当前处于测试阶段。可以结合相应的接口版本提升来添加向后兼容的更改。只能通过创建扩展的新主要版本来进行不向后兼容的更改。"
+  },
+  "interfaces": {
+    "ext_foreign_toplevel_list_v1": {
+      "description": {
+        "summary": "列出 toplevel",
+        "text": "toplevel 被定义为具有类似于 xdg_toplevel 角色的 surface。在本次协议中，XWayland surface 可以被视为 toplevel。\n\n客户端绑定 ext_foreign_toplevel_list_v1 后，每个映射的 toplevel 窗口都将使用 ext_foreign_toplevel_list_v1.toplevel 事件发送。\n\n只关心当前状态的客户端可以在绑定此全局对象后执行一次 roundtrip。\n\n对于 ext_foreign_toplevel_list_v1 的每个实例，compositor 必须为每个映射的 toplevel 创建一个新的 ext_foreign_toplevel_handle_v1 对象。\n\n如果 compositor 实现在绑定全局对象后发送了 ext_foreign_toplevel_list_v1.finished 事件，则 compositor 不得发送任何 ext_foreign_toplevel_list_v1.toplevel 事件。"
+      },
+      "requests": {
+        "stop": {
+          "description": {
+            "summary": "停止发送事件",
+            "text": "该请求表示客户端不再希望接收新 toplevel 的事件。\n\nWayland 协议是异步的，这意味着在处理 stop 请求之前，compositor 可能会发送更多 toplevel 事件。客户端应在销毁此对象之前等待 ext_foreign_toplevel_list_v1.finished 事件。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 ext_foreign_toplevel_list_v1 对象",
+            "text": "应在客户端不再使用 ext_foreign_toplevel_list_v1 或在收到 finished 事件之后调用此请求，以允许销毁该对象。\n\n如果客户端希望销毁此对象，它应发送 ext_foreign_toplevel_list_v1.stop 请求并等待 ext_foreign_toplevel_list_v1.finished 事件，然后销毁这些句柄，最后销毁此对象。"
+          }
+        }
+      },
+      "events": {
+        "toplevel": {
+          "description": {
+            "summary": "一个 toplevel 已创建",
+            "text": "每当创建新 toplevel 窗口时，都会发出此事件。无论是由哪个应用创建的，都会为所有 toplevel 发出该事件。\n\ntoplevel 的所有初始属性（identifier、title、app_id）将在发出此事件后立即使用对应的 ext_foreign_toplevel_handle_v1 事件发送。compositor 将使用 ext_foreign_toplevel_handle_v1.done 事件来指示何时发送完所有初始属性。"
+          }
+        },
+        "finished": {
+          "description": {
+            "summary": "compositor 已经完成使用 ext_foreign_toplevel_list_v1 对象",
+            "text": "此事件表示 compositor 完成了针对该对象的事件发送。即使客户端之前没有发送 stop 请求，也会发生这种情况。客户端必须销毁接收到此事件的协议对象。"
+          }
+        }
+      }
+    },
+    "ext_foreign_toplevel_handle_v1": {
+      "description": {
+        "summary": "一个已打开的 toplevel",
+        "text": "一个代表单个映射 toplevel 窗口的 ext_foreign_toplevel_handle_v1 对象。\n\n通过此句柄公开的关于 toplevel 的信息是特定于实例的。只有在为特定实例获取了此对象之后发生的生命周期事件才会通过该对象广播到该特定客户端的实例。\n\n包含在 done 事件中的属性如果发生变化，即使之前没有发送过此类属性，也将发出新事件并跟随着 done 事件发送。\n\n由于此协议期望通过扩展来增强功能，因此除了最初的 identifier、title 和 app_id 外，可能会发送多个带有新属性的 done 事件集。客户端应该通过确保有多个 done 事件能够正常处理来考虑这一点。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 ext_foreign_toplevel_handle_v1 对象",
+            "text": "此请求只应在收到 ext_foreign_toplevel_handle_v1.closed 后发出。"
+          }
+        }
+      },
+      "events": {
+        "closed": {
+          "description": {
+            "summary": "此 toplevel 已被销毁",
+            "text": "每当该 toplevel 变为未映射状态（例如，由于它被破坏），都会发出此事件。收到此事件后，客户端应销毁该对象。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "在此事件之前发出的所有关于 toplevel 的信息已更新",
+            "text": "在发出任何由于其状态改变导致的 toplevel 信息变更事件（以及初始状态）之后，都会发出此事件。这允许一次性更新单个 toplevel 的状态。"
+          }
+        },
+        "title": {
+          "description": {
+            "summary": "给定的 toplevel 的标题",
+            "text": "每当该 toplevel 的标题改变（以及初始状态），都会发出此事件。"
+          }
+        },
+        "app_id": {
+          "description": {
+            "summary": "给定的 toplevel 的 app_id",
+            "text": "每当该 toplevel 的 app_id 改变（以及初始状态），都会发出此事件。"
+          }
+        },
+        "identifier": {
+          "description": {
+            "summary": "给定的 toplevel 的字符串标识符",
+            "text": "在 initial_state 发出后发送的此事件，包含由 compositor 为该 toplevel 分配的标识符。此标识符可以提供给使用协议对象的其它请求的。此标识符在此 ext_foreign_toplevel_list_v1 的全局实例生命周期内保证在各个 toplevel 之间是唯一的，这通过提供此句柄来保证标识符是安全的并防止竞态条件。此句柄的标识符永远不会改变。\n\n可以通过发送包含该字符串标识符作为字符串长度并后跟字符串内容的字节序列作为标识符，来将该字符串标识符发送到允许该类型的请求。"
+          }
+        }
+      }
+    }
+  }
+}

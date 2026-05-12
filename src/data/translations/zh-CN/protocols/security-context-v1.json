@@ -1,0 +1,109 @@
+{
+  "interfaces": {
+    "wp_security_context_manager_v1": {
+      "description": {
+        "summary": "客户端安全上下文管理器",
+        "text": "此接口允许客户端向 compositor 注册一个新的 Wayland 连接，并向其附加安全上下文（security context）。\n\n这主要用于沙盒（sandboxes）。沙盒引擎将安全上下文附加到所有来自沙盒内部的连接。然后，compositor 可以限制沙盒连接能够使用的功能。\n\nCompositor 应该禁止嵌套多个安全上下文，方法是不向已附加安全上下文的客户端暴露 wp_security_context_manager_v1 全局对象，或者发送嵌套协议错误。嵌套安全上下文是危险的，因为它们可能允许沙盒客户端提升权限。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本升级一起添加。向后不兼容的更改只能通过创建此扩展的新主要版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器对象",
+            "text": "销毁管理器。这不会销毁使用该管理器创建的对象。"
+          }
+        },
+        "create_listener": {
+          "description": {
+            "summary": "创建新的安全上下文",
+            "text": "创建一个带有监听 socket 文件描述符（FD）的新安全上下文。\n\nCompositor 将在 listen_fd 上接受新的客户端连接。当客户端发送此请求时，listen_fd 必须准备好接受新连接。换句话说，客户端必须在发送 FD 之前调用 bind(2) 和 listen(2)。\n\nclose_fd 是一个文件描述符，当 compositor 应该停止在 listen_fd 上接受新连接时，它将发出挂断（hangup）信号。\n\n当创建安全上下文的 Wayland 客户端断开连接时，compositor 必须继续在 listen_fd 上接受连接。\n\n发送此请求后，关闭 listen_fd 和 close_fd 仍然是对它们唯一有效的操作。"
+          },
+          "args": {
+            "listen_fd": {
+              "summary": "监听 socket FD"
+            },
+            "close_fd": {
+              "summary": "发出完成信号的 FD"
+            }
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_listen_fd": {
+              "summary": "监听 socket FD 无效"
+            },
+            "nested": {
+              "summary": "禁止嵌套安全上下文"
+            }
+          }
+        }
+      }
+    },
+    "wp_security_context_v1": {
+      "description": {
+        "summary": "客户端安全上下文",
+        "text": "安全上下文允许客户端注册一个新客户端，并将安全上下文元数据（metadata）附加到连接。\n\n当同时设置时，compositor 应该使用沙盒引擎、应用程序 ID 和实例 ID 的组合来识别应用程序。\n\n除非另有说明，否则请求只会更改稍后通过附加到该安全上下文的监听 FD（listen FD）建立的连接的上下文。已经建立的连接不会受到影响。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁安全上下文对象",
+            "text": "销毁安全上下文。这不会影响已经建立的与此安全上下文关联的连接。"
+          }
+        },
+        "set_sandbox_engine": {
+          "description": {
+            "summary": "设置沙盒引擎（sandbox engine）",
+            "text": "附加稍后建立连接的沙盒引擎的名称。沙盒引擎（sandbox engine）是一个特定于沙盒程序的字符串（例如，“flatpak” 或 “snap”）。\n\n给定安全上下文只能发送一次此请求。如果发送了多次，则会触发 already_set 协议错误。"
+          },
+          "args": {
+            "name": {
+              "summary": "沙盒引擎名称"
+            }
+          }
+        },
+        "set_app_id": {
+          "description": {
+            "summary": "设置应用程序 ID",
+            "text": "附加稍后建立连接的沙盒引擎中特定应用程序的名称。\n\n给定安全上下文只能发送一次此请求。如果发送了多次，则会触发 already_set 协议错误。"
+          },
+          "args": {
+            "app_id": {
+              "summary": "应用程序 ID"
+            }
+          }
+        },
+        "set_instance_id": {
+          "description": {
+            "summary": "设置应用程序实例 ID",
+            "text": "附加运行在沙盒引擎中的特定应用程序实例。这不仅可以识别应用程序的类型，还可以识别特定应用程序的唯一实例。\n\n给定安全上下文只能发送一次此请求。如果发送了多次，则会触发 already_set 协议错误。"
+          },
+          "args": {
+            "instance_id": {
+              "summary": "实例 ID"
+            }
+          }
+        },
+        "commit": {
+          "description": {
+            "summary": "提交安全上下文",
+            "text": "提交安全上下文。\n\n如果客户端没有发送 set_sandbox_engine 请求，则会触发 missing_metadata 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_set": {
+              "summary": "安全上下文元数据已经被设置"
+            },
+            "missing_metadata": {
+              "summary": "元数据缺失"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "interfaces": {
+    "ext_idle_notifier_v1": {
+      "description": {
+        "summary": "空闲通知管理器",
+        "text": "此接口允许客户端监控用户的空闲状态。\n\n绑定到此全局对象后，客户端可以创建 ext_idle_notification_v1\n对象，以便在用户空闲指定时间后获得通知。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "销毁管理器对象。通过此接口创建的所有对象\n保持有效。"
+          }
+        },
+        "get_idle_notification": {
+          "description": {
+            "summary": "创建通知对象",
+            "text": "创建一个新的空闲通知对象。\n\n该通知对象具有最小超时时间，并绑定到一个\n seat。如果 seat 处于非活动状态的时间至少达到\n提供的超时时间，将通知客户端。有关更多详细信息，请参阅 ext_idle_notification_v1。\n\n零超时是有效的，意味着客户端希望在 seat 处于非活动状态时尽快收到通知。"
+          }
+        },
+        "get_input_idle_notification": {
+          "description": {
+            "summary": "创建通知对象",
+            "text": "创建一个新的空闲通知对象，以跟踪\n用户的输入，例如键盘和鼠标移动。因为此对象\n仅用于跟踪用户输入，所以它会忽略空闲抑制器（idle inhibitors）。\n\n该通知对象具有最小超时时间，并绑定到一个\n seat。如果 seat 处于非活动状态的时间至少达到\n提供的超时时间，将通知客户端。有关更多详细信息，请参阅 ext_idle_notification_v1。\n\n零超时是有效的，意味着客户端希望在 seat 处于非活动状态时尽快收到通知。"
+          }
+        }
+      }
+    },
+    "ext_idle_notification_v1": {
+      "description": {
+        "summary": "空闲通知",
+        "text": "此接口由 compositor 使用，用于向客户端发送空闲通知事件。\n\n最初，通知对象不处于空闲状态。从创建通知对象开始算起，当至少在超时持续时间内未发生任何用户活动时，\n通知对象将变为空闲状态。用户\n活动可以包括输入事件或存在传感器，但具体取决于\n compositor。\n\n此通知对空闲抑制器（idle inhibitors）的响应方式取决于\n它的构建方式。如果通过\n get_idle_notification 请求构建，那么如果存在活动的空闲抑制器\n（例如，另一个客户端在可见的 surface 上创建了 zwp_idle_inhibitor_v1），\n compositor 绝不能使该\n通知对象进入空闲状态。但是，如果通过\n get_input_idle_notification 请求构建，则会忽略空闲抑制器，\n并且只有来自用户的输入（例如来自键盘或\n鼠标）才算作活动。\n\n当通知对象变为空闲时，会发送 idled 事件。当\n用户活动重新开始时，通知对象停止空闲，\n会发送 resumed 事件并重新启动超时。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁通知对象",
+            "text": "销毁通知对象。"
+          }
+        }
+      },
+      "events": {
+        "idled": {
+          "description": {
+            "summary": "通知对象处于空闲状态",
+            "text": "当通知对象变为空闲状态时发送此事件。\n\n如果在没有 resumed 事件介入的情况下发送此事件两次，则属于 compositor 协议错误。"
+          }
+        },
+        "resumed": {
+          "description": {
+            "summary": "通知对象不再处于空闲状态",
+            "text": "当通知对象停止空闲时发送此事件。\n\n如果在没有 idled 事件介入的情况下发送此事件两次，则属于 compositor 协议错误。在任何 idled 事件之前发送此\n事件也属于 compositor 协议错误。"
+          }
+        }
+      }
+    }
+  }
+}
