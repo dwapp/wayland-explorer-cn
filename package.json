@@ -4,7 +4,7 @@
     "version": "0.1.0",
     "private": true,
     "license": "MIT",
-    "homepage": "/protocols",
+    "homepage": "/wayland-explorer-cn",
     "dependencies": {
         "@headlessui/react": "^1.4.1",
         "@vscode/codicons": "^0.0.21",

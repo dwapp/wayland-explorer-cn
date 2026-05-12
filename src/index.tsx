@@ -15,7 +15,7 @@ const hydrateOrRender = process.env.NODE_ENV === 'production' ? hydrate : render
 hydrateOrRender(
     <React.StrictMode>
         <LanguageProvider>
-            <Router base="/protocols">
+            <Router base="/wayland-explorer-cn">
                 <App />
             </Router>
         </LanguageProvider>
