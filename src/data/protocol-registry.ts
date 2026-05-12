@@ -266,6 +266,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/xdg-toplevel-tag-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xdg-toplevel-tag-v1.json'),
+        },
     },
     {
         id: 'pointer-warp-v1',
