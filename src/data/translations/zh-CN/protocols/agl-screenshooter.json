@@ -1,0 +1,47 @@
+{
+  "interfaces": {
+    "agl_screenshooter": {
+      "description": {
+        "summary": "AGL 截图工具",
+        "text": "AGL compositor 扩展，执行由 \"wl_output\" 对象表示的输出的截图。\n\n客户端将调用 \"take_shot\" 请求并等待 compositor 将数据写入 Wayland 缓冲区，然后通过 \"done\" 事件向客户端发信号。如果客户端想要拍摄另一张截图或对不同输出进行截图，应等待收到 \"done\" 事件。\n\n客户端必须在拍摄时提供正确大小的基于 wl_shm 的 wl_buffer。compositor 将截图写入 wl_buffer，然后发送 \"done\" 事件，表示数据写入完成。\n\n一旦 compositor 将数据传回提供的 Wayland 缓冲区，客户端应能够将其转换为磁盘上的常见文件格式。"
+      },
+      "requests": {
+        "take_shot": {
+          "description": {
+            "summary": "执行截图",
+            "text": "对由 \"wl_output\" 对象表示的 Wayland 输出进行截图。客户端应首先使用全局注册表检索它，以及 \"wl_shm\" 对象，以便创建 Wayland 缓冲区类型的对象（\"wl_buffer\"）。\n\n客户端可以从 \"wl_output\" 对象推导出步长和大小，然后在创建基于 shm 的 \"wl_buffer\" 以及提供像素格式时使用这些值。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁主对象",
+            "text": "销毁 \"weston_screenshooter\" 接口。"
+          }
+        }
+      },
+      "events": {
+        "done": {
+          "description": {
+            "summary": "当 \"take_shot\" 完成时发送",
+            "text": "发回事件以通知客户端 \"take_shot\" 请求已完成。"
+          }
+        }
+      },
+      "enums": {
+        "done_status": {
+          "entries": {
+            "success": {
+              "summary": "成功"
+            },
+            "no_memory": {
+              "summary": "内存不足"
+            },
+            "bad_buffer": {
+              "summary": "无效的缓冲区"
+            }
+          }
+        }
+      }
+    }
+  }
+}

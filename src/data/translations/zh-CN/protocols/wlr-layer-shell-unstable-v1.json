@@ -1,0 +1,190 @@
+{
+    "interfaces": {
+        "zwlr_layer_shell_v1": {
+            "description": {
+                "summary": "创建作为桌面图层的表面",
+                "text": "客户端可以使用此接口为 wl_surface 分配 surface_layer 角色。这些表面被分配到输出的某个\"图层\"中，并按照定义的 z 深度相互渲染。它们还可以锚定到屏幕的边缘和角落，并指定输入处理语义。此接口应适用于许多桌面 shell 组件以及大量与桌面交互的其他应用程序的实现。"
+            },
+            "requests": {
+                "get_layer_surface": {
+                    "description": {
+                        "summary": "从表面创建 layer_surface",
+                        "text": "为现有表面创建图层表面。这会分配 layer_surface 角色，如果已分配了其他角色，则会引发协议错误。\n\n从已附加或已提交 buffer 的 wl_surface 创建图层表面是客户端错误，在首次 layer_surface.configure 调用之前，客户端附加或操作 buffer 的任何尝试也必须视为错误。\n\n创建 layer_surface 对象并设置完成后，客户端必须执行不附加任何 buffer 的初始提交。合成器将回复 layer_surface.configure 事件。客户端必须确认该事件，然后才被允许附加 buffer 以映射表面。\n\n可以为 output 传递 NULL，让合成器决定使用哪个输出。通常这是用户最近交互过的输出。\n\n客户端可以指定命名空间来定义图层表面的用途。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 layer_shell 对象",
+                        "text": "此请求表示客户端将不再使用 layer_shell 对象。通过此实例创建的对象不受影响。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "role": {
+                            "summary": "wl_surface 已有其他角色"
+                        },
+                        "invalid_layer": {
+                            "summary": "图层值无效"
+                        },
+                        "already_constructed": {
+                            "summary": "wl_surface 已附加或已提交 buffer"
+                        }
+                    }
+                },
+                "layer": {
+                    "description": {
+                        "summary": "表面可用的图层",
+                        "text": "这些值表示表面可以在哪些图层中渲染。它们按 z 深度排序，最底层在前。传统 shell 表面通常在 bottom 和 top 图层之间渲染。全屏 shell 表面通常在 top 图层渲染。多个表面可以共享同一图层，单个图层内的排序是未定义的。"
+                    }
+                }
+            }
+        },
+        "zwlr_layer_surface_v1": {
+            "description": {
+                "summary": "图层元数据接口",
+                "text": "可由 wl_surface 实现的接口，用于设计为在堆叠式桌面环境中作为图层渲染的表面。\n\n图层表面状态（图层、大小、锚定、独占区域、边距、交互性）是双缓冲的，将在调用相应 wl_surface 的 wl_surface.commit 时应用。\n\n将空 buffer 附加到图层表面会取消映射它。\n\n取消映射 layer_surface 意味着合成器无法显示该表面，除非再次显式映射。layer_surface 返回到 layer_shell.get_layer_surface 之后的状态。客户端可以通过执行不附加任何 buffer 的提交、等待 configure 事件并照常处理来重新映射表面。"
+            },
+            "requests": {
+                "set_size": {
+                    "description": {
+                        "summary": "设置表面大小",
+                        "text": "以表面局部坐标设置表面的大小。合成器将相对于其锚定点居中显示表面。\n\n如果为任一值传递 0，合成器将分配它并在 configure 事件中通知分配结果。必须将锚定设置为省略维度的相对边缘；否则将导致协议错误。两个值默认都是 0。\n\n大小是双缓冲的，参见 wl_surface.commit。"
+                    }
+                },
+                "set_anchor": {
+                    "description": {
+                        "summary": "配置表面的锚定点",
+                        "text": "请求合成器将表面锚定到指定的边缘和角落。如果指定了两个正交边缘（例如 'top' 和 'left'），则锚定点将是边缘的交点（例如输出的左上角）；否则锚定点将位于该边缘的中心，如果未指定则位于中心。\n\n锚定是双缓冲的，参见 wl_surface.commit。"
+                    }
+                },
+                "set_exclusive_zone": {
+                    "description": {
+                        "summary": "配置此表面的独占几何区域",
+                        "text": "请求合成器避免用其他表面遮挡某个区域。合成器对这些信息的使用取决于实现——不要假设该区域实际上不会被遮挡。\n\n正值仅在表面锚定到一条边缘或一条边缘和两条垂直边缘时有意义。如果表面未锚定、仅锚定到两条垂直边缘（角落）、仅锚定到两条平行边缘或锚定到所有边缘，正值将被视为零。\n\n正值区域是以表面局部坐标从边缘开始考虑独占的距离。\n\n不希望有独占区域的表面可以指定它们应如何与具有独占区域的表面交互。如果设置为 0，表示表面希望被移动以避免遮挡具有正值独占区域的表面。如果设置为 -1，表示表面不希望为容纳其他表面而被移动，合成器应将其一直扩展到它所锚定的边缘。\n\n例如，面板可能将其独占区域设置为 10，这样最大化的 shell 表面就不会显示在其上方。通知可能将其独占区域设置为 0，这样它会被移动以避免遮挡面板，但 shell 表面会在其下方显示。壁纸或锁屏可能将其独占区域设置为 -1，这样它们会在面板下方或上方拉伸。\n\n默认值为 0。\n\n独占区域是双缓冲的，参见 wl_surface.commit。"
+                    }
+                },
+                "set_margin": {
+                    "description": {
+                        "summary": "设置距锚定点的边距",
+                        "text": "请求将表面放置在距输出上锚定点一定距离处，以表面局部坐标表示。为未锚定的边缘设置此值无效。\n\n独占区域包含边距。\n\n边距是双缓冲的，参见 wl_surface.commit。"
+                    }
+                },
+                "set_keyboard_interactivity": {
+                    "description": {
+                        "summary": "请求键盘事件",
+                        "text": "设置键盘事件如何传递到此表面。默认情况下，图层 shell 表面不接收键盘事件；此请求可用于更改此行为。\n\n此设置由 get_popup 请求设置的子表面继承。\n\n图层表面正常接收指针、触摸和平板电脑事件。如果不想接收它们，请将表面上的输入区域设置为空区域。\n\n键盘交互性是双缓冲的，参见 wl_surface.commit。"
+                    }
+                },
+                "get_popup": {
+                    "description": {
+                        "summary": "将此 layer_surface 设为 xdg_popup 的父级",
+                        "text": "将 xdg_popup 的父级分配为此 layer_surface。此弹出窗口应通过 xdg_surface::get_popup 创建，父级设置为 NULL，并且此请求必须在提交弹出窗口的初始状态之前调用。\n\n有关 xdg_popup 是什么以及如何使用的更多详细信息，请参阅 xdg_popup 的文档。"
+                    }
+                },
+                "ack_configure": {
+                    "description": {
+                        "summary": "确认 configure 事件",
+                        "text": "当收到 configure 事件时，如果客户端提交了表面以响应 configure 事件，则客户端必须在提交请求之前的某个时间发出 ack_configure 请求，传入 configure 事件的序列号。\n\n如果客户端在能够响应之前收到多个 configure 事件，则只需确认最后一个 configure 事件。\n\n客户端不需要在发送 ack_configure 请求后立即提交——甚至可以在下次表面提交之前多次 ack_configure。\n\n客户端可以在提交之前发送多个 ack_configure 请求，但只有提交前发送的最后一个请求才表示客户端真正响应的是哪个 configure 事件。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 layer_surface",
+                        "text": "此请求销毁图层表面。"
+                    }
+                },
+                "set_layer": {
+                    "description": {
+                        "summary": "更改表面的图层",
+                        "text": "更改表面渲染所在的图层。\n\n图层是双缓冲的，参见 wl_surface.commit。"
+                    }
+                },
+                "set_exclusive_edge": {
+                    "description": {
+                        "summary": "设置独占区域将应用到的边缘",
+                        "text": "请求独占区域应用到的边缘。独占边缘在可能时会自动从锚定点推导，但当表面锚定到角落时，需要显式设置以消除歧义，因为无法推导应使用两个角落边缘中的哪一个。\n\n边缘必须是表面锚定到的边缘之一，否则将引发 invalid_exclusive_edge 协议错误。"
+                    }
+                }
+            },
+            "events": {
+                "configure": {
+                    "description": {
+                        "summary": "建议表面更改",
+                        "text": "configure 事件要求客户端调整其表面大小。\n\n客户端应为其表面安排新状态，然后在提交新表面之前的某个时间发送带有此 configure 事件中序列号的 ack_configure 请求。\n\n客户端可以自由忽略除最后一个之外的所有 configure 事件。\n\nwidth 和 height 参数以表面局部坐标指定窗口大小。\n\n大小是一个提示，客户端可以自由忽略它（如果不调整大小）、选择较小的大小（以满足宽高比或按 NxM 像素的步长调整大小）。如果客户端选择较小的大小并锚定到两个相对的锚点（例如 'top' 和 'bottom'），表面将在此轴上居中。\n\n如果 width 或 height 参数为零，表示客户端应自行决定其窗口尺寸。"
+                    }
+                },
+                "closed": {
+                    "description": {
+                        "summary": "表面应被关闭",
+                        "text": "当表面不再显示时，合成器发送 closed 事件。输出可能已被销毁，或者用户可能要求移除它。对表面的进一步更改将被忽略。客户端应在收到此事件后销毁资源，并在需要时创建新表面。"
+                    }
+                }
+            },
+            "enums": {
+                "keyboard_interactivity": {
+                    "description": {
+                        "summary": "图层 shell 表面可用的键盘交互类型",
+                        "text": "图层 shell 表面可用的键盘交互类型。其原理有两个方面：(1) 一些应用程序对键盘事件不感兴趣，不允许它们获得焦点可以改善桌面体验；(2) 一些应用程序需要独占键盘焦点。"
+                    },
+                    "entries": {
+                        "none": {
+                            "description": {
+                                "summary": "不可能获得键盘焦点",
+                                "text": "此值表示此表面不感兴趣键盘事件，合成器不应为其分配键盘焦点。\n\n这是默认值，为新创建的图层 shell 表面设置。\n\n这对于显示信息或仅与非键盘输入设备交互的桌面小部件等很有用。"
+                            }
+                        },
+                        "exclusive": {
+                            "description": {
+                                "summary": "请求独占键盘焦点",
+                                "text": "如果此表面位于 shell 表面图层上方，则请求独占键盘焦点。\n\n对于 top 和 overlay 图层，seat 始终将独占键盘焦点给予最顶层的图层（其键盘交互性设置为 exclusive）。如果此图层包含多个键盘交互性设置为 exclusive 的表面，合成器以实现定义的方式确定接收键盘事件的表面。在这种情况下，不保证此表面何时会收到键盘焦点（如果有的话）。\n\n对于 bottom 和 background 图层，合成器可以使用正常的焦点语义。\n\n此设置主要用于需要确保接收所有键盘事件的应用程序，如锁屏或密码提示。"
+                            }
+                        },
+                        "on_demand": {
+                            "description": {
+                                "summary": "请求常规键盘焦点语义",
+                                "text": "此请求允许合成器以实现定义的方式让用户聚焦和取消聚焦此表面。用户应能够取消聚焦此表面，无论它在哪个图层上。\n\n通常，合成器会使用其正常机制来管理具有此设置的图层 shell 表面和桌面上的常规 toplevel 之间的键盘焦点（例如点击聚焦）。但是，合成器也可能需要特殊交互来聚焦或取消聚焦图层 shell 表面（例如即使焦点跟随鼠标也需要点击，或提供按键绑定来切换图层之间的焦点）。\n\n此设置主要用于允许键盘交互的桌面 shell 组件（例如面板）。使用此选项可以实现完全无需鼠标即可使用的桌面 shell。"
+                            }
+                        }
+                    }
+                },
+                "error": {
+                    "entries": {
+                        "invalid_surface_state": {
+                            "summary": "提供的表面状态无效"
+                        },
+                        "invalid_size": {
+                            "summary": "大小无效"
+                        },
+                        "invalid_anchor": {
+                            "summary": "锚定位字段无效"
+                        },
+                        "invalid_keyboard_interactivity": {
+                            "summary": "键盘交互性无效"
+                        },
+                        "invalid_exclusive_edge": {
+                            "summary": "给定表面锚定点，独占边缘无效"
+                        }
+                    }
+                },
+                "anchor": {
+                    "entries": {
+                        "top": {
+                            "summary": "锚定矩形的顶边"
+                        },
+                        "bottom": {
+                            "summary": "锚定矩形的底边"
+                        },
+                        "left": {
+                            "summary": "锚定矩形的左边"
+                        },
+                        "right": {
+                            "summary": "锚定矩形的右边"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

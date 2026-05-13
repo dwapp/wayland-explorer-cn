@@ -1,0 +1,74 @@
+{
+  "description": {
+    "summary": "描述输出区域的协议",
+    "text": "此协议旨在以更符合桌面系统中输出概念的方式描述输出。\n\n某些信息更特定于桌面系统的输出概念，在其他应用中可能没有意义，例如 IVI 系统。\n\n通常，桌面系统上的全局合成器空间由一组连续或重叠的矩形区域组成。\n\n此协议中定义的 logical_position 和 logical_size 事件可能提供与 wl_output 中已有的对应事件相同的信息，在这种情况下，应优先使用此协议提供的信息而非 wl_output 中的等效信息。目标是将桌面特定概念（如全局合成器空间中的输出位置等）移出核心 wl_output 协议。\n\n警告！此文件中描述的协议是实验性的，可能会进行不向后兼容的更改。向后兼容的更改可以与相应的接口版本号提升一起添加。\n不向后兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被宣布为稳定，协议和接口名称中的 \"z\" 前缀和版本号将被移除，接口版本号将被重置。"
+  },
+  "interfaces": {
+    "zxdg_output_manager_v1": {
+      "description": {
+        "summary": "管理 xdg_output 对象",
+        "text": "xdg_output 对象的全局工厂接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xdg_output_manager 对象",
+            "text": "使用此请求，客户端可以告知服务器它不再使用 xdg_output_manager 对象。\n\n已通过此实例创建的任何对象不受影响。"
+          }
+        },
+        "get_xdg_output": {
+          "description": {
+            "summary": "从 wl_output 创建 xdg 输出",
+            "text": "为给定的 wl_output 创建一个新的 xdg_output 对象。"
+          }
+        }
+      }
+    },
+    "zxdg_output_v1": {
+      "description": {
+        "summary": "合成器逻辑输出区域",
+        "text": "xdg_output 描述了合成器几何结构的一部分。\n\n这通常对应于显示合成器空间一部分的监视器。\n\n对于版本 3 及以上的对象，在所有 xdg_output 属性发送完毕后（在对象创建时以及属性更新时），会发送 wl_output.done 事件。这使得输出属性的更改可以被视为原子操作，即使它们通过多个事件发生。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xdg_output 对象",
+            "text": "使用此请求，客户端可以告知服务器它不再使用 xdg_output 对象。"
+          }
+        }
+      },
+      "events": {
+        "logical_position": {
+          "description": {
+            "summary": "输出在全局合成器空间中的位置",
+            "text": "position 事件描述了 wl_output 在全局合成器空间中的位置。\n\nlogical_position 事件在创建 xdg_output（参见 xdg_output_manager.get_xdg_output）后发送，以及当输出在全局合成器空间中的位置发生变化时发送。"
+          }
+        },
+        "logical_size": {
+          "description": {
+            "summary": "输出在全局合成器空间中的大小",
+            "text": "logical_size 事件描述了输出在全局合成器空间中的大小。\n\n大多数常规 Wayland 客户端不应关注逻辑大小，而应依赖 xdg_shell 接口。\n\n然而，某些客户端（如 Xwayland）需要此信息来在全局合成器空间中配置其 surface，因为合成器可能应用与输出缩放属性所通告的不同缩放因子（例如，为了实现分数缩放）。\n\n例如，对于 wl_output 模式 3840×2160 和缩放因子 2：\n\n- 不在合成空间中缩放监视器视口的合成器将通告 3840×2160 的逻辑大小，\n\n- 使用缩放因子 2 缩放监视器视口的合成器将通告 1920×1080 的逻辑大小，\n\n- 使用分数缩放 1.5 缩放监视器视口的合成器将通告 2560×1440 的逻辑大小。\n\n例如，对于 wl_output 模式 1920×1080 和 90 度旋转，合成器将通告 1080x1920 的逻辑大小。\n\nlogical_size 事件在创建 xdg_output（参见 xdg_output_manager.get_xdg_output）后发送，以及当输出的逻辑大小发生变化时发送，无论是由于应用的缩放变化还是由于相应的输出模式（参见 wl_output.mode）或变换（参见 wl_output.transform）的变化。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "输出的所有信息已发送",
+            "text": "此事件在 xdg_output 的所有其他属性发送完毕后发送。\n\n这使得 xdg_output 属性的更改可以被视为原子操作，即使它们通过多个事件发生。\n\n对于版本 3 及以上的对象，此事件已弃用。合成器不再需要发送它，而必须改为发送 wl_output.done。"
+          }
+        },
+        "name": {
+          "description": {
+            "summary": "此输出的名称",
+            "text": "许多合成器会为其输出分配名称，向用户显示它们，允许按名称配置它们等。客户端可能也希望知道此名称以向用户提供类似的行为。\n\n命名约定由合成器定义，但仅限于字母数字字符和破折号（-）。每个名称在所有 wl_output 全局对象中是唯一的，但如果 wl_output 全局对象被销毁，相同的名称可能会在以后被重用。在相同的硬件和软件配置下，名称在各会话之间也将保持一致。\n\n名称示例包括 'HDMI-A-1'、'WL-1'、'X11-1' 等。但是，不要假设名称反映了底层的 DRM 连接器、X11 连接等。\n\nname 事件在创建 xdg_output（参见 xdg_output_manager.get_xdg_output）后发送。此事件每个 xdg_output 仅发送一次，并且在 wl_output 全局对象的生命周期内名称不会更改。\n\n此事件已弃用，客户端应改为使用 wl_output.name。合成器仍必须支持此事件。"
+          }
+        },
+        "description": {
+          "description": {
+            "summary": "此输出的人类可读描述",
+            "text": "许多合成器可以生成其输出的人类可读描述。客户端可能也希望知道此描述，以便与用户进行各种目的的沟通。\n\n描述是一个 UTF-8 字符串，其内容没有定义的约定。示例可能包括 'Foocorp 11\" Display' 或 'Virtual X11 output via :1'。\n\ndescription 事件在创建 xdg_output（参见 xdg_output_manager.get_xdg_output）后发送，以及当描述发生变化时发送。描述是可选的，可能根本不会发送。\n\n对于版本 2 及以下的对象，此事件每个 xdg_output 仅发送一次，并且在 wl_output 全局对象的生命周期内描述不会更改。\n\n此事件已弃用，客户端应改为使用 wl_output.description。合成器仍必须支持此事件。"
+          }
+        }
+      }
+    }
+  }
+}

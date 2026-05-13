@@ -1,0 +1,41 @@
+{
+    "interfaces": {
+        "zwlr_input_inhibit_manager_v1": {
+            "description": {
+                "summary": "阻止向其他客户端发送输入事件",
+                "text": "客户端可以使用此接口阻止输入事件发送到除自身之外的任何表面，例如在锁屏软件中使用。假设对此接口的访问将被合成器锁定为白名单客户端。\n\n注意！此协议已弃用，不打算用于生产。对于锁屏程序，请使用 ext-session-lock-v1 协议。"
+            },
+            "requests": {
+                "get_inhibitor": {
+                    "description": {
+                        "summary": "阻止向其他客户端发送输入",
+                        "text": "激活输入抑制器。只要抑制器处于活动状态，合成器就不会向其他客户端发送输入事件。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "already_inhibited": {
+                            "summary": "合成器上已在使用输入抑制器"
+                        }
+                    }
+                }
+            }
+        },
+        "zwlr_input_inhibitor_v1": {
+            "description": {
+                "summary": "阻止向其他客户端发送输入",
+                "text": "当此资源存在时，输入抑制器所有者之外的客户端将不会收到输入事件。任何之前拥有焦点的客户端将收到离开事件，并且不会再次获得焦点。拥有此资源的客户端将正常接收所有输入事件。合成器也会在抑制器活动时禁用其所有自身的输入处理（如键盘快捷键）。\n\n合成器可以继续向选定的客户端发送输入事件，例如屏幕键盘（通过 input-method 协议）。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁输入抑制器对象",
+                        "text": "销毁抑制器并允许其他客户端接收输入。"
+                    }
+                }
+            }
+        }
+    }
+}

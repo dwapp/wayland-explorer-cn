@@ -1,0 +1,81 @@
+{
+  "description": {
+    "summary": "过滤和拦截键盘事件",
+    "text": "keyboard_filter 协议允许客户端拦截选定的键盘事件，防止它们到达焦点 surface。\n\n此协议提供了一种在不需要允许生成任意键盘事件的情况下更改到达应用程序的事件的方法。\n\n接口的高级概述：\n\nkeyboard_filter_manager 暴露 bind_to_input_method 请求，该请求将 wl_keyboard 绑定到 xx_input_method。\n生成的 keyboard_filter 对象可用于根据输入法需求拦截键盘事件。\n\n本文档在使用 \"must\"、\"should\"、\"may\" 等词语时遵循 RFC 2119。\n\n警告！此文件中描述的协议目前处于实验阶段。预计将出现不向后兼容的协议主要版本。不鼓励在没有 opt-in 机制的情况下公开此协议。"
+  },
+  "interfaces": {
+    "xx_keyboard_filter_v1": {
+      "description": {
+        "summary": "键盘事件过滤功能",
+        "text": "管理按键的过滤。"
+      },
+      "requests": {
+        "unbind": {
+          "description": {
+            "summary": "停止拦截",
+            "text": "解除键盘绑定并停止拦截事件。\n\n解除绑定的键盘和输入法。合成器必须停止重定向键盘事件。keyboard_filter 客户端尚未响应的事件被视为收到 \"passthrough\" 操作。\n\n此请求立即生效。"
+          }
+        },
+        "filter": {
+          "description": {
+            "summary": "决定键盘事件的处理方式",
+            "text": "此请求控制键盘输入事件在到达焦点 surface 之前的过滤。\n\n用法：\n\n当 keyboard_filter 拦截时，合成器必须将每个拦截的事件发送到其绑定的 wl_keyboard，并在其内部队列中保留副本。\n当客户端使用 .filter 请求响应时，合成器要么从队列中移除事件（filter_action.consume），要么将副本发送到原始 wl_keyboard 对象（filter_action.passthrough）。\n\n合成器必须在处理更近的事件之前处理队列中最旧的 .filter。\n因此，客户端将参数 \"serial\" 设置为它接收的相应事件的序列号。\n\n例外：\n\n如果事件不是 wl_keyboard.key 或不包含序列号，则无法过滤。keyboard_filter 客户端不得使用 .filter 请求响应它。当此类事件是队列中最旧的事件时，合成器必须像事件已收到 \"passthrough\" 回复一样继续处理。\n\n截至 wl_keyboard v10 和 keyboard_filter_v1，唯一可以过滤的事件是 wl_keyboard.key 事件。\n\n序列：\n\nwl_keyboard 在 input_method.activate 提交后开始接收事件。\n有效序列号是在 input_method.activate 之后发送的但尚未收到 .filter 确认的最旧 wl_keyboard 事件的序列号。\n合成器可能会对它未发出的序列号的事件引发 invalid_serial 错误。\n合成器必须忽略所有其他序列号的事件。（特别是，这意味着重复序列号的事件被正常接受，不会被忽略）。\n事件必须按到达顺序过滤。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁键盘",
+            "text": "销毁 keyboard_filter 对象，停止事件拦截，并解除绑定到它的 wl_keyboard 和 input_method 对象。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_serial": {
+              "summary": "合成器收到不符合要求的序列号"
+            }
+          }
+        },
+        "filter_action": {
+          "entries": {
+            "consume": {
+              "summary": "消费按键事件"
+            },
+            "passthrough": {
+              "summary": "将按键事件传递给文本输入客户端"
+            }
+          }
+        }
+      }
+    },
+    "xx_keyboard_filter_manager_v1": {
+      "requests": {
+        "bind_to_input_method": {
+          "description": {
+            "summary": "将键盘绑定到输入法",
+            "text": "将键盘绑定到输入法，以便在按键到达文本输入客户端之前捕获它们。\n\n当 wl_keyboard 被绑定时，合成器必须将发送到具有文本输入的焦点 surface 的输入事件重定向到它。wl_keyboard 实例从此不再接收其他事件。\n参见 keyboard_filter.filter。\n\n要使绑定的 wl_keyboard 实例拦截事件，必须满足以下条件：\n- 有一个焦点 surface，\n- 该 surface 有一个已启用的文本输入对象，\n- 绑定的输入法处于活动状态（关于 \"active\" 的含义，参见 input_method.activate、input_method.deactivate）。\n\n当这些条件满足时，合成器必须开始将发送到文本输入 surface 的输入事件重定向到使用此请求绑定的 wl_keyboard。否则，文本输入 surface 将接收事件而不进行拦截。\n\n请注意，文本输入客户端可能使用与输入法使用的不同版本的 wl_keyboard 对象。合成器应像通常对相关版本一样发出事件。此协议假设发送到多个不同协议版本键盘的事件是等效的。\n\n背景：\n\n每当输入法被激活时，合成器必须开始向其发送发送到文本输入客户端的键盘事件，以便可以使用键盘控制输入法。\n传统上，从用户的角度来看，输入法接收按键就像它们是一个覆盖层：对输入法有意义的按键获得特殊的输入法含义，所有其他按键照常工作。\n绑定和 keyboard_filter.filter 请求一起通过让输入法指示它感兴趣的事件来实现这一点。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁输入法管理器",
+            "text": "销毁 xx_keyboard_filter_manager_v1 对象。\n\n由此产生的 xx_keyboard_filter_v1 对象不受影响。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_bound": {
+              "summary": "参数已被绑定"
+            },
+            "wrong_seat": {
+              "summary": "键盘连接到了错误的 seat"
+            }
+          }
+        }
+      }
+    }
+  }
+}

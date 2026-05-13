@@ -1,0 +1,43 @@
+{
+  "description": {
+    "summary": "控制输出的颜色变换矩阵",
+    "text": "此协议允许客户端控制输出的颜色变换矩阵 (CTM)。\n\n此协议为特权协议，不应暴露给非特权客户端。"
+  },
+  "interfaces": {
+    "hyprland_ctm_control_manager_v1": {
+      "description": {
+        "summary": "控制 CTM 的管理器",
+        "text": "此对象是一个管理器，提供控制 CTM 的请求。\n\n如果进行了任何更改，一旦此对象被销毁，CTM 将被重置为单位矩阵。"
+      },
+      "requests": {
+        "set_ctm_for_output": {
+          "description": {
+            "summary": "设置输出的 CTM",
+            "text": "为 wl_output 设置 CTM。\n\n此状态不会立即应用；客户端必须调用 .commit 来应用任何待处理的更改。\n\n提供的值描述了一个 3x3 行优先 CTM，值的范围为 [0, ∞)\n\n传递超出范围的值将引发 invalid_matrix 错误。\n\nCTM 的默认值是单位矩阵。\n\n如果某个输出未通过 set_ctm_for_output 设置 CTM 且调用了 commit，该输出的 CTM 将被重置为单位矩阵。"
+          }
+        },
+        "commit": {
+          "description": {
+            "summary": "提交待处理的状态",
+            "text": "提交由 set_ctm_for_output 设置的待处理状态。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "管理器创建的所有对象仍将保持有效，直到调用其相应的销毁请求。\n\n所有输出的 CTM 将被重置为单位矩阵。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_matrix": {
+              "summary": "矩阵值无效"
+            }
+          }
+        }
+      }
+    }
+  }
+}

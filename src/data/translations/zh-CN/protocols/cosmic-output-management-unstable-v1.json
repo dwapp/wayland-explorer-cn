@@ -1,0 +1,198 @@
+{
+  "description": {
+    "summary": "wlr-output-management 的扩展协议",
+    "text": "此协议作为 wlr-output-management 的扩展。\n\n它主要添加了显式输出镜像功能，同时上游正在研究如何最好地支持此功能。\n\n它针对 wlr-output-management 版本 4 设计，但尽力保持前向兼容性。"
+  },
+  "interfaces": {
+    "zcosmic_output_manager_v1": {
+      "description": {
+        "summary": "输出配置管理器",
+        "text": "此接口为 wlr-output-management 类型提供扩展点。"
+      },
+      "requests": {
+        "get_head": {
+          "description": {
+            "summary": "获取现有 zwlr_output_head_v1 的 zcosmic_output_head_v1",
+            "text": "获取 zwlr_output_head_v1 的扩展对象。\n\n一旦扩展输出被创建，事件将被分发，随后向匹配的 'zwlr_output_manager_v1' 传递一个伴随的 'done' 事件。\n\n任何进一步的更新将产生新事件，如果 zcosmic_output_head_v1 的属性发生变化，就像原始的 'zwlr_output_head_v1' 一样。事件应被视为原子的，如 'zwlr_output_manager_v1::done' 所示。\n\n尝试为每个 zwlr_output_head_v1 创建多个 zcosmic_output_head_v1 将引发 \"already_extended\" 错误。"
+          }
+        },
+        "get_configuration": {
+          "description": {
+            "summary": "获取现有 zwlr_output_configuration_v1 的 zcosmic_output_configuration_v1",
+            "text": "获取 zwlr_output_configuration_v1 的扩展对象。\n\n尝试为每个 zwlr_output_configuration_v1 创建多个 zcosmic_output_configuration_v1 将引发 \"already_extended\" 错误。"
+          }
+        },
+        "get_configuration_head": {
+          "description": {
+            "summary": "获取现有 zwlr_output_configuration_head_v1 的 zcosmic_output_configuration_head_v1",
+            "text": "获取 zwlr_output_configuration_head_v1 的扩展对象。\n\n尝试为每个 zwlr_output_configuration_head_v1 创建多个 zcosmic_output_configuration_head_v1 将引发 \"already_extended\" 错误。"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "销毁此全局对象",
+            "text": "销毁此全局对象。所有先前创建的对象仍然有效。"
+          }
+        },
+        "set_xwayland_primary": {
+          "description": {
+            "summary": "将 head 设为 Xwayland 的主输出",
+            "text": "此请求将一个 head 作为通过 randr 向 Xwayland 通告的主输出。\n\n不必标记主 head，如果传递 'null'，Xwayland 将不通告主输出。发送已禁用的 head 将被忽略以避免竞争。"
+          }
+        }
+      },
+      "events": {},
+      "enums": {
+        "error": {
+          "entries": {
+            "already_extended": {
+              "summary": "对象已被创建"
+            }
+          }
+        }
+      }
+    },
+    "zcosmic_output_head_v1": {
+      "description": {
+        "summary": "输出扩展对象",
+        "text": "zwlr_output_head_v1 的扩展。\n\n添加额外的只读属性。\n\n通过此接口发送的属性通过 wlr_output_manager.done 事件原子地应用。不保证属性的发送顺序。"
+      },
+      "requests": {
+        "release": {
+          "description": {
+            "summary": "销毁输出 head",
+            "text": "使用此请求，客户端可以告诉合成器它不再对 head 对象感兴趣。"
+          }
+        }
+      },
+      "events": {
+        "scale_1000": {
+          "description": {
+            "summary": "当前缩放比例",
+            "text": "此事件描述 head 在全局合成器空间中的缩放比例，乘以 1000 以获得额外精度。\n\n仅在输出启用时发送。"
+          }
+        },
+        "mirroring": {
+          "description": {
+            "summary": "镜像其他输出",
+            "text": "此事件描述 head 正在镜像另一个 head。在这种情况下，'name' 包含匹配的 'zwlr_output_head_v1' 的唯一名称。如果名称为 null，则没有 head 被镜像到此 head 上。\n\n对于镜像的 head，'position' 事件无意义。\n\n仅在输出启用时发送。"
+          }
+        },
+        "adaptive_sync_available": {
+          "description": {
+            "summary": "此 head 是否支持 adaptive_sync",
+            "text": "此事件描述此 head 是否支持 adaptive_sync。\n\n仅在输出启用时发送。"
+          }
+        },
+        "adaptive_sync_ext": {
+          "description": {
+            "summary": "当前 adaptive_sync 状态",
+            "text": "此事件描述此 head 的 adaptive_sync 状态。\n\n仅在输出启用时发送。"
+          }
+        },
+        "xwayland_primary": {
+          "description": {
+            "summary": "此 head 是否被配置为 Xwayland 的主输出",
+            "text": "此事件描述此 head 是否作为通过 randr 向 Xwayland 通告的主输出。\n\n最多一个输出被标记为主输出，但不保证任何输出被标记。\n仅在输出启用时发送。"
+          }
+        }
+      },
+      "enums": {
+        "adaptive_sync_availability": {
+          "entries": {
+            "unsupported": {
+              "summary": "不支持 adaptive sync"
+            },
+            "requires_modeset": {
+              "summary": "自动 adaptive sync 不可用"
+            },
+            "supported": {
+              "summary": "在所有状态下都支持 adaptive sync"
+            }
+          }
+        },
+        "adaptive_sync_state_ext": {
+          "entries": {
+            "disabled": {
+              "summary": "adaptive sync 已禁用"
+            },
+            "automatic": {
+              "summary": "adaptive sync 将自动激活"
+            },
+            "always": {
+              "summary": "adaptive sync 被强制始终激活"
+            }
+          }
+        }
+      }
+    },
+    "zcosmic_output_configuration_v1": {
+      "description": {
+        "summary": "输出配置扩展对象",
+        "text": "zwlr_output_configuration_v1 的扩展。\n\n添加要通过原始 zwlr_output_configuration_v1 测试/应用的附加参数。"
+      },
+      "requests": {
+        "mirror_head": {
+          "description": {
+            "summary": "启用并配置 head 以镜像另一个 head",
+            "text": "启用一个 head 镜像另一个 head。\n\n此请求创建一个 head 配置对象，可用于更改 head 的属性。\n\n这是 'zwlr_output_configuration_v1::enable_head' 或 'zwlr_output_configuration_v1::disable_head' 的替代方案。使用相同的 'head' 参数调用任一方法将在原始 'zwlr_output_configuration_v1' 对象上引发 'already_configured_head' 错误。\n\n客户端仍然需要按照原始协议中所述将所有属性设置到生成的 'zwlr_output_configuration_head' 上。但某些属性如 'set_position' 在镜像配置中可能会被忽略。\n\n尝试将已禁用或正在镜像的 head 设为 'mirroring'，或在将 head 用作 'mirroring' 参数后调用 'disable_head'/'mirror_head'，将引发 'mirrored_head_busy' 协议错误。"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "销毁输出配置",
+            "text": "使用此请求，客户端可以告诉合成器它不再使用配置对象。对输出的任何更改仍将附加到原始 'zwlr_output_configuration_head_v1'（如果它未被销毁）。"
+          }
+        }
+      },
+      "events": {
+        "finished": {
+          "description": {
+            "summary": "配置已被使用",
+            "text": "此事件表示配置不再可用。\n\n这通常在原始配置被 'cancelled'、'succeeded' 或 'failed' 时发生。\n\n收到此事件后，客户端应销毁此对象。\n\n配置对象变为惰性，除 'destroy' 外的任何请求都将被忽略。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_finished": {
+              "summary": "底层配置已被使用"
+            },
+            "mirrored_head_busy": {
+              "summary": "镜像的 head 未启用"
+            }
+          }
+        }
+      }
+    },
+    "zcosmic_output_configuration_head_v1": {
+      "description": {
+        "summary": "输出配置 head 扩展对象",
+        "text": "zwlr_output_configuration_head_v1 的扩展。\n\n向原始 zwlr_output_configuration_head_v1 添加附加/替代参数。\n\n一旦原始 'zwlr_output_configuration_head_v1' 被销毁，此对象将变为惰性，除 'release' 外的所有请求将被忽略。"
+      },
+      "requests": {
+        "set_scale_1000": {
+          "description": {
+            "summary": "设置乘以 1000 的缩放比例",
+            "text": "此请求设置 head 的缩放比例乘以 1000 以获得额外精度。\n\n此请求旨在替代 'zwlr_output_configuration_head_v1::set_scale'。同时使用 'set_scale' 和 'set_scale_1000' 将在原始 'zwlr_output_configuration_head_v1' 上引发 'already_set' 错误。\n\n与 'set_scale' 冲突的任何请求也将与 'set_scale_1000' 冲突。"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "销毁输出配置 head",
+            "text": "使用此请求，客户端可以告诉合成器它不再使用配置对象。已发出的请求仍将附加到原始 'zwlr_output_configuration_head_v1'，直到它被销毁。"
+          }
+        },
+        "set_adaptive_sync_ext": {
+          "description": {
+            "summary": "设置 adaptive sync 状态",
+            "text": "此请求请求新的 adaptive sync 状态。\n\n此请求旨在替代 'zwlr_output_configuration_head_v1::set_adaptive_sync'。同时使用 'set_adaptive_sync' 和 'set_adaptive_sync_ext' 将在原始 'zwlr_output_configuration_head_v1' 上引发 'already_set' 错误。\n\n与 'set_adaptive_sync' 冲突的任何请求也将与 'set_adaptive_sync_ext' 冲突。"
+          }
+        }
+      },
+      "events": {},
+      "enums": {}
+    }
+  }
+}

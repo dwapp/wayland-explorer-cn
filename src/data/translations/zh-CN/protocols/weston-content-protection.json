@@ -1,0 +1,103 @@
+{
+  "description": {
+    "summary": "提供安全输出的协议",
+    "text": "此协议指定了一组接口，用于提供内容保护（如 HDCP），保护安全输出上的 surface 内容，防止其出现在截屏中或在非安全输出上可见。\n\n安全输出是指由某种内容保护机制（如 HDCP）保护的输出，并且至少满足客户端请求的最低内容保护级别。\n\n术语\"内容保护\"根据 HDCP type 0 和 HDCP type 1 定义，但将来可能会扩展。\n\n此协议不适用于在通用系统（如桌面）上实现数字版权管理（DRM），仅适用于封闭系统。由于服务器负责实现内容保护，客户端只能在信任服务器的程度上信任内容保护。\n\n为了保护内容并防止 surface 内容出现在截屏中或在非安全输出上可见，客户端必须首先绑定全局接口 \"weston_content_protection\"，如果 compositor 支持安全输出，则该接口会通过 registry 暴露。使用绑定的全局对象，客户端使用 \"get_protection\" 请求为 wl_surface 对象实例化一个接口扩展。然后，该扩展接口将允许 surface 请求内容保护，并在非安全输出上审查 surface 的可见性。\n\n审查可见性是指 compositor 在非安全输出上审查受保护的内容。审查可能包括人为降低图像质量或用占位图形完全替换受保护的内容。"
+  },
+  "interfaces": {
+    "weston_content_protection": {
+      "description": {
+        "summary": "内容保护全局接口",
+        "text": "全局接口 weston_content_protection 用于向客户端暴露内容保护能力。它为客户端提供了一种方式，请求其 wl_surface 内容不要显示在低于其所需内容保护级别的输出上。使用此接口，客户端可以请求一个 weston_protected_surface，它是 wl_surface 的扩展以提供内容保护，并在非安全输出上设置审查可见性。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "解除与内容保护接口的绑定",
+            "text": "通知服务器客户端将不再使用此协议对象。这不会影响任何其他对象，包括 protected_surface 对象。"
+          }
+        },
+        "get_protection": {
+          "description": {
+            "summary": "扩展 surface 接口以提供保护",
+            "text": "为给定的 wl_surface 实例化一个接口扩展以提供 surface 保护。如果给定的 wl_surface 已经关联了 weston_protected_surface，则引发 surface_exists 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "surface_exists": {
+              "summary": "该 surface 已关联保护 surface"
+            }
+          }
+        }
+      }
+    },
+    "weston_protected_surface": {
+      "description": {
+        "summary": "wl_surface 的内容保护接口",
+        "text": "wl_surface 对象的附加接口，允许客户端请求最低内容保护级别、请求更改其内容的可见性，以及接收内容保护变化的通知。\n\n受保护的 surface 有一个关联的 \"status\"，指示当前提供的保护类型，由 content-type 指定。状态更新通过 \"status\" 事件发送给客户端。在第一个 status 事件发送之前，客户端应假设状态为 \"unprotected\"。\n\n客户端可以请求内容保护级别作为输出被视为安全的最低标准，使用 \"set_type\" 请求。客户端有责任通过 \"status\" 事件监控实际达到的内容保护级别，并据此决定显示什么内容。\n\n服务器应尽最大努力在客户端内容显示的所有输出上达到所需的内容保护级别。任何内容保护状态的更改都应报告给客户端，即使低于请求的内容保护级别。如果客户端内容显示在多个输出上，应报告达到的最低内容保护级别。\n\n客户端还可以请求其内容仅在被视为安全的输出上显示。\"enforce/relax\" 请求可以实现这一点。在 enforce 模式下，非安全输出上的内容将被审查。审查可见性的实现由 compositor 定义。在 relax 模式下没有此类限制。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "移除 surface 的安全性",
+            "text": "如果 protected_surface 被销毁，wl_surface 的期望保护级别返回到 unprotected，如同发送了 type 为 \"unprotected\" 的 set_type 请求。"
+          }
+        },
+        "set_type": {
+          "description": {
+            "summary": "设置可接受的内容保护级别",
+            "text": "通知服务器内容类型。内容保护级别取决于客户端通过此请求设置的 content-type。初始值为 \"unprotected\"。\n\n如果请求的值不是有效的 content_type 枚举值，则引发 \"invalid_type\" 协议错误。请求 compositor 未实现或无法达到的有效保护类型不是错误。\n\n请求的内容保护是双缓冲的，参见 wl_surface.commit。"
+          }
+        },
+        "enforce": {
+          "description": {
+            "summary": "强制审查可见性约束",
+            "text": "在非安全输出上审查 wl_surface 内容的可见性。参见 weston_protected_surface 的描述。\n\n强制约束模式是双缓冲的，参见 wl_surface.commit。"
+          }
+        },
+        "relax": {
+          "description": {
+            "summary": "放松审查可见性约束",
+            "text": "不在非安全输出上强制审查 wl_surface 内容的可见性。参见 weston_protected_surface 的描述。\n\n如果未明确请求强制审查可见性，则默认选择 relax 模式。\n\nrelax 模式是双缓冲的，参见 wl_surface.commit。"
+          }
+        }
+      },
+      "events": {
+        "status": {
+          "description": {
+            "summary": "安全状态已改变",
+            "text": "此事件发送给客户端，通知其 surface 在 relax 模式下的实际保护级别。\n\n\"type\" 参数指示服务器当前建立的内容保护级别。\n\n当 weston_protected_surface 被创建时，首次发送 \"status\" 事件。\n\n在此事件首次发送之前，客户端应假设其内容不安全，type 为 \"unprotected\"。\n\n内容保护状态可能变化的原因包括：审查可见性模式从 enforced 变为 relaxed、添加了新连接器、窗口移动到另一个输出、或客户端附加了服务器无法保护的过大缓冲区。但不仅限于这些原因。\n\n客户端可能需要监听此事件并降低内容分辨率，直到内容可以安全显示。\n\n在 \"enforce\" 模式下，客户端不会收到任何 status 事件。如果模式随后更改为 \"relax\"，客户端将收到 status 事件。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_type": {
+              "summary": "提供的类型无效"
+            }
+          }
+        },
+        "type": {
+          "description": {
+            "summary": "内容类型",
+            "text": "特定类型内容保护的描述。\n\n服务器不一定支持所有这些类型。\n\n注意，除非另有说明，枚举成员之间没有排序关系。随着时间的推移，可能会添加不同类型的内容保护，这些可能被认为比现有类型更不安全。"
+          },
+          "entries": {
+            "unprotected": {
+              "summary": "不需要保护"
+            },
+            "hdcp_0": {
+              "summary": "HDCP type 0"
+            },
+            "hdcp_1": {
+              "summary": "HDCP type 1，比 HDCP type 0 更安全"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "interfaces": {
+    "hyprland_lock_notifier_v1": {
+      "description": {
+        "summary": "锁定通知管理器",
+        "text": "此接口允许客户端监控 Wayland 会话是否处于锁定或解锁状态。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "销毁管理器对象。通过此接口创建的所有对象保持有效。"
+          }
+        },
+        "get_lock_notification": {
+          "description": {
+            "summary": "创建通知对象",
+            "text": "创建一个新的锁定通知对象。\n\n如果调用此方法时会话已锁定，将立即发送 locked 事件。"
+          }
+        }
+      }
+    },
+    "hyprland_lock_notification_v1": {
+      "description": {
+        "summary": "锁定通知",
+        "text": "此接口由 compositor 用于向客户端发送锁定通知事件。\n\n通常，当客户端通过 ext-session-lock 锁定/解锁会话时会发出 \"locked\" 和 \"unlocked\" 事件，但 compositor 可以选择为任何其他锁定机制发送通知。\n\ncompositor 必须在会话的锁定和解锁状态之间的过渡期结束后发出通知。\n在 ext-session-lock 的上下文中，这意味着 \"locked\" 事件预期在会话锁定客户端已在每个输出上呈现锁定屏幕帧之后发送，这对应于 ext-session-lock 的 \"locked\" 事件。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁通知对象",
+            "text": "销毁通知对象。"
+          }
+        }
+      },
+      "events": {
+        "locked": {
+          "description": {
+            "summary": "会话已锁定",
+            "text": "当 Wayland 会话被锁定时发送此事件。\n\n如果在没有 unlock 事件介入的情况下发送此事件两次，则属于 compositor 协议错误。"
+          }
+        },
+        "unlocked": {
+          "description": {
+            "summary": "会话不再锁定",
+            "text": "当 Wayland 会话解锁时发送此事件。\n\n如果在没有 locked 事件介入的情况下发送此事件两次，则属于 compositor 协议错误。在任何 locked 事件之前发送此事件也属于 compositor 协议错误。"
+          }
+        }
+      }
+    }
+  }
+}

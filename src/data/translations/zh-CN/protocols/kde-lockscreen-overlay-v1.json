@@ -1,0 +1,33 @@
+{
+    "interfaces": {
+        "kde_lockscreen_overlay_v1": {
+            "description": {
+                "summary": "允许表面显示在锁屏之上",
+                "text": "允许客户端请求在系统锁定时显示表面。\n\n这适用于特定的高紧急情况，如电话或闹钟。\n\n警告！此文件中描述的协议是桌面环境的实现细节。普通客户端不得使用此协议。可能会在不增加扩展主版本号的情况下添加不向后兼容的更改。"
+            },
+            "requests": {
+                "allow": {
+                    "description": {
+                        "summary": "告知哪个表面可以显示在锁屏之上",
+                        "text": "告知合成器该表面可以在屏幕锁定时显示。此请求应在表面未映射时调用。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 kde_lockscreen_overlay_v1",
+                        "text": "这不会影响之前通过 allow 请求标记的表面。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "invalid_surface_state": {
+                            "summary": "客户端提供了无效的表面状态"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

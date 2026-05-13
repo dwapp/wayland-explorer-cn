@@ -1,0 +1,53 @@
+{
+  "interfaces": {
+    "wl_eglstream_controller": {
+      "requests": {
+        "attach_eglstream_consumer": {
+          "description": {
+            "summary": "创建服务器端流并附加消费者",
+            "text": "从给定的 wl_buffer 创建相应的服务器端 EGLStream 并附加消费者。"
+          }
+        },
+        "attach_eglstream_consumer_attribs": {
+          "description": {
+            "summary": "使用属性创建服务器端流并附加消费者",
+            "text": "从给定的 wl_buffer 创建相应的服务器端 EGLStream 并使用给定属性附加消费者。"
+          }
+        }
+      },
+      "enums": {
+        "present_mode": {
+          "description": {
+            "summary": "流呈现模式",
+            "text": "- dont_care：使用此枚举将告诉服务器自行决定呈现模式。\n\n- fifo：告诉服务器使用 fifo 呈现模式。是否使用 fifo 同步由服务器决定。\n\n- mailbox：告诉服务器使用 mailbox 呈现模式。"
+          },
+          "entries": {
+            "dont_care": {
+              "summary": "让服务器决定呈现模式"
+            },
+            "fifo": {
+              "summary": "使用 fifo 呈现模式"
+            },
+            "mailbox": {
+              "summary": "使用 mailbox 模式"
+            }
+          }
+        },
+        "attrib": {
+          "description": {
+            "summary": "流消费者附加属性",
+            "text": "- present_mode：必须是 wl_eglstream_controller_present_mode 之一。告诉服务器期望使用的呈现模式。\n\n- fifo_length：仅在提供 present_mode 属性且其值指定为 fifo 时有效。告诉服务器在期望的 present_mode 为 fifo 时期望使用的 fifo 长度。"
+          },
+          "entries": {
+            "present_mode": {
+              "summary": "告诉服务器期望的呈现模式"
+            },
+            "fifo_length": {
+              "summary": "告诉服务器在期望的 presentation_mode 为 fifo 时期望的 fifo 长度"
+            }
+          }
+        }
+      }
+    }
+  }
+}

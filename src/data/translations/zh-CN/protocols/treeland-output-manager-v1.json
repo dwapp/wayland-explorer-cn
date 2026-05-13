@@ -1,0 +1,96 @@
+{
+  "interfaces": {
+    "treeland_output_manager_v1": {
+      "description": {
+        "summary": "暴露哪个是主显示器",
+        "text": "用于告知在已启用的输出中哪个是主显示器的协议。"
+      },
+      "requests": {
+        "set_primary_output": {
+          "description": {
+            "summary": "选择要使用的主输出"
+          }
+        },
+        "get_color_control": {
+          "description": {
+            "summary": "获取输出的颜色控制接口"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁主输出通知器"
+          }
+        }
+      },
+      "events": {
+        "primary_output": {
+          "description": {
+            "summary": "提供当前主输出的名称",
+            "text": "指定哪个输出是通过名称标识的主输出。"
+          }
+        }
+      }
+    },
+    "treeland_output_color_control_v1": {
+      "description": {
+        "summary": "输出的颜色控制接口",
+        "text": "用于控制特定输出的色温和亮度设置的协议。"
+      },
+      "requests": {
+        "set_color_temperature": {
+          "description": {
+            "summary": "设置输出的色温",
+            "text": "色温设置仅在发出 commit 请求后应用。设置超出 [1000, 20000] 范围的值是协议错误。"
+          }
+        },
+        "set_brightness": {
+          "description": {
+            "summary": "设置输出的亮度",
+            "text": "亮度设置仅在发出 commit 请求后应用。设置超出 [0.0, 100.0] 范围的值是协议错误。"
+          }
+        },
+        "commit": {
+          "description": {
+            "summary": "提交输出的待处理颜色设置更改"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁颜色控制接口"
+          }
+        }
+      },
+      "events": {
+        "result": {
+          "description": {
+            "summary": "上次 commit 请求的结果"
+          }
+        },
+        "color_temperature": {
+          "description": {
+            "summary": "输出的当前色温",
+            "text": "提供输出的当前色温设置。色温取值范围为 [1000, 20000]。色温定义为显示器当前白点在普朗克轨迹上对应的温度（开尔文）。在当前实现中，中性色温为 6600K。此事件在 treeland_output_color_control_v1 对象创建后发送一次，或在输出的色温更改成功提交后立即发送。"
+          }
+        },
+        "brightness": {
+          "description": {
+            "summary": "输出的当前亮度",
+            "text": "提供输出的当前亮度设置。亮度取值范围为 [0.0, 100.0]。此事件在 treeland_output_color_control_v1 对象创建后发送一次，或在输出的亮度更改成功提交后立即发送。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_color_temperature": {
+              "summary": "提供的色温值无效"
+            },
+            "invalid_brightness": {
+              "summary": "提供的亮度值无效"
+            }
+          }
+        }
+      }
+    }
+  }
+}

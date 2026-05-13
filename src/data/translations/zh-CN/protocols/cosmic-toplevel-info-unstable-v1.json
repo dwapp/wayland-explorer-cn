@@ -1,0 +1,157 @@
+{
+  "interfaces": {
+    "zcosmic_toplevel_info_v1": {
+      "description": {
+        "summary": "列出 toplevel 及其属性",
+        "text": "此协议的目的是使任务栏或 dock 等客户端能够访问已打开应用程序的列表及其基本属性。\n\n因此，它扩展了 ext_foreign_toplevel_v1，以在外部 toplevel 上提供更多信息和操作。"
+      },
+      "requests": {
+        "stop": {
+          "description": {
+            "summary": "停止发送事件",
+            "text": "此请求表示客户端不再希望接收新 toplevel 的事件。但是，合成器可能会在发出 finished 事件之前继续发出 further toplevel_created 事件。\n\n客户端在此请求之后不得再发送任何请求。\n\n注意：绑定此协议版本 2 的客户端不需要此请求，将被忽略。"
+          }
+        },
+        "get_cosmic_toplevel": {
+          "description": {
+            "summary": "获取 cosmic toplevel 扩展对象",
+            "text": "为现有的 ext_foreign_toplevel_handle_v1 请求 zcosmic_toplevel_handle_v1 扩展对象。\n\ntoplevel 的所有初始属性（状态等）将在此事件后立即通过 zcosmic_toplevel_handle_v1 中的相应事件发送。"
+          }
+        }
+      },
+      "events": {
+        "toplevel": {
+          "description": {
+            "summary": "已创建一个 toplevel",
+            "text": "此事件对于绑定此协议版本 2 的客户端永远不会发出，它们应改用 `get_cosmic_toplevel`。\n\n此事件对于绑定版本 1 的客户端，每当创建新的 toplevel 窗口时发出。它对所有 toplevel 发出，无论创建它们的应用程序如何。\n\ntoplevel 的所有初始属性（标题、app_id、状态等）将在此事件后立即通过 zcosmic_toplevel_handle_v1 中的相应事件发送。"
+          }
+        },
+        "finished": {
+          "description": {
+            "summary": "合成器已完成 toplevel 管理器",
+            "text": "此事件表示合成器已完成向 zcosmic_toplevel_info_v1 发送事件。服务器将在此请求发送后立即销毁对象，因此它将变为无效，客户端应释放与之关联的任何资源。\n\n注意：对于绑定此协议版本 2 的客户端，此事件在调用 `stop` 后立即发出，以保持向后兼容。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "所有活动 toplevel 的信息已发送",
+            "text": "在所有当前活动的 zcosmic_toplevel_handle_v1 的更改发送后发送此事件。\n\n这使得对多个 zcosmic_toplevel_handle_v1 句柄及其属性的更改可以被视为原子操作，即使它们通过多个事件发生。"
+          }
+        }
+      }
+    },
+    "zcosmic_toplevel_handle_v1": {
+      "description": {
+        "summary": "一个打开的 toplevel",
+        "text": "zcosmic_toplevel_handle_v1 对象代表一个打开的 toplevel 窗口。单个应用程序可能有多个打开的 toplevel。\n\n每个 toplevel 都有一个它可见的输出列表，通过 output_enter 和 output_leave 事件向客户端公开。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 zcosmic_toplevel_handle_v1 对象",
+            "text": "当客户端不再使用 zcosmic_toplevel_handle_v1 时，应调用此请求。"
+          }
+        }
+      },
+      "events": {
+        "closed": {
+          "description": {
+            "summary": "toplevel 已关闭",
+            "text": "服务器在此事件之后不会在 zcosmic_toplevel_handle_v1 上发出进一步的事件。除了 destroy 请求之外收到的任何请求都将被忽略。收到此事件后，客户端应发出 destroy 请求以允许释放资源。\n\n注意：对于绑定此协议版本 2 的客户端，不会发出此事件，因为 `ext_foreign_toplevel_handle_v1.closed` 是等效的。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "toplevel 的所有信息已发送",
+            "text": "在 toplevel 状态的所有更改发送后发送此事件。\n\n这使得对 zcosmic_toplevel_handle_v1 属性的更改可以被视为原子操作，即使它们通过多个事件发生。\n\n注意：此事件不会在 closed 事件之后发送。\n\n注意：对于绑定此协议版本 2 的客户端，不会发出此事件，因为 `ext_foreign_toplevel_handle_v1.done` 是等效的。"
+          }
+        },
+        "title": {
+          "description": {
+            "summary": "标题更改",
+            "text": "每当 toplevel 的标题更改时发出此事件。\n\n注意：对于绑定此协议版本 2 的客户端，不会发出此事件，因为 `ext_foreign_toplevel_handle_v1.title` 是等效的。"
+          }
+        },
+        "app_id": {
+          "description": {
+            "summary": "app_id 更改",
+            "text": "每当 toplevel 的 app_id 更改时发出此事件。\n\n注意：对于绑定此协议版本 2 的客户端，不会发出此事件，因为 `ext_foreign_toplevel_handle_v1.app_id` 是等效的。"
+          }
+        },
+        "output_enter": {
+          "description": {
+            "summary": "toplevel 进入输出",
+            "text": "每当 toplevel 在给定输出上变得可见时发出此事件。toplevel 可能在多个输出上可见。"
+          }
+        },
+        "output_leave": {
+          "description": {
+            "summary": "toplevel 离开输出",
+            "text": "每当 toplevel 在给定输出上不再可见时发出此事件。保证在此事件之前已发出具有相同输出的 output_enter 事件。"
+          }
+        },
+        "workspace_enter": {
+          "description": {
+            "summary": "toplevel 进入工作区",
+            "text": "每当 toplevel 在给定工作区上变得可见时发出此事件。toplevel 可能在多个工作区上可见。"
+          }
+        },
+        "workspace_leave": {
+          "description": {
+            "summary": "toplevel 离开工作区",
+            "text": "每当 toplevel 在给定工作区上不再可见时发出此事件。保证在此事件之前已发出具有相同工作区的 workspace_enter 事件。"
+          }
+        },
+        "state": {
+          "description": {
+            "summary": "toplevel 状态已更改",
+            "text": "在创建 zcosmic_toplevel_handle_v1 时发出一次，并在 toplevel 状态更改时再次发出。"
+          }
+        },
+        "geometry": {
+          "description": {
+            "summary": "toplevel 的位置和/或大小已更改",
+            "text": "当 toplevel 相对于提供的输出的几何形状（位置和/或大小）发生变化时发出。\n\n此事件在创建 zcosmic_toplevel_handle_v1 时为每个已进入的输出发出一次，并在 toplevel 相对于任何输出的几何形状发生变化时再次发出。"
+          }
+        },
+        "ext_workspace_enter": {
+          "description": {
+            "summary": "toplevel 进入工作区",
+            "text": "每当 toplevel 在给定工作区上变得可见时发出此事件。toplevel 可能在多个工作区上可见。"
+          }
+        },
+        "ext_workspace_leave": {
+          "description": {
+            "summary": "toplevel 离开工作区",
+            "text": "每当 toplevel 在给定工作区上不再可见时发出此事件。保证在此事件之前已发出具有相同工作区的 workspace_enter 事件。"
+          }
+        }
+      },
+      "enums": {
+        "state": {
+          "description": {
+            "summary": "toplevel 上的状态类型",
+            "text": "toplevel 可能具有的不同状态。这些状态与 xdg-toplevel 中定义的同名状态具有相同的含义。"
+          },
+          "entries": {
+            "maximized": {
+              "summary": "toplevel 已最大化"
+            },
+            "minimized": {
+              "summary": "toplevel 已最小化"
+            },
+            "activated": {
+              "summary": "toplevel 处于活动状态"
+            },
+            "fullscreen": {
+              "summary": "toplevel 处于全屏状态"
+            },
+            "sticky": {
+              "summary": "toplevel 是固定的"
+            }
+          }
+        }
+      }
+    }
+  }
+}

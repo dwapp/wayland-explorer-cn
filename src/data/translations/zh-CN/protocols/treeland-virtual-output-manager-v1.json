@@ -1,0 +1,81 @@
+{
+  "interfaces": {
+    "treeland_virtual_output_manager_v1": {
+      "description": {
+        "summary": "管理器创建虚拟输出",
+        "text": "此接口是一个管理器，允许创建复制输出。"
+      },
+      "requests": {
+        "create_virtual_output": {
+          "description": {
+            "summary": "创建虚拟输出",
+            "text": "创建虚拟输出，可在设置屏幕复制模式用于多屏时使用。虚拟输出用于镜像多个 wl_output 输出。\n\n数组中的元素是屏幕名称。\n\n数组 outputs 的第一个元素是要复制的屏幕，后续元素是要镜像的屏幕。\n\n调用此接口的客户端不会在客户端上生成额外的 wl_output 对象。"
+          }
+        },
+        "get_virtual_output_list": {
+          "description": {
+            "summary": "获取虚拟输出名称列表",
+            "text": "获取虚拟输出名称列表。"
+          }
+        },
+        "get_virtual_output": {
+          "description": {
+            "summary": "获取虚拟输出",
+            "text": "客户端通过虚拟输出名称获取对应的 virtual_output_v1 对象。"
+          }
+        }
+      },
+      "events": {
+        "virtual_output_list": {
+          "description": {
+            "summary": "发送虚拟输出名称列表",
+            "text": "向客户端发送虚拟输出名称列表。"
+          }
+        }
+      }
+    },
+    "treeland_virtual_output_v1": {
+      "description": {
+        "summary": "屏幕输出对象",
+        "text": "treeland_virtual_output_v1 表示一个集合虚拟屏幕输出对象。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁输出",
+            "text": "销毁该输出。"
+          }
+        }
+      },
+      "events": {
+        "outputs": {
+          "description": {
+            "summary": "屏幕输出变化",
+            "text": "当数组中的任何屏幕发生变化时，此事件发送给客户端。\n\n数组中的元素是屏幕名称。\n\n数组 outputs 的第一个元素是要复制的屏幕，后续元素是要镜像的屏幕。\n\n当主屏幕（被复制的屏幕）被移除时，将从队列中选择一个后继者作为主屏幕，并更新队列信息。"
+          }
+        },
+        "error": {
+          "description": {
+            "summary": "屏幕复制模式错误事件",
+            "text": "当发生错误时，发出错误事件，终止客户端发出的复制模式请求。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_group_name": {
+              "summary": "组名为空"
+            },
+            "invalid_screen_number": {
+              "summary": "申请复制模式的屏幕数量少于 2"
+            },
+            "invalid_output": {
+              "summary": "输出不存在"
+            }
+          }
+        }
+      }
+    }
+  }
+}

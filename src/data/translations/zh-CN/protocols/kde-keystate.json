@@ -1,0 +1,17 @@
+{
+  "interfaces": {
+    "org_kde_kwin_keystate": {
+      "description": {
+        "summary": "按键状态",
+        "text": "跟踪具有状态关联的不同按键的状态。"
+      },
+      "events": {
+        "stateChanged": {
+          "description": {
+            "summary": "更新指定按键的状态"
+          }
+        }
+      }
+    }
+  }
+}

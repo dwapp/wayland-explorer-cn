@@ -1,0 +1,62 @@
+{
+  "description": {
+    "summary": "toplevel 到窗口的映射",
+    "text": "此协议允许客户端检索 toplevel 到 hyprland 窗口地址的映射。"
+  },
+  "interfaces": {
+    "hyprland_toplevel_mapping_manager_v1": {
+      "description": {
+        "summary": "请求 toplevel 映射的管理器",
+        "text": "此对象是一个管理器，提供请求 toplevel 窗口地址的请求。"
+      },
+      "requests": {
+        "get_window_for_toplevel": {
+          "description": {
+            "summary": "获取 toplevel 的窗口地址",
+            "text": "获取 toplevel 的窗口地址。"
+          }
+        },
+        "get_window_for_toplevel_wlr": {
+          "description": {
+            "summary": "获取 wlr toplevel 的窗口地址",
+            "text": "获取 wlr toplevel 的窗口地址。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "管理器创建的所有对象仍将保持有效，直到调用适当的销毁请求。"
+          }
+        }
+      }
+    },
+    "hyprland_toplevel_window_mapping_handle_v1": {
+      "description": {
+        "summary": "toplevel 到窗口的映射",
+        "text": "此对象表示 (wlr) toplevel 到窗口地址的映射。\n\n创建后，将发送包含与 toplevel 关联的窗口地址的 `window_address` 事件。\n如果映射失败，将发送 `failed` 事件。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁句柄",
+            "text": "销毁句柄。客户端可以随时发送此请求。"
+          }
+        }
+      },
+      "events": {
+        "window_address": {
+          "description": {
+            "summary": "窗口的地址",
+            "text": "完整的 64 位窗口地址。`address` 字段包含低 32 位，而 `address_hi` 包含高 32 位。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "映射失败",
+            "text": "toplevel 到窗口地址的映射失败。最可能的原因是窗口不存在（已不存在）。"
+          }
+        }
+      }
+    }
+  }
+}

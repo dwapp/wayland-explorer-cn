@@ -1,0 +1,75 @@
+{
+  "interfaces": {
+    "kde_external_brightness_v1": {
+      "description": {
+        "summary": "外部亮度控制",
+        "text": "某些亮度控制机制不太稳定，或者需要 root 权限，因此不希望将它们放在合成器内部。此协议用于将实际的亮度设置外包给合成器外部的进程。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁对象。"
+          }
+        },
+        "create_brightness_control": {
+          "description": {
+            "summary": "向合成器注册亮度设备"
+          }
+        }
+      }
+    },
+    "kde_external_brightness_device_v1": {
+      "description": {
+        "summary": "亮度控制设备",
+        "text": "创建此对象后，客户端应发出所有相关的设置请求（set_internal、set_edid、set_max_brightness，可选 set_observed_brightness）并使用 commit 结束序列。之后，对于值的每次更改，客户端必须再次调用 commit。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁对象并注销亮度控制设备"
+          }
+        },
+        "set_internal": {
+          "description": {
+            "summary": "设置亮度设备是否属于内置显示器"
+          }
+        },
+        "set_edid": {
+          "description": {
+            "summary": "设置用于识别显示器的 EDID 数据"
+          }
+        },
+        "set_max_brightness": {
+          "description": {
+            "summary": "通知合成器此设备可设置的最大亮度"
+          }
+        },
+        "commit": {
+          "description": {
+            "summary": "通知合成器所有相关标识符和值已发送"
+          }
+        },
+        "set_observed_brightness": {
+          "description": {
+            "summary": "通知合成器从此设备读取的亮度",
+            "text": "客户端可以设置此项以通知合成器设备的初始亮度。它还可以在初始提交后再次设置此项，以通知合成器亮度级别因外部因素而发生变化。合成器可以自由使用或忽略此值。"
+          }
+        },
+        "set_uses_ddc_ci": {
+          "description": {
+            "summary": "通知合成器使用 DDC/CI 控制亮度等",
+            "text": "合成器可以使用此信息在其命令暴露监视器问题时忽略此对象。合成器还可以减少亮度请求的数量，考虑到潜在的缓慢响应时间和对监视器 EEPROM 寿命/磨损的担忧。"
+          }
+        }
+      },
+      "events": {
+        "requested_brightness": {
+          "description": {
+            "summary": "请求客户端将亮度更改为此值",
+            "text": "客户端必须确保如果亮度级别因外部因素而发生变化，它要么用合成器最后请求的值覆盖这些更改，要么再次提交并使用 set_observed_brightness 指定更改后的亮度。"
+          }
+        }
+      }
+    }
+  }
+}

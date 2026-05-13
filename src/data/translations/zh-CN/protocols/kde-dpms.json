@@ -1,0 +1,57 @@
+{
+  "interfaces": {
+    "org_kde_kwin_dpms_manager": {
+      "description": {
+        "summary": "输出 DPMS 管理器",
+        "text": "DPMS 管理器允许为给定的 wl_output 获取 org_kde_kwin_dpms。\norg_kde_kwin_dpms 提供当前使用的 VESA Display Power Management Signaling（显示电源管理信号）状态（参见 https://en.wikipedia.org/wiki/VESA_Display_Power_Management_Signaling）。\n此外，它还允许请求状态变更。compositor 没有义务遵从请求，通常会自动切换回开启状态。\n\n警告！此文件中描述的协议是桌面环境的实现细节。普通客户端不应使用此协议。\n可能会添加不兼容的更改，而无需递增扩展的主版本号。"
+      },
+      "requests": {
+        "get": {
+          "description": {
+            "summary": "为 wl_output 获取 org_kde_kwin_dpms",
+            "text": "工厂请求，为给定的 wl_output 获取 org_kde_kwin_dpms。"
+          }
+        }
+      }
+    },
+    "org_kde_kwin_dpms": {
+      "description": {
+        "summary": "wl_output 的 DPMS",
+        "text": "此接口提供关于 wl_output 的 VESA DPMS 状态信息。\n它通过 org_kde_kwin_dpms_manager 接口的 get 请求创建。\n\n创建资源时，服务器将推送该输出是否支持 DPMS、当前使用的 DPMS 状态，并在所有状态推送完毕后通过 done 事件通知客户端。每当状态发生变化时，变更集会通过 done 事件提交。"
+      },
+      "requests": {
+        "set": {
+          "description": {
+            "summary": "请求更改 wl_output 的 DPMS 状态",
+            "text": "请求 compositor 将 wl_output 切换到指定模式。compositor 没有义务更改状态。此外，compositor 可以在认为合适时随时离开该模式。例如，compositor 可能会在用户输入时返回开启状态。\n\n客户端不应假设请求新模式后模式已更改。相反，客户端应监听 mode 事件。"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "释放 DPMS 对象"
+          }
+        }
+      },
+      "events": {
+        "supported": {
+          "description": {
+            "summary": "指示 wl_output 是否支持 DPMS 的事件",
+            "text": "此事件在绑定资源时推送，指示该 wl_output 是否支持 DPMS。在某些 Wayland 服务器运行模式下 DPMS 可能没有意义（例如嵌套 compositor）。"
+          }
+        },
+        "mode": {
+          "description": {
+            "summary": "指示当前使用 DPMS 模式的事件",
+            "text": "此模式在绑定资源时推送，提供当前使用的 DPMS 模式。如果 wl_output 不支持 DPMS，也会推送此事件，此时值为 On。\n\n当状态发生变化时也会推送此事件。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "所有变更已推送",
+            "text": "此事件在绑定资源时，当所有其他状态推送完毕后推送。\n\n此外，每当状态发生变化时也会推送此事件，以告知客户端所有状态变更已推送完毕。"
+          }
+        }
+      }
+    }
+  }
+}

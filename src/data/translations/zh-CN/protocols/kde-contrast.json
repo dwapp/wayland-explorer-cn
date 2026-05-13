@@ -1,0 +1,35 @@
+{
+  "interfaces": {
+    "org_kde_kwin_contrast_manager": {
+      "requests": {
+        "create": {},
+        "unset": {}
+      }
+    },
+    "org_kde_kwin_contrast": {
+      "requests": {
+        "commit": {},
+        "set_region": {},
+        "set_contrast": {},
+        "set_intensity": {},
+        "set_saturation": {},
+        "release": {
+          "description": {
+            "summary": "释放 contrast 对象"
+          }
+        },
+        "set_frost": {
+          "description": {
+            "summary": "使用给定颜色启用 frost 效果",
+            "text": "启用 contrast 效果的 'frost' 变体。\n\n'frost' 是 contrast 效果的增强版本，使用不同的颜色算法使背景同时具有更高的对比度和（外观上的）透明度。\n\nr、g、b、a 是 0-255 的通道值，指示用于 contrast 计算的颜色。\n应基于 surface 的主要背景颜色。"
+          }
+        },
+        "unset_frost": {
+          "description": {
+            "summary": "禁用 frost 效果"
+          }
+        }
+      }
+    }
+  }
+}

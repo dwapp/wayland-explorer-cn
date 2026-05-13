@@ -1,0 +1,50 @@
+{
+  "interfaces": {
+    "agl_shell_desktop": {
+      "description": {
+        "summary": "允许应用程序激活其他应用的私有扩展",
+        "text": "普通应用程序可以使用此扩展来指示 compositor 激活或切换到其他正在运行的（普通）应用程序。客户端负责在接收应用程序 id 时过滤自己的 app_id。\n\n只有在策略引擎允许的情况下，compositor 才会允许客户端绑定到此接口。"
+      },
+      "requests": {
+        "activate_app": {
+          "description": {
+            "summary": "使客户端成为当前窗口",
+            "text": "请求 compositor 使一个 toplevel 成为当前/聚焦的窗口，用于窗口管理目的。\n\n有关 app_id 的描述，请参阅 xdg-shell 协议中的 xdg_toplevel.set_app_id。"
+          }
+        },
+        "set_app_property": {
+          "description": {
+            "summary": "为由 app_id 标识的客户端设置属性",
+            "text": "请求 compositor 使一个顶层窗口遵守 'app_role' 枚举，并根据该角色使用某些参数作为要考虑的初始值。\n\n请注意，x、y、bx、by、width 和 height 仅对弹出窗口角色有意义，output 参数适用于所有角色。width 和 height 值定义了顶层窗口应放置的最大区域。请注意，这不对应于顶层 surface 的大小，而是用于在 surface 面积超过此边界框时裁剪 surface 的边界框。这两个值都需要大于 0（零）才能被 compositor 考虑。任何负的 width 和 height 值将被丢弃。\n\nx 和 y 值将用作（初始）位置值。bx 和 by 值是边界框左上角的 x 和 y 值。对边界框的任何裁剪不会影响 surface 的大小或支持顶层窗口的底层 surface 的位置。bx 和 by 值与位置值一样，可以都设置为零，甚至负值。compositor 将不做任何进一步验证就传递它们。\n\n初始位置值和边界矩形在后续的 app_id 激活请求中仍然有效，假设它之前在某个时间点被停用过。\n\n有关 app_id 的描述，请参阅 xdg-shell 协议中的 xdg_toplevel.set_app_id。"
+          }
+        },
+        "deactivate_app": {
+          "description": {
+            "summary": "停用/隐藏由 app_id 标识的窗口",
+            "text": "请求 compositor 隐藏 toplevel 窗口，用于窗口管理目的。根据窗口角色，此请求将显示先前活动的窗口（如果没有先前活动的 surface 则显示背景）或临时（或直到调用 'activate_app'）隐藏 surface。所有 surface 都可以通过 app_id 标识，如果 app_id 不存在/曾经不存在，则不会采取任何操作。\n\n有关 app_id 的描述，请参阅 xdg-shell 协议中的 xdg_toplevel.set_app_id。"
+          }
+        },
+        "set_app_property_mode": {
+          "description": {
+            "summary": "请求更改应用程序属性的生命周期",
+            "text": "使用此请求通知 compositor 为通过 set_app_property() 请求设置的 app_id 维护挂起状态。任何后续匹配该 app_id 的应用程序将在潜在的应用程序销毁后保留。请注意，此请求将在所有应用程序上全局生效。\n\n要打开或关闭它，请使用 'permanent' 参数。最初，compositor 将此选项设置为关闭。请注意，此请求与 set_app_property() 请求的顺序无关紧要，因为更改仅在应用程序本身使用设置的 app_id 进行提交时生效，因此唯一的要求是在 app_id 客户端进行首次提交之前调用此请求。"
+          }
+        }
+      },
+      "events": {
+        "application": {
+          "description": {
+            "summary": "通告应用程序 id",
+            "text": "compositor 可以选择通告一个或多个可用于激活/切换的应用程序 id。\n\n当绑定此全局对象时，compositor 将发送所有可用于激活的应用程序 id，但可能随时发送其他应用程序 id（当它们在 compositor 中被映射时）。"
+          }
+        },
+        "state_app": {
+          "description": {
+            "summary": "应用程序状态修改时发送的事件",
+            "text": "当其他应用程序发生状态修改时通知应用程序。"
+          }
+        }
+      }
+    }
+  }
+}

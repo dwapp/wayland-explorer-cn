@@ -1,0 +1,31 @@
+{
+  "interfaces": {
+    "treeland_window_management_v1": {
+      "description": {
+        "summary": "应用程序窗口管理",
+        "text": "此接口管理应用程序窗口。\n它提供显示和隐藏桌面的请求，并在每次创建窗口时发出事件，以便客户端可以使用它来管理窗口。\n\n一次只能有一个客户端绑定此接口。"
+      },
+      "requests": {
+        "set_desktop": {
+          "description": {
+            "summary": "显示/隐藏桌面",
+            "text": "通知 compositor 显示/隐藏桌面。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁窗口管理器对象"
+          }
+        }
+      },
+      "events": {
+        "show_desktop": {
+          "description": {
+            "summary": "通知客户端显示桌面模式的进入/离开",
+            "text": "每当显示桌面模式发生变化时发送此事件。例如进入或离开时。\n\n绑定接口时会发送当前状态。"
+          }
+        }
+      }
+    }
+  }
+}

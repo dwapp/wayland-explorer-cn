@@ -1,0 +1,144 @@
+{
+  "interfaces": {
+    "zcosmic_workspace_manager_v2": {
+      "description": {
+        "summary": "列出和控制工作区",
+        "text": "此协议扩展了 `ext-workspace-v1`，添加了额外的请求和事件。\n\n每当创建新的 ext workspace 时，调用者应调用 `get_cosmic_workspace`。"
+      },
+      "requests": {
+        "get_cosmic_workspace": {
+          "description": {
+            "summary": "获取 cosmic workspace 扩展对象",
+            "text": "为现有的 `ext_workspace_handle_v1` 请求 `zcosmic_workspace_handle_v2` 扩展对象。\n\n如果 `ext_workspace_handle_v1` 已存在 `zcosmic_workspace_handle_v2`，这将引发 `workspace_exists` 协议错误。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 zcosmic_workspace_manager_v2 对象",
+            "text": "当客户端不再使用 `zcosmic_workspace_manager_v2` 时应调用此请求。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "workspace_exists": {
+              "summary": "ext_workspace_handle_v1 已存在 zcosmic_workspace_handle_v2"
+            }
+          }
+        }
+      }
+    },
+    "zcosmic_workspace_handle_v2": {
+      "description": {
+        "summary": "处理一组表面的工作区",
+        "text": "zcosmic_workspace_handle_v2 对象表示一个处理一组表面的工作区。\n\n每个工作区有一个名称，通过 name 事件传达给客户端；一个状态列表，通过 state 事件传达给客户端；以及可选的一组坐标，通过 coordinates 事件传达给客户端。客户端可以请求合成器激活或停用工作区。\n\n每个工作区只能属于单个工作区组。根据合成器策略，不同工作区组中可能存在同名的工作区，但这些工作区仍然是独立的（例如其中一个可能是活动的而另一个不是）。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 zcosmic_workspace_handle_v1 对象",
+            "text": "当客户端不再使用 `zcosmic_workspace_handle_v1` 时应调用此请求。"
+          }
+        },
+        "rename": {
+          "description": {
+            "summary": "重命名此工作区",
+            "text": "请求重命名此工作区。\n\n不保证工作区实际会被重命名。"
+          }
+        },
+        "set_tiling_state": {
+          "description": {
+            "summary": "更改此工作区的平铺状态",
+            "text": "请求更改此工作区的平铺状态。\n\n不保证工作区实际会更改其平铺状态。"
+          }
+        },
+        "move_before": {
+          "description": {
+            "summary": "移动到不同工作区之前",
+            "text": "沿给定轴将工作区移动到另一个工作区之前。\n\n`other_workspace` 可以在同一工作区组上，也可以在不同的组上。如果是不同的组，工作区也将移动到该组。\n\n`axis` 应是 `other_workspace` 所在工作区组坐标中的有效索引。工作区将在目标组上定位，使该分量的坐标小于 `other_workspace` 分量的值。确切的坐标值，或其他工作区如何移动以适应此工作区，未指定。\n\n如果 `axis` 无效或合成器无法移动工作区，此请求将被忽略。\n\n不保证工作区实际会被移动。"
+          }
+        },
+        "move_after": {
+          "description": {
+            "summary": "移动到不同工作区之后",
+            "text": "沿给定轴将工作区移动到另一个工作区之后。\n\n参见 `move_before`。"
+          }
+        },
+        "pin": {
+          "description": {
+            "summary": "固定工作区",
+            "text": "请求固定此工作区。\n\n不保证工作区实际会被固定。"
+          }
+        },
+        "unpin": {
+          "description": {
+            "summary": "取消固定工作区",
+            "text": "请求取消固定此工作区。\n\n不保证工作区实际会被取消固定。"
+          }
+        }
+      },
+      "events": {
+        "capabilities": {
+          "description": {
+            "summary": "合成器功能",
+            "text": "此事件通告合成器支持的功能。如果不支持某个功能，客户端应隐藏或禁用暴露此功能的 UI 元素。例如，如果合成器不支持删除工作区，则不应显示触发删除请求的按钮。\n\n合成器将忽略它不支持的请求。例如，不支持删除的合成器将忽略删除请求。\n\n合成器必须在创建 `zcosmic_workspace_handle_v2` 后发送此事件一次。当功能发生变化时，合成器必须再次发送此事件。"
+          }
+        },
+        "tiling_state": {
+          "description": {
+            "summary": "指示此工作区是否启用平铺行为",
+            "text": "此事件在 zcosmic_workspace_handle_v2 创建后立即发出，每次工作区平铺状态更改时也会发出，无论是由于合成器操作还是此协议中的请求。"
+          }
+        },
+        "state": {
+          "description": {
+            "summary": "工作区状态已更改",
+            "text": "此事件在 zcosmic_workspace_handle_v2 创建后立即发出，每次工作区状态更改时也会发出，无论是由于合成器操作还是此协议中的请求。"
+          }
+        }
+      },
+      "enums": {
+        "workspace_capabilities": {
+          "entries": {
+            "rename": {
+              "summary": "重命名请求可用"
+            },
+            "set_tiling_state": {
+              "summary": "set_tiling_state 请求可用"
+            },
+            "pin": {
+              "summary": "pin 和 unpin 请求可用"
+            },
+            "move": {
+              "summary": "move_before 和 move_after 请求可用"
+            }
+          }
+        },
+        "tiling_state": {
+          "description": {
+            "summary": "工作区可能具有的平铺状态类型"
+          },
+          "entries": {
+            "floating_only": {
+              "summary": "工作区没有活动的平铺属性"
+            },
+            "tiling_enabled": {
+              "summary": "工作区已启用平铺行为"
+            }
+          }
+        },
+        "state": {
+          "description": {
+            "summary": "工作区状态，扩展 ext workspace 状态"
+          },
+          "entries": {
+            "pinned": {
+              "summary": "工作区已固定"
+            }
+          }
+        }
+      }
+    }
+  }
+}

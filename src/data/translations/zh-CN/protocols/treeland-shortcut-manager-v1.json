@@ -1,0 +1,41 @@
+{
+  "interfaces": {
+    "treeland_shortcut_manager_v1": {
+      "description": {
+        "summary": "快捷键管理器",
+        "text": "此接口允许客户端获取某些 shell 的信息。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后不兼容的更改只能通过创建扩展的新主版本来完成。"
+      },
+      "requests": {
+        "register_shortcut_context": {
+          "description": {
+            "summary": "注册快捷键",
+            "text": "快捷键的格式为 \"修饰键+按键\"，例如 \"Ctrl+Alt+T\"。\n如果格式错误，compositor 将给出 \"格式错误\"。如果快捷键已被注册，compositor 将给出 \"注册错误\" 并对上下文发出销毁。"
+          }
+        }
+      }
+    },
+    "treeland_shortcut_context_v1": {
+      "description": {
+        "summary": "客户端快捷键上下文",
+        "text": "此接口允许客户端监听快捷键动作。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后不兼容的更改只能通过创建扩展的新主版本来完成。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁上下文对象",
+            "text": "销毁上下文对象。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "register_failed": {
+              "summary": "快捷键注册失败"
+            }
+          }
+        }
+      }
+    }
+  }
+}

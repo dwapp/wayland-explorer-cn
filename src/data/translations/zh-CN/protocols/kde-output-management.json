@@ -1,0 +1,113 @@
+{
+  "interfaces": {
+    "org_kde_kwin_outputmanagement": {
+      "description": {
+        "summary": "通过客户端配置服务端输出",
+        "text": "此接口使客户端能够通过服务器设置输出设备的属性以进行屏幕配置。为此，输出设备通过全局 org_kde_kwin_outputdevice 对象引用。\n\noutputmanagement (wl_global)\n--------------------------\n请求：\n* create_configuration -> outputconfiguration (wl_resource)\n\noutputconfiguration (wl_resource)\n--------------------------\n请求：\n* enable(outputdevice, bool)\n* mode(outputdevice, mode_id)\n* transformation(outputdevice, flag)\n* position(outputdevice, x, y)\n* apply\n\n事件：\n* applied\n* failed\n\n服务器注册一个 outputmanagement 对象作为全局对象。为了配置输出，客户端请求 create_configuration，该请求提供一个引用 outputconfiguration 的资源用于一次性配置。通过这种方式，服务器知道哪些请求属于一起，并可以按此分组。\n\n在 outputconfiguration 对象上，客户端为每个输出调用是否应启用输出、应设置哪种模式（通过引用已公布模式列表中的模式）以及输出的全局位置。以这种方式配置完所有输出后，客户端调用 apply。\n\n此时（而不是更早）服务器应尝试应用配置。如果成功，服务器发出 applied 信号，否则发出 failed 信号，以便配置客户端收到其配置请求成功与否的通知。\n\n通过这种设计，如果服务器内部支持，该接口可以实现原子输出配置更改。"
+      },
+      "requests": {
+        "create_configuration": {
+          "description": {
+            "summary": "提供用于配置输出的 outputconfiguration 对象",
+            "text": "请求一个 outputconfiguration 对象，客户端可以通过它配置输出设备。"
+          }
+        }
+      }
+    },
+    "org_kde_kwin_outputconfiguration": {
+      "description": {
+        "summary": "配置单个输出设备",
+        "text": "outputconfiguration 是特定于客户端的资源，可用于请求服务器对可用输出设备应用更改。\n\n客户端从注册表接收输出设备列表。当它想要应用新设置时，它从 outputmanagement 全局对象创建一个配置对象，通过此对象的 enable、scale、transform 和 mode 调用写入更改。然后它要求服务器以原子方式应用这些设置，例如通过 Linux 的 DRM 接口。\n\n服务器发回信号，指示新设置是已成功应用还是应用失败。outputdevice 对象在更改已应用于硬件之后且服务器端发送 applied 事件之前更新。"
+      },
+      "requests": {
+        "enable": {
+          "description": {
+            "summary": "启用或禁用输出",
+            "text": "将输出标记为启用或禁用。"
+          }
+        },
+        "mode": {
+          "description": {
+            "summary": "切换输出设备模式",
+            "text": "通过给定输出的模式大小（宽度和高度）和刷新率设置模式。"
+          }
+        },
+        "transform": {
+          "description": {
+            "summary": "变换输出设备",
+            "text": "设置给定输出的变换。"
+          }
+        },
+        "position": {
+          "description": {
+            "summary": "在全局空间中定位输出",
+            "text": "设置此输出设备的位置。(x,y) 描述输出在全局空间中的左上角，其中全局空间的原点 (0,0) 必须与最左侧输出的左上角对齐，如果不唯一则与顶部输出对齐。\n\n输出之间不能有间隙或重叠，即输出水平、垂直或两者堆叠在一起。"
+          }
+        },
+        "scale": {
+          "description": {
+            "summary": "设置此输出的缩放因子",
+            "text": "设置此输出设备的缩放因子。"
+          }
+        },
+        "apply": {
+          "description": {
+            "summary": "将配置更改应用到所有输出设备",
+            "text": "请求服务器将通过此 outputconfiguration 对象请求的属性更改应用到服务器端的所有输出。"
+          }
+        },
+        "scalef": {
+          "description": {
+            "summary": "设置此输出的缩放因子",
+            "text": "设置此输出设备的缩放因子。同时发送 scale 和 scalef 是未定义行为。"
+          }
+        },
+        "colorcurves": {
+          "description": {
+            "summary": "设置输出颜色曲线",
+            "text": "通过 RGB 颜色渐变设置输出设备的颜色曲线。允许从用户空间对输出设备进行颜色校正。\n\n这些是原始值。合成器可能会选择在内部调整这些值，例如在夜间调整色温。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "释放 outputconfiguration 对象"
+          }
+        },
+        "overscan": {
+          "description": {
+            "summary": "设置过扫描值",
+            "text": "以百分比值设置此输出设备的过扫描值。"
+          }
+        },
+        "set_vrr_policy": {
+          "description": {
+            "summary": "设置 VRR 策略",
+            "text": "设置合成器在使用可变刷新率时应采用的策略。"
+          }
+        }
+      },
+      "events": {
+        "applied": {
+          "description": {
+            "summary": "配置更改已成功应用",
+            "text": "在服务器成功应用更改后发送。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "配置更改应用失败",
+            "text": "如果服务器拒绝更改或应用失败，则发送此事件。"
+          }
+        }
+      },
+      "enums": {
+        "vrr_policy": {
+          "description": {
+            "summary": "描述 VRR 策略",
+            "text": "描述合成器何时可以使用可变刷新率"
+          }
+        }
+      }
+    }
+  }
+}

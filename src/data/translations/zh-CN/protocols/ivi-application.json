@@ -1,0 +1,51 @@
+{
+  "interfaces": {
+    "ivi_surface": {
+      "description": {
+        "summary": "IVI compositor 中 surface 的应用程序接口"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 ivi_surface",
+            "text": "这会移除从 ivi_id 到 wl_surface 的链接并销毁 ivi_surface。ID（ivi_id）将被释放，可以再次用于 surface_create。"
+          }
+        }
+      },
+      "events": {
+        "configure": {
+          "description": {
+            "summary": "建议调整大小",
+            "text": "configure 事件请求客户端调整其 surface 的大小。\n\n该大小是一个提示，客户端可以自由忽略它（如果不调整大小），或选择较小的大小（以满足宽高比或按 NxM 像素的步长调整大小）。\n\n客户端可以自由忽略除最后一个收到的 configure 事件之外的所有事件。\n\nwidth 和 height 参数指定窗口在 surface 本地坐标中的大小。"
+          }
+        }
+      }
+    },
+    "ivi_application": {
+      "description": {
+        "summary": "创建 IVI 风格的 surface",
+        "text": "此接口作为全局单例公开。此接口由提供 IVI 风格用户界面的服务器实现。它允许客户端将 ivi_surface 与 wl_surface 关联。"
+      },
+      "requests": {
+        "surface_create": {
+          "description": {
+            "summary": "在 IVI compositor 中创建具有数字 ID 的 ivi_surface",
+            "text": "此请求赋予 wl_surface 一个 IVI Surface 角色。不允许为一个 wl_surface 创建多个 ivi_surface。请注意，这仍然允许以下示例：\n\n1. 创建 wl_surface\n2. 为 wl_surface 创建 ivi_surface\n3. 销毁 ivi_surface\n4. 为 wl_surface 创建 ivi_surface（使用与之前相同或不同的 ivi_id）\n\nsurface_create 将在 IVI compositor 中创建一个具有数字 ID（ivi_id）的 interface:ivi_surface。这些 ivi_id 在系统中被定义为唯一，以在 IVI compositor 中标识它。IVI compositor 实现了如何根据系统状态设置具有 ivi_id 的 surface 属性的业务逻辑。例如，车载导航应用程序的唯一 ID 用于实现有关应用程序应位于何处的特殊逻辑。\n服务器将以下情况视为协议错误并断开客户端连接。\n- wl_surface 已经有另一个角色。\n- ivi_id 已分配给另一个 wl_surface。\n\n如果客户端销毁 ivi_surface 或分配给 ivi_surface 的 wl_surface，则分配给 ivi_surface 的 ivi_id 将被释放以供重用。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "role": {
+              "summary": "给定的 wl_surface 有另一个角色"
+            },
+            "ivi_id": {
+              "summary": "给定的 ivi_id 已分配给另一个 wl_surface"
+            }
+          }
+        }
+      }
+    }
+  }
+}

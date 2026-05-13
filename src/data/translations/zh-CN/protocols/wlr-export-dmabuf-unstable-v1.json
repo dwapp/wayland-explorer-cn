@@ -1,0 +1,98 @@
+{
+  "description": {
+    "summary": "低开销屏幕内容捕获协议",
+    "text": "通过导出 DMA-BUF 以高效方式捕获表面的接口。\n\n警告！此文件中描述的实验性协议可能会进行向后不兼容的更改。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后不兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被宣布为稳定版本，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。"
+  },
+  "interfaces": {
+    "zwlr_export_dmabuf_manager_v1": {
+      "description": {
+        "summary": "用于通知客户端并开始捕获的管理器",
+        "text": "此对象是一个管理器，用于从源开始捕获。"
+      },
+      "requests": {
+        "capture_output": {
+          "description": {
+            "summary": "从输出捕获一帧",
+            "text": "捕获整个输出的下一帧。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "管理器创建的所有对象仍将保持有效，直到调用适当的销毁请求。"
+          }
+        }
+      }
+    },
+    "zwlr_export_dmabuf_frame_v1": {
+      "description": {
+        "summary": "DMA-BUF 帧",
+        "text": "此对象表示单个 DMA-BUF 帧。\n\n如果捕获成功，合成器将首先发送 \"frame\" 事件，后跟一个或多个 \"object\"。当帧可供读取时，发送 \"ready\" 事件。\n\n如果捕获失败，发送 \"cancel\" 事件。这可能在 \"ready\" 事件之前的任何时间发生。\n\n收到 \"ready\" 或 \"cancel\" 事件后，客户端应销毁此帧。收到 \"object\" 事件后，客户端负责关闭关联的文件描述符。\n\n所有帧都是只读的，不得写入或修改。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "删除此对象，无论是否使用",
+            "text": "取消引用帧。此请求必须在不再使用时立即调用。\n\n客户端可以在任何时间调用此请求。客户端仍必须关闭已获得的任何文件描述符。"
+          }
+        }
+      },
+      "events": {
+        "frame": {
+          "description": {
+            "summary": "帧描述",
+            "text": "向客户端提供帧信息的主要事件。如果捕获未失败，此事件总是在任何其他事件之前发出。\n\n此事件后跟 \"num_objects\" 参数指定的多个 \"object\"。"
+          }
+        },
+        "object": {
+          "description": {
+            "summary": "对象描述",
+            "text": "此事件用于向客户端提供包含每个对象数据的文件描述符。\n\n收到此事件后，客户端必须在完成后立即关闭文件描述符，即使帧失败也是如此。"
+          }
+        },
+        "ready": {
+          "description": {
+            "summary": "指示帧可供读取",
+            "text": "帧呈现后立即发送此事件，指示其可供读取。此事件包括呈现发生的时间。\n\n时间戳表示为 tv_sec_hi、tv_sec_lo、tv_nsec 三元组，每个组件为无符号 32 位值。整秒在 tv_sec 中，它是 tv_sec_hi 和 tv_sec_lo 组合的 64 位值，附加的分数部分在 tv_nsec 中以纳秒为单位。因此，对于有效时间戳 tv_nsec 必须在 [0, 999999999] 范围内。秒部分在开始时可能有任意偏移。\n\n收到此事件后，客户端应销毁此对象。"
+          }
+        },
+        "cancel": {
+          "description": {
+            "summary": "指示帧不再有效",
+            "text": "如果捕获失败或帧在发出 \"frame\" 事件后不再有效，此事件将用于通知客户端丢弃帧。\n\n如果失败是暂时的，客户端可以再次捕获同一源。如果失败是永久的，任何进一步尝试捕获同一源都将再次失败。\n\n收到此事件后，客户端应销毁此对象。"
+          }
+        }
+      },
+      "enums": {
+        "flags": {
+          "description": {
+            "summary": "帧标志",
+            "text": "客户端应遵守的特殊标志。"
+          },
+          "entries": {
+            "transient": {
+              "summary": "客户端应在处理前复制帧"
+            }
+          }
+        },
+        "cancel_reason": {
+          "description": {
+            "summary": "取消原因",
+            "text": "指示取消帧的原因。"
+          },
+          "entries": {
+            "temporary": {
+              "summary": "暂时错误，源将产生更多帧"
+            },
+            "permanent": {
+              "summary": "致命错误，源将不会产生帧"
+            },
+            "resizing": {
+              "summary": "暂时错误，源将产生更多帧"
+            }
+          }
+        }
+      }
+    }
+  }
+}

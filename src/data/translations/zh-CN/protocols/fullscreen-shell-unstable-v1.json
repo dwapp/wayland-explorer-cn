@@ -1,0 +1,113 @@
+{
+  "interfaces": {
+    "zwp_fullscreen_shell_v1": {
+      "description": {
+        "summary": "每个 output 显示单个 surface",
+        "text": "此接口为单个客户端提供了一种显示简单全屏 surface 的机制。虽然技术上可能有多个客户端绑定到此接口，但一次只应显示其中一个客户端。\n\n要呈现 surface，客户端使用 present_surface 或 present_surface_for_mode 请求。呈现 surface 在下一次 wl_surface.commit 时生效。有关缩放和模式切换的详细信息，请参阅各个请求。\n\n客户端在任何时候每个 output 最多只能有一个 surface。请求在已有 surface 的 output 上呈现 surface 将替换先前呈现的 surface。呈现 null surface 将移除其内容并有效地禁用 output。output 被\"禁用\"时具体会发生什么取决于 compositor。同一个 surface 可以同时在多个 output 上呈现。\n\n一旦 surface 在 output 上呈现，它将保持在该 output 上，直到客户端移除它或 compositor 销毁该 output。这样，客户端只需附加新的 buffer 即可更新 output 的内容。\n\n警告！此文件中描述的协议是实验性的，可能会进行向后不兼容的更改。可能会添加向后兼容的更改，并相应地更新接口版本。向后不兼容的更改通过在协议和接口名称中增加版本号并重置接口版本来完成。一旦协议被宣布为稳定版本，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。"
+      },
+      "requests": {
+        "release": {
+          "description": {
+            "summary": "释放 wl_fullscreen_shell 接口",
+            "text": "释放与 wl_fullscreen_shell 接口的绑定。\n\n这将销毁服务器端对象并释放此绑定。如果客户端多次绑定 wl_fullscreen_shell，它可能希望释放其中一些绑定。"
+          }
+        },
+        "present_surface": {
+          "description": {
+            "summary": "呈现 surface 以供显示",
+            "text": "在给定的 output 上呈现 surface。\n\n如果 output 为 null，compositor 将在其认为最佳的任何显示设备上呈现 surface。特别是，这可能会替换当前呈现的任何或所有 surface，因此不应与在特定 output 上放置 surface 结合使用。\n\nmethod 参数是对 compositor 如何呈现 surface 的提示。特别是，它告诉 compositor 如何处理呈现的 surface 与 output 之间的大小不匹配。compositor 可以自由忽略此参数。\n\n\"zoom\"、\"zoom_crop\" 和 \"stretch\" 方法意味着对 surface 进行缩放操作。这将覆盖任何类型的 output 缩放，因此 surface 的 buffer_scale 属性实际上被忽略。\n\n此请求赋予 surface 全屏 shell surface 的角色。如果 surface 已经有另一个角色，它将引发角色协议错误。"
+          }
+        },
+        "present_surface_for_mode": {
+          "description": {
+            "summary": "以特定模式呈现 surface 以供显示",
+            "text": "在给定的 output 上为特定模式呈现 surface。\n\n如果 output 的当前大小与 surface 的大小不同，compositor 将尝试更改 output 的大小以匹配 surface。模式切换操作的结果将通过提供的 zwp_fullscreen_shell_mode_feedback_v1 对象返回。\n\n如果当前 output 模式与请求的模式匹配，或者 compositor 成功切换模式以匹配 surface，则将发送 mode_successful 事件，并且 output 将包含给定 surface 的内容。如果 compositor 无法将 output 大小与 surface 大小匹配，则将发送 mode_failed，并且 output 将包含先前呈现的 surface 的内容（如果有）。如果在这些事件有机会发生之前，在给定的 output 上呈现了另一个 surface，则将发送 present_cancelled 事件。\n\n由于竞态条件和客户端未知的其他问题，无法保证模式切换操作会成功。但是，如果该模式是由 wl_output.mode 通告的模式，或者 compositor 通告了 ARBITRARY_MODES 功能，则客户端应期望模式切换操作通常会成功。\n\n如果呈现的 surface 大小发生变化，结果 output 是未定义的。compositor 可能会尝试更改 output 模式以进行补偿。但是，不保证会找到合适的模式，客户端也无法收到成功或失败的通知。\n\nframerate 参数指定 output 的所需帧率（以 mHz 为单位）。compositor 可以自由忽略此参数。值为 0 表示客户端没有偏好。\n\n如果 wl_output.scale 的值与 wl_surface.buffer_scale 不同，则 compositor 可以选择与 buffer 大小或 surface 大小匹配的模式。在任何一种情况下，surface 都将填充 output。\n\n此请求赋予 surface 全屏 shell surface 的角色。如果 surface 已经有另一个角色，它将引发角色协议错误。"
+          }
+        }
+      },
+      "events": {
+        "capability": {
+          "description": {
+            "summary": "通告 compositor 的功能",
+            "text": "通告 compositor 的单个功能。\n\n当绑定 wl_fullscreen_shell 接口时，此事件会为通告的每个功能发出一次。有效功能由 wl_fullscreen_shell.capability 枚举给出。如果客户端想要利用这些功能中的任何一个，他们应该在绑定后立即使用 wl_display.sync 请求，以确保他们接收所有功能事件。"
+          }
+        }
+      },
+      "enums": {
+        "capability": {
+          "description": {
+            "summary": "compositor 通告的功能",
+            "text": "compositor 可以通告的各种功能。它们在绑定 wl_fullscreen_shell 接口时逐个通告。有关更多详细信息，请参阅 wl_fullscreen_shell.capability 事件。\n\nARBITRARY_MODES：\n这是对客户端的提示，表明 compositor 能够在其 output 上设置几乎任何模式。如果提供了此功能，wl_fullscreen_shell.present_surface_for_mode 几乎永远不会失败，客户端应随意设置他们喜欢的任何模式。如果 compositor 不通告此功能，它可能仍然支持一些未通过 wl_global.mode 通告的模式，但可能性较小。\n\nCURSOR_PLANE：\n这是对客户端的提示，表明 compositor 可以在不实际合成的情况下处理来自客户端的光标 surface。这可能是因为硬件光标平面或某些其他机制。如果 compositor 不通告此功能，则设置 wl_pointer.cursor 可能会降低性能或被完全忽略。如果未通告 CURSOR_PLANE，建议客户端绘制自己的光标并设置 wl_pointer.cursor(NULL)。"
+          },
+          "entries": {
+            "arbitrary_modes": {
+              "summary": "compositor 能够处理几乎任何 output 模式"
+            },
+            "cursor_plane": {
+              "summary": "compositor 有单独的光标平面"
+            }
+          }
+        },
+        "present_method": {
+          "description": {
+            "summary": "将 surface 设置为全屏的不同方法",
+            "text": "提示 compositor 如何处理 surface 尺寸与 output 尺寸之间的冲突。compositor 可以自由忽略此参数。"
+          },
+          "entries": {
+            "default": {
+              "summary": "无偏好，应用默认策略"
+            },
+            "center": {
+              "summary": "将 surface 居中放置在 output 上"
+            },
+            "zoom": {
+              "summary": "缩放 surface，保持宽高比，缩放到适合 output 的最大尺寸"
+            },
+            "zoom_crop": {
+              "summary": "缩放 surface，保持宽高比，完全填充 output，必要时裁剪"
+            },
+            "stretch": {
+              "summary": "将 surface 缩放到 output 的大小，忽略宽高比"
+            }
+          }
+        },
+        "error": {
+          "description": {
+            "summary": "wl_fullscreen_shell 错误值",
+            "text": "这些错误可以在响应 wl_fullscreen_shell 请求时发出。"
+          },
+          "entries": {
+            "invalid_method": {
+              "summary": "present_method 未知"
+            },
+            "role": {
+              "summary": "给定的 wl_surface 有另一个角色"
+            }
+          }
+        }
+      }
+    },
+    "zwp_fullscreen_shell_mode_feedback_v1": {
+      "events": {
+        "mode_successful": {
+          "description": {
+            "summary": "模式切换成功",
+            "text": "此事件表明尝试的模式切换操作成功。请求的模式切换大小的 surface 将无需缩放即可填充 output。\n\n收到此事件后，客户端应销毁 zwp_fullscreen_shell_mode_feedback_v1 对象。"
+          }
+        },
+        "mode_failed": {
+          "description": {
+            "summary": "模式切换失败",
+            "text": "此事件表明尝试的模式切换操作失败。这可能是因为请求的 output 模式不可能，或者 compositor 不想允许它。\n\n收到此事件后，客户端应销毁 zwp_fullscreen_shell_mode_feedback_v1 对象。"
+          }
+        },
+        "present_cancelled": {
+          "description": {
+            "summary": "模式切换已取消",
+            "text": "此事件表明尝试的模式切换操作已取消。最有可能是因为客户端在第一个模式切换完成之前请求了第二次模式切换。\n\n收到此事件后，客户端应销毁 zwp_fullscreen_shell_mode_feedback_v1 对象。"
+          }
+        }
+      }
+    }
+  }
+}

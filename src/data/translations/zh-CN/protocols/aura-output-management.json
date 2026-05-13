@@ -1,0 +1,90 @@
+{
+  "interfaces": {
+    "zaura_output_manager_v2": {
+      "description": {
+        "summary": "aura 输出管理器单例",
+        "text": "一个全局对象，负责将原子性的输出配置变更传播给客户端。输出配置是添加/移除的输出与更新的输出指标的联合。\n\n添加的输出作为 wl_registry.global 事件到达客户端，移除的输出作为 wl_registry.global_remove 事件，更新的输出指标作为 zaura_output_manager_v2 接口上定义的一系列事件。随后是管理器的 done 事件，表示事务的结束。\n\n客户端应以从一种输出配置状态过渡到另一种状态的方式处理变更，而不应将中间输出状态暴露给应用程序的其余部分。\n\n参与的服务器应在 wl_registry.global 事件序列中，在任何 wl_output 全局对象之前发出 zaura_output_manager_v2 全局对象。\n\n参与的客户端应在绑定任何 wl_output 全局对象之前绑定 zaura_output_manager_v2。此排序要求确保客户端在接收任何可能引用已绑定 wl_output 的后续服务器事件之前，接收到所有必要的输出配置信息。\n\n客户端可以预期组成配置变更的所有事件都是同步发送的，一个接一个地，在任何使用输出作为事件参数的其他服务器事件之前。"
+      },
+      "events": {
+        "done": {
+          "description": {
+            "summary": "已发送关于输出配置变更的所有信息",
+            "text": "在给定 wl_output 的所有添加、更改和移除输出事件已分派给客户端后，发送此事件。"
+          }
+        },
+        "display_id": {
+          "description": {
+            "summary": "宣告输出的显示 ID",
+            "text": "此事件描述 ChromeOS 分配给每个显示器的 64 位显示 ID。该值是不透明的，不应进行解释。\n\n该事件在输出的 wl_registry.global 事件之后立即发送，随后在后续的显示配置变更中发送。"
+          }
+        },
+        "logical_position": {
+          "description": {
+            "summary": "输出在全局合成器空间中的位置",
+            "text": "position 事件描述 wl_output 在全局合成器空间中的位置。\n\n该事件在输出的 wl_registry.global 事件之后立即发送，随后在后续的显示配置变更中发送。"
+          }
+        },
+        "logical_size": {
+          "description": {
+            "summary": "输出在全局合成器空间中的大小",
+            "text": "logical_size 事件描述输出在全局合成器空间中的逻辑大小。\n\n该事件在输出的 wl_registry.global 事件之后立即发送，随后在后续的显示配置变更中发送。"
+          }
+        },
+        "physical_size": {
+          "description": {
+            "summary": "输出的像素大小",
+            "text": "显示器的物理分辨率，以像素为单位。该值不应包含任何过扫描边距或显示旋转，但面板方向调整除外。\n\n该事件在输出的 wl_registry.global 事件之后立即发送，随后在后续的显示配置变更中发送。"
+          }
+        },
+        "work_area_insets": {
+          "description": {
+            "summary": "宣告输出的工作区域内边距",
+            "text": "此事件描述输出在逻辑屏幕坐标中的工作区域内边距，据此可以计算工作区。\n\n该事件在绑定到输出对象时发送，随后在输出状态变更时发送。"
+          }
+        },
+        "device_scale_factor": {
+          "description": {
+            "summary": "宣告输出的设备缩放因子",
+            "text": "输出设备的缩放因子。我们将浮点缩放因子 reinterpret_cast 为 32 位 uint，稍后再将其转换回 float。这是因为 wayland 不支持浮点数的原生传输。由于不同的 CPU 架构可能对 IEEE 754 浮点数使用不同的字节序表示，此协议隐式假设调用者和接收者是同一台机器。\n\n该事件在输出的 wl_registry.global 事件之后立即发送，随后在后续的显示配置变更中发送。"
+          }
+        },
+        "logical_transform": {
+          "description": {
+            "summary": "输出的逻辑变换",
+            "text": "此事件描述输出的逻辑变换。面板变换对应于显示器的面板旋转，逻辑变换对应于显示器的逻辑旋转。\n\n该事件在输出的 wl_registry.global 事件之后立即发送，随后在后续的显示配置变更中发送。"
+          }
+        },
+        "panel_transform": {
+          "description": {
+            "summary": "输出的面板变换",
+            "text": "此事件描述输出的面板变换，即关联显示器的面板旋转。\n\n该事件在输出的 wl_registry.global 事件之后立即发送，随后在后续的显示配置变更中发送。"
+          }
+        },
+        "name": {
+          "description": {
+            "summary": "此输出的人类可读名称",
+            "text": "name 是一个 UTF-8 字符串，其内容没有定义约定。\n\n该事件在输出的 wl_registry.global 事件之后立即发送，随后在后续的显示配置变更中发送。"
+          }
+        },
+        "description": {
+          "description": {
+            "summary": "此输出的人类可读描述",
+            "text": "description 是一个 UTF-8 字符串，其内容没有定义约定。\n\n该事件在输出的 wl_registry.global 事件之后立即发送，随后在后续的显示配置变更中发送。"
+          }
+        },
+        "overscan_insets": {
+          "description": {
+            "summary": "宣告输出的过扫描边距",
+            "text": "此事件描述输出的过扫描边距，以物理像素为单位。\n\n该事件在输出的 wl_registry.global 事件之后立即发送，随后在后续的显示配置变更中发送。"
+          }
+        },
+        "activated": {
+          "description": {
+            "summary": "新窗口的目标显示器",
+            "text": "通知此输出现在是活动输出。它通常用作在没有特定边界的情况下创建新窗口时的目标。"
+          }
+        }
+      }
+    }
+  }
+}

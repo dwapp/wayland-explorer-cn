@@ -1,0 +1,179 @@
+{
+  "interfaces": {
+    "zwlr_foreign_toplevel_manager_v1": {
+      "description": {
+        "summary": "列出并控制已打开的应用",
+        "text": "此协议的目的是通过向任务栏和 Dock 提供已打开应用的列表，并允许它们请求对这些应用执行某些操作（如最大化等），从而实现任务栏和 Dock 的创建。\n\n客户端绑定 zwlr_foreign_toplevel_manager_v1 后，每个已打开的 toplevel 窗口都将通过 toplevel 事件发送。"
+      },
+      "requests": {
+        "stop": {
+          "description": {
+            "summary": "停止发送事件",
+            "text": "表示客户端不再希望接收新 toplevel 的事件。但合成器可能会继续发出 toplevel_created 事件，直到发出 finished 事件。\n\n客户端在此请求之后不得再发送任何请求。"
+          }
+        }
+      },
+      "events": {
+        "toplevel": {
+          "description": {
+            "summary": "一个 toplevel 已被创建",
+            "text": "每当创建新的 toplevel 窗口时，都会发出此事件。它针对所有 toplevel 发出，无论创建它们的应用是什么。\n\ntoplevel 的所有初始详情（标题、app_id、状态等）将在此事件之后通过 zwlr_foreign_toplevel_handle_v1 中的相应事件立即发送。"
+          }
+        },
+        "finished": {
+          "description": {
+            "summary": "合成器已完成 toplevel 管理器的事件发送",
+            "text": "此事件表示合成器已完成向 zwlr_foreign_toplevel_manager_v1 发送事件。服务器将在发送此请求后立即销毁该对象，因此它将变为无效，客户端应释放与其关联的所有资源。"
+          }
+        }
+      }
+    },
+    "zwlr_foreign_toplevel_handle_v1": {
+      "description": {
+        "summary": "一个已打开的 toplevel",
+        "text": "zwlr_foreign_toplevel_handle_v1 对象代表一个已打开的 toplevel 窗口。每个应用可以有多个已打开的 toplevel。\n\n每个 toplevel 都有一个它可见的输出列表，通过 output_enter 和 output_leave 事件传递给客户端。"
+      },
+      "requests": {
+        "set_maximized": {
+          "description": {
+            "summary": "请求最大化 toplevel",
+            "text": "请求最大化 toplevel。如果最大化状态实际发生变化，将通过 state 事件指示。"
+          }
+        },
+        "unset_maximized": {
+          "description": {
+            "summary": "请求取消最大化 toplevel",
+            "text": "请求取消最大化 toplevel。如果最大化状态实际发生变化，将通过 state 事件指示。"
+          }
+        },
+        "set_minimized": {
+          "description": {
+            "summary": "请求最小化 toplevel",
+            "text": "请求最小化 toplevel。如果最小化状态实际发生变化，将通过 state 事件指示。"
+          }
+        },
+        "unset_minimized": {
+          "description": {
+            "summary": "请求取消最小化 toplevel",
+            "text": "请求取消最小化 toplevel。如果最小化状态实际发生变化，将通过 state 事件指示。"
+          }
+        },
+        "activate": {
+          "description": {
+            "summary": "激活 toplevel",
+            "text": "请求在给定 seat 上激活此 toplevel。不保证 toplevel 会被实际激活。"
+          }
+        },
+        "close": {
+          "description": {
+            "summary": "请求关闭 toplevel",
+            "text": "向 toplevel 发送关闭自身的请求。合成器通常会使用特定于 shell 的方法来执行此请求，例如发送 xdg_toplevel.close 事件。但这不保证 toplevel 会被实际销毁。如果并且当这种情况发生时，将发出 zwlr_foreign_toplevel_handle_v1.closed 事件。"
+          }
+        },
+        "set_rectangle": {
+          "description": {
+            "summary": "代表 toplevel 的矩形区域",
+            "text": "此请求中指定的表面矩形对应于使用此协议的应用代表给定 toplevel 的位置。合成器可以将其用作某些操作（如最小化）的提示。但客户端不需要设置此值，在这种情况下合成器可以自由决定默认值。\n\n如果客户端指定了多个矩形，则只考虑最后一个。\n\n尺寸以表面局部坐标给出。\n设置 width=height=0 将移除已设置的矩形。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 zwlr_foreign_toplevel_handle_v1 对象",
+            "text": "销毁 zwlr_foreign_toplevel_handle_v1 对象。\n\n此请求应在客户端不再使用该 toplevel 时或在 closed 事件之后调用，以完成对象的销毁。"
+          }
+        },
+        "set_fullscreen": {
+          "description": {
+            "summary": "请求将 toplevel 设为全屏",
+            "text": "请求在给定输出上将 toplevel 设为全屏。如果全屏状态和/或 toplevel 可见的输出实际发生变化，将通过 state 和 output_enter/leave 事件指示。\n\noutput 参数只是对合成器的提示。此外，如果 output 为 NULL，合成器应决定在哪个输出上将 toplevel 设为全屏（如果有的话）。"
+          }
+        },
+        "unset_fullscreen": {
+          "description": {
+            "summary": "请求取消 toplevel 的全屏状态",
+            "text": "请求取消 toplevel 的全屏状态。如果全屏状态实际发生变化，将通过 state 事件指示。"
+          }
+        }
+      },
+      "events": {
+        "title": {
+          "description": {
+            "summary": "标题变更",
+            "text": "每当 toplevel 的标题发生变化时，都会发出此事件。"
+          }
+        },
+        "app_id": {
+          "description": {
+            "summary": "app-id 变更",
+            "text": "每当 toplevel 的 app-id 发生变化时，都会发出此事件。"
+          }
+        },
+        "output_enter": {
+          "description": {
+            "summary": "toplevel 进入了某个输出",
+            "text": "每当 toplevel 在给定输出上变为可见时，都会发出此事件。一个 toplevel 可能在多个输出上可见。"
+          }
+        },
+        "output_leave": {
+          "description": {
+            "summary": "toplevel 离开了某个输出",
+            "text": "每当 toplevel 在给定输出上不再可见时，都会发出此事件。保证在此之前已发出具有相同输出的 output_enter 事件。"
+          }
+        },
+        "state": {
+          "description": {
+            "summary": "toplevel 状态已变更",
+            "text": "此事件在 zlw_foreign_toplevel_handle_v1 创建后立即发出，以及每次 toplevel 状态发生变化时发出，无论是由于合成器操作还是此协议中的请求。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "toplevel 的所有信息已发送完毕",
+            "text": "此事件在 toplevel 状态的所有更改发送完毕后发出。\n\n这允许将 zwlr_foreign_toplevel_handle_v1 属性的更改视为原子操作，即使它们通过多个事件发生。"
+          }
+        },
+        "closed": {
+          "description": {
+            "summary": "此 toplevel 已被销毁",
+            "text": "此事件表示 toplevel 已被销毁。保证不会再有此 zwlr_foreign_toplevel_handle_v1 的任何事件。toplevel 本身变为惰性，因此除 destroy 请求外，任何请求都将被忽略。"
+          }
+        },
+        "parent": {
+          "description": {
+            "summary": "父级变更",
+            "text": "每当 toplevel 的父级发生变化时，都会发出此事件。\n\n当父级句柄被客户端销毁时，不会发出事件。"
+          }
+        }
+      },
+      "enums": {
+        "state": {
+          "description": {
+            "summary": "toplevel 的状态类型",
+            "text": "toplevel 可以具有的不同状态。这些状态与 xdg-toplevel 中定义的同名状态具有相同含义。"
+          },
+          "entries": {
+            "maximized": {
+              "summary": "toplevel 已最大化"
+            },
+            "minimized": {
+              "summary": "toplevel 已最小化"
+            },
+            "activated": {
+              "summary": "toplevel 处于活动状态"
+            },
+            "fullscreen": {
+              "summary": "toplevel 已全屏"
+            }
+          }
+        },
+        "error": {
+          "entries": {
+            "invalid_rectangle": {
+              "summary": "提供的矩形无效"
+            }
+          }
+        }
+      }
+    }
+  }
+}

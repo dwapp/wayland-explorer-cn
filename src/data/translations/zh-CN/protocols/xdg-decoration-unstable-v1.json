@@ -1,0 +1,90 @@
+{
+  "interfaces": {
+    "zxdg_decoration_manager_v1": {
+      "description": {
+        "summary": "窗口装饰管理器",
+        "text": "此接口允许合成器通告对服务端装饰的支持。\n\n窗口装饰是由管理它们的一方认为合适的一组窗口控件，例如用于移动、调整大小和更改窗口状态的用户界面组件。\n\n客户端可以使用此协议请求由支持的合成器进行装饰。\n\n如果合成器和客户端未使用此协议协商使用服务端装饰，客户端将继续自行装饰。\n\n警告！此文件中描述的协议是实验性的，可能会进行不向后兼容的更改。向后兼容的更改可以与相应的接口版本号提升一起添加。\n不向后兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被宣布为稳定，协议和接口名称中的 \"z\" 前缀和版本号将被移除，接口版本号将被重置。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁装饰管理器对象",
+            "text": "销毁装饰管理器。这不会销毁使用该管理器创建的对象。"
+          }
+        },
+        "get_toplevel_decoration": {
+          "description": {
+            "summary": "创建新的 toplevel 装饰对象",
+            "text": "创建与给定 toplevel 关联的新装饰对象。\n\n对于版本 1 的对象，从已附加或提交 buffer 的 xdg_toplevel 创建 xdg_toplevel_decoration 是客户端错误，并且在第一个 xdg_toplevel_decoration.configure 事件之前客户端附加或操作 buffer 的任何尝试也必须被视为错误。\n\n对于版本 2 或更新版本的对象，允许从已附加或提交 buffer 的 xdg_toplevel 创建 xdg_toplevel_decoration。如果已附加 buffer，surface 的初始装饰模式取决于在此请求之前是否已将 xdg_toplevel_decoration 对象与 surface 关联。\n\n如果 xdg_toplevel_decoration 已与 surface 关联，然后在没有 surface 提交的情况下被销毁，则保留先前的装饰模式。\n\n如果在此请求之前没有 xdg_toplevel_decoration 与 surface 关联，或者在先前与 surface 关联的 xdg_toplevel_decoration 对象被销毁后执行了 surface 提交，则装饰模式假定为客户端装饰。"
+          }
+        }
+      }
+    },
+    "zxdg_toplevel_decoration_v1": {
+      "description": {
+        "summary": "toplevel surface 的装饰对象",
+        "text": "装饰对象允许合成器为 toplevel surface 切换服务端窗口装饰。客户端可以请求切换到另一种模式。\n\nxdg_toplevel_decoration 对象必须在其 xdg_toplevel 之前被销毁。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁装饰对象",
+            "text": "在下一次提交时切换回没有任何服务端装饰的模式，除非首先为该 surface 创建了新的 xdg_toplevel_decoration。"
+          }
+        },
+        "set_mode": {
+          "description": {
+            "summary": "设置装饰模式",
+            "text": "设置 toplevel surface 的装饰模式。这通知合成器客户端偏好提供的装饰模式。\n\n请求装饰模式后，合成器将通过发出 xdg_surface.configure 事件来响应。客户端应随后更新其内容，如果收到的模式是服务端装饰，则不绘制装饰。客户端在提交新内容时还必须确认 configure（参见 xdg_surface.ack_configure）。\n\n合成器可以决定不使用客户端的模式，而是强制执行不同的模式。\n\n装饰模式取决于 xdg_toplevel 状态的客户端可以在响应 xdg_surface.configure 事件时发送 set_mode 请求，并等待下一个 xdg_surface.configure 事件以防止不需要的状态。此类客户端负责防止 configure 循环，并确保不使用相同的装饰模式发送多个连续的 set_mode 请求。\n\n如果客户端提供了无效的模式，合成器将引发 invalid_mode 协议错误。"
+          }
+        },
+        "unset_mode": {
+          "description": {
+            "summary": "取消设置装饰模式",
+            "text": "取消设置 toplevel surface 的装饰模式。这通知合成器客户端不偏好特定的装饰模式。\n\n此请求与 set_mode 具有相同的语义。"
+          }
+        }
+      },
+      "events": {
+        "configure": {
+          "description": {
+            "summary": "通知装饰模式更改",
+            "text": "configure 事件配置有效的装饰模式。配置的状态不应立即应用。客户端必须发送 ack_configure 以响应此事件。详情请参见 xdg_surface.configure 和 xdg_surface.ack_configure。\n\nconfigure 事件可以随时发送。客户端必须服从指定的模式。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "unconfigured_buffer": {
+              "summary": "xdg_toplevel 在 configure 之前附加了 buffer"
+            },
+            "already_constructed": {
+              "summary": "xdg_toplevel 已经有装饰对象"
+            },
+            "orphaned": {
+              "summary": "xdg_toplevel 在装饰对象之前被销毁"
+            },
+            "invalid_mode": {
+              "summary": "无效的模式"
+            }
+          }
+        },
+        "mode": {
+          "description": {
+            "summary": "窗口装饰模式",
+            "text": "这些值描述了窗口装饰模式。"
+          },
+          "entries": {
+            "client_side": {
+              "summary": "无服务端窗口装饰"
+            },
+            "server_side": {
+              "summary": "服务端窗口装饰"
+            }
+          }
+        }
+      }
+    }
+  }
+}

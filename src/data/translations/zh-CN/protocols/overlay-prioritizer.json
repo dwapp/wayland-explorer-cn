@@ -1,0 +1,83 @@
+{
+  "interfaces": {
+    "overlay_prioritizer": {
+      "description": {
+        "summary": "overlay 提示优先级排序",
+        "text": "暴露 overlay 委托优先级排序提示功能的全局接口，用于为 wl_surface 对象实例化接口扩展。此扩展接口将允许对 surface 进行委托 overlay 优先级排序。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 overlay prioritizer",
+            "text": "通知服务器客户端将不再使用此协议对象。这不会影响任何其他对象，包括 prioritizer 对象。"
+          }
+        },
+        "get_overlay_prioritized_surface": {
+          "description": {
+            "summary": "为 surface 接口扩展 overlay 优先级排序提示",
+            "text": "为给定的 wl_surface 实例化接口扩展，以添加 overlay 优先级排序提示支持。如果给定的 wl_surface 已经关联了 prioritization 对象，将产生 delegate_exists 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "overlay_hinted_surface_exists": {
+              "summary": "该 surface 已经关联了 prioritizer 对象"
+            }
+          }
+        }
+      }
+    },
+    "overlay_prioritized_surface": {
+      "description": {
+        "summary": "wl_surface 的委托 overlay 优先级排序提示",
+        "text": "wl_surface 对象的附加接口，允许客户端为 surface 的 overlay 优先级排序指定提示。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "移除 surface 的 overlay 优先级排序",
+            "text": "关联的 wl_surface 的 overlay 优先级排序将被移除。\n更改在下次 wl_surface.commit 时生效。"
+          }
+        },
+        "set_overlay_priority": {
+          "description": {
+            "summary": "设置 surface 的 overlay 优先级"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "bad_value": {
+              "summary": "半径或大小中的负值"
+            },
+            "no_surface": {
+              "summary": "wl_surface 已被销毁"
+            }
+          }
+        },
+        "overlay_priority": {
+          "description": {
+            "summary": "overlay 优先级排序的提示"
+          },
+          "entries": {
+            "none": {
+              "summary": "此 surface 不需要 overlay 提升"
+            },
+            "regular": {
+              "summary": "surface 可被视为提升候选"
+            },
+            "preferred_low_latency_canvas": {
+              "summary": "该 surface 是低延迟画布，提升为 overlay 效果更好"
+            },
+            "required_hardware_protection": {
+              "summary": "该 surface 包含受保护内容，需要提升为 overlay"
+            }
+          }
+        }
+      }
+    }
+  }
+}

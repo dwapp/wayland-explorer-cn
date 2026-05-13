@@ -1,0 +1,85 @@
+{
+  "interfaces": {
+    "kde_screen_edge_manager_v1": {
+      "description": {
+        "summary": "屏幕边缘管理器",
+        "text": "此接口允许客户端将操作与屏幕边缘关联。例如，通过将指针移动到屏幕边缘来显示一个 surface。\n\n触发屏幕边缘的潜在方式由合成器策略决定。例如，合成器可以考虑当指针触及关联的屏幕边界时触发屏幕边缘。其他方式可能包括使用触摸屏或触摸板手势。\n\n警告！此文件中描述的协议是桌面环境的实现细节。普通客户端不得使用此协议。可能会在不增加扩展主版本号的情况下添加不向后兼容的更改。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁屏幕边缘管理器",
+            "text": "销毁屏幕边缘管理器。这不会销毁由此管理器创建的对象。"
+          }
+        },
+        "get_auto_hide_screen_edge": {
+          "description": {
+            "summary": "创建自动隐藏边缘",
+            "text": "创建一个新的自动隐藏屏幕边缘对象，与指定的 surface 和边界关联。\n\n创建 kde_auto_hide_screen_edge_v1 对象不会改变 surface 的可见性。必须发出 kde_auto_hide_screen_edge_v1.activate 请求才能隐藏 surface。\n\n\"border\" 参数必须是有效的枚举条目，否则将引发 invalid_border 协议错误。\n\n如果指定的 surface 没有 layer_surface 角色，将引发 invalid_role 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_border": {
+              "summary": "指定的边界值无效"
+            },
+            "invalid_role": {
+              "summary": "surface 具有无效的角色"
+            },
+            "already_constructed": {
+              "summary": "surface 已经有一个屏幕边缘"
+            }
+          }
+        },
+        "border": {
+          "description": {
+            "summary": "屏幕边界",
+            "text": "这些值描述了可能的屏幕边界。"
+          },
+          "entries": {
+            "top": {
+              "summary": "顶部屏幕边缘"
+            },
+            "bottom": {
+              "summary": "底部屏幕边缘"
+            },
+            "left": {
+              "summary": "左侧屏幕边缘"
+            },
+            "right": {
+              "summary": "右侧屏幕边缘"
+            }
+          }
+        }
+      }
+    },
+    "kde_auto_hide_screen_edge_v1": {
+      "description": {
+        "summary": "自动隐藏屏幕边缘",
+        "text": "自动隐藏屏幕边缘对象允许隐藏 surface 并通过触发屏幕边缘使其可见。屏幕边缘默认处于非活动状态，surface 默认可见。\n\n此接口可用于实现自动隐藏面板或 dock 等用户界面元素。\n\nkde_auto_hide_screen_edge_v1.activate 激活屏幕边缘并隐藏 surface。可以通过触发屏幕边缘或调用 kde_auto_hide_screen_edge_v1.deactivate 使 surface 可见。\n\n如果屏幕边缘已被触发，它不会被重新激活。客户端必须发出另一个 kde_auto_hide_screen_edge_v1.activate 请求来激活屏幕边缘。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁自动隐藏屏幕边缘对象",
+            "text": "销毁自动隐藏屏幕边缘对象。如果屏幕边缘处于活动状态，它将被停用，surface 将变为可见。"
+          }
+        },
+        "deactivate": {
+          "description": {
+            "summary": "停用屏幕边缘",
+            "text": "停用屏幕边缘。surface 将变为可见。"
+          }
+        },
+        "activate": {
+          "description": {
+            "summary": "激活屏幕边缘",
+            "text": "激活屏幕边缘。surface 将被隐藏，直到屏幕边缘被触发。"
+          }
+        }
+      }
+    }
+  }
+}

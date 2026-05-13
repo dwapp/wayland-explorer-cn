@@ -1,0 +1,119 @@
+{
+  "interfaces": {
+    "weston_capture_v1": {
+      "description": {
+        "summary": "图像捕获工厂",
+        "text": "暴露 Weston 屏幕截图功能的全局接口，用于单次拍摄。\n\n这是一个特权接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "解绑图像捕获工厂",
+            "text": "不会以任何方式影响其他协议对象。"
+          }
+        },
+        "create": {
+          "description": {
+            "summary": "创建用于捕获输出图像的对象",
+            "text": "创建一个对应于给定 wl_output 的 weston_capture_source_v1 对象。\n该对象提供用于分配合适缓冲区的信息，并暴露捕获功能。\n\n该对象将使用给定的像素源进行图像捕获。\n如果该源不可用，所有捕获尝试将优雅地失败。\n\n'writeback' 源将使用 DRM KMS 的硬件回写功能进行捕获。\n这可能允许硬件平面在捕获期间继续使用。此源通常不可用。\n\n'framebuffer' 源复制最终帧缓冲区的内容。\n使用此源会临时禁用所有硬件平面和 DRM KMS 颜色管线特性的使用。\n此源始终可用。\n\n'full_framebuffer' 与 'framebuffer' 相同，但会包含帧缓冲区可能包含的任何边框（装饰）。\n\n'blending' 源复制中间混合缓冲区的内容，该缓冲区应为线性光格式。\n使用此源会临时禁用所有硬件平面的使用。\n此源仅在存在混合缓冲区时可用，例如当输出上启用了颜色管理时。\n\n如果像素源不是定义的枚举值之一，将引发 'invalid_source' 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_source": {
+              "summary": "无效的源枚举值"
+            }
+          }
+        },
+        "source": {
+          "entries": {
+            "writeback": {
+              "summary": "使用硬件回写"
+            },
+            "framebuffer": {
+              "summary": "从帧缓冲区复制，桌面区域"
+            },
+            "full_framebuffer": {
+              "summary": "复制整个帧缓冲区，包括边框"
+            },
+            "blending": {
+              "summary": "从混合空间复制"
+            }
+          }
+        }
+      }
+    },
+    "weston_capture_source_v1": {
+      "description": {
+        "summary": "图像捕获源",
+        "text": "表示单个源的图像捕获功能的对象。\n创建时，当且仅当输出仍然存在且指定的像素源在输出上可用时，才会发送初始事件。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "取消捕获并销毁",
+            "text": "如果此对象上正在进行捕获，将取消捕获并使图像缓冲区内容变为未定义。\n\n此对象将被销毁。"
+          }
+        },
+        "capture": {
+          "description": {
+            "summary": "捕获图像",
+            "text": "如果给定的 wl_buffer 兼容，关联的输出将在此请求被处理后的某个时间进行重绘，\n该重绘将执行捕获。\n捕获完成后，将发出 'complete' 事件。\n\n如果给定的 wl_buffer 不兼容，将发出 'retry' 事件。\n\n如果捕获失败或缓冲区类型不受支持，将发出 'failed' 事件。\n\n客户端必须等待这些事件之一后才能在此对象上再次尝试 'capture'。\n如果在任何事件之前再次请求 'capture'，将引发 'sequence' 协议错误。\n\nwl_buffer 对象不会因此请求发出 wl_buffer.release 事件。\n\nwl_buffer 必须引用合成器可写的存储。\n如果缓冲区存储不可写，将引发 bad_buffer 或 wl_shm.error.invalid_fd 协议错误。\n\n如果 wl_buffer 在任何事件发出之前被销毁，缓冲区内容变为未定义。\n\n合成器必须实现对 wl_buffer 缓冲区的捕获。\n其他缓冲区类型可能支持也可能不支持。"
+          }
+        }
+      },
+      "events": {
+        "format": {
+          "description": {
+            "summary": "缓冲区的像素格式",
+            "text": "此事件传递可用于图像缓冲区的像素格式。\n任何不具有由此事件之一传递的像素格式的缓冲区都是不兼容的。\n\n格式修饰符为 linear (DRM_FORMAT_MOD_LINEAR)。\n\n这是一个初始事件，在支持的格式发生变化时发送。\n\n此事件可能会发送多次，后跟 format_done 事件。"
+          }
+        },
+        "size": {
+          "description": {
+            "summary": "缓冲区的尺寸",
+            "text": "此事件传递图像缓冲区应使用的尺寸。\n任何不具有此尺寸的缓冲区都是不兼容的。\n\n对于 wl_shm，缓冲区的行对齐必须为 4 字节，且不得包含额外的行填充。\n否则缓冲区不受支持。\n\n这是一个初始事件，在所需尺寸发生变化时发送。"
+          }
+        },
+        "complete": {
+          "description": {
+            "summary": "捕获已完成",
+            "text": "当 'capture' 请求成功完成时，作为响应发出此事件。\n\n如果拍摄中使用的缓冲区是 dmabuf，客户端还需要等待其上的任何隐式围栏后再访问内容。"
+          }
+        },
+        "retry": {
+          "description": {
+            "summary": "使用不同的缓冲区重试图像捕获",
+            "text": "当 'capture' 请求由于不兼容的缓冲区而无法成功时，作为响应发出此事件。\n客户端已接收到传递新缓冲区参数的事件。客户端应使用新的缓冲区参数重试捕获。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "捕获失败",
+            "text": "当 'capture' 请求因不兼容缓冲区以外的原因失败时，作为响应发出此事件。\n原因可能包括：不受支持的缓冲区类型、不受支持的缓冲区步长、不受支持的图像源、\n图像源（输出）已被移除，或合成器策略拒绝了捕获。\n\n字符串 'msg' 可能包含人类可读的失败说明以辅助调试。"
+          }
+        },
+        "formats_done": {
+          "description": {
+            "summary": "格式发送完成",
+            "text": "所有格式发送完毕后发送此事件。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "bad_buffer": {
+              "summary": "wl_buffer 不可写"
+            },
+            "sequence": {
+              "summary": "在上一次捕获完成之前再次请求了捕获"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "description": {
+    "summary": "描述裁剪表面区域的协议",
+    "text": "此协议描述了 toplevel 被物理显示器中存在的硬件元素从可用表面区域中裁剪出来的区域。这使客户端可以避免在这些区域中放置用户界面元素。\n\n典型的裁剪区域是刘海（即嵌入摄像头）或\"瀑布\"显示屏边缘。在刘海的情况下，合成器通常会提供刘海的边界框或通过多个矩形进行近似。因此，显示器中的单个物理元素可以对应协议中的多个裁剪事件。\n\n该协议目前支持 xdg_toplevel 表面，但旨在将来扩展到其他表面（如 layer surface）。\n\n警告！此文件中描述的实验性协议可能会进行向后不兼容的更改。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后不兼容的更改只能通过创建扩展的新主要版本来完成。"
+  },
+  "interfaces": {
+    "xx_cutouts_manager_v1": {
+      "description": {
+        "summary": "显示器裁剪区域管理器",
+        "text": "此接口允许合成器宣布对向客户端提供裁剪信息的支持。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xx_cutouts_manager 对象",
+            "text": "使用此请求，客户端可以告知服务器它不再使用 xx_cutouts_manger 对象。\n\n已通过此实例创建的任何对象不受影响。"
+          }
+        },
+        "get_cutouts": {
+          "description": {
+            "summary": "从 xdg toplevel 创建裁剪通知器",
+            "text": "这会为给定表面创建一个新的 xx_cutouts 对象。表面的角色必须是 xdg_toplevel，否则将引发 invalid_role 协议错误。此协议的后续版本可能会允许其他表面角色。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_role": {
+              "summary": "给定的 wl_surface 角色不正确"
+            },
+            "defunct_cutouts_object": {
+              "summary": "wl_surface 或表面角色在裁剪对象之前被销毁"
+            }
+          }
+        }
+      }
+    },
+    "xx_cutouts_v1": {
+      "description": {
+        "summary": "裁剪区域信息",
+        "text": "xx_cutouts 描述了当前从 toplevel 中\"裁剪\"出来的区域。\n\n每个裁剪事件携带一个标识物理元素的 id。如果合成器通过多个裁剪事件描述一个元素，则应使用相同的元素 id。一个典型的例子是通过多个 cutout_box 元素近似的一个弯曲刘海。使用相同的 id 允许客户端识别这些属于同一物理对象。id 仅在一个 configure 序列中有效。不保证相同的 id 在不同的 configure 序列中标识相同的元素。\n\n通常合成器只在 toplevel 进入全屏或最大化状态时（如 xdg_shell 协议中指定的）发送裁剪信息。\n\nxx_cutouts_v1 对象必须在其底层 xdg_toplevel 和 wl_surface 之前销毁。否则将发送 defunct_cutouts_object 协议错误。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xx_cutouts 对象",
+            "text": "使用此请求，客户端可以告知服务器它不再使用 xx_cutouts 对象。"
+          }
+        },
+        "set_unhandled": {
+          "description": {
+            "summary": "通知未处理的裁剪",
+            "text": "如果客户端未处理待确认序列中的一个或多个裁剪，它可以将其元素的 id 添加到 unhandled 数组中。合成器可能会尝试在未来的 configure 序列中重新定位表面以避开这些元素。\n\n此请求（如果使用）必须在确认 configure 序列之前发送。通过此请求设置的状态是双缓冲的。它将在下一次 ack_configure 时应用，并保持有效直到下一个 configure 事件。"
+          }
+        }
+      },
+      "events": {
+        "cutout_box": {
+          "description": {
+            "summary": "矩形裁剪区域",
+            "text": "cutout_box 事件描述了表面局部坐标中的矩形裁剪区域。\n\n这可以是例如圆形摄像头刘海的近似。"
+          }
+        },
+        "cutout_corner": {
+          "description": {
+            "summary": "裁剪圆角",
+            "text": "cutout_corner 事件描述了表面局部坐标中的圆角。朝向屏幕边缘的区域是裁剪圆角部分。"
+          }
+        },
+        "configure": {
+          "description": {
+            "summary": "通知裁剪更改",
+            "text": "configure 事件标志着 configure 序列的结束。configure 序列是一组零个或多个裁剪事件以及最终的 xx_cutout.configure 事件。\n\n在 xdg_toplevel 的情况下，客户端应为其表面安排新的裁剪，然后在提交新表面之前的某个时刻发送 xdg_surface.ack_configure 请求。详情请参见 xdg_shell 协议中的 xdg_surface.configure 和 xdg_surface.ack_configure。\n\n如果裁剪序列仅包含 configure 事件且不包含裁剪或圆角事件，则表示表面未与任何裁剪或圆角重叠。\n\n如果客户端在能够响应之前收到多个 configure 事件，它可以自由丢弃除最后一个收到的事件之外的所有事件。"
+          }
+        }
+      },
+      "enums": {
+        "type": {
+          "description": {
+            "summary": "裁剪类型",
+            "text": "这些值表示裁剪的类型。该信息旨在帮助客户端决定是否可以忽略该元素。"
+          },
+          "entries": {
+            "cutout": {
+              "summary": "通用裁剪",
+              "description": {
+                "summary": "通用裁剪",
+                "text": "如果合成器不想提供更具体的类型，则可以使用此元素类型。"
+              }
+            },
+            "notch": {
+              "summary": "小型功能性裁剪区域",
+              "description": {
+                "summary": "小型功能性裁剪区域",
+                "text": "设备边缘上的功能性不规则形状。通常包含摄像头。"
+              }
+            },
+            "waterfall": {
+              "summary": "弯曲的显示屏边缘",
+              "description": {
+                "summary": "弯曲的显示屏边缘",
+                "text": "弯曲的显示屏边缘，旨在使设备看起来没有边框。"
+              }
+            }
+          }
+        },
+        "corner_position": {
+          "description": {
+            "summary": "角落位置",
+            "text": "表面上角落的位置"
+          }
+        },
+        "error": {
+          "entries": {
+            "invalid_element_id": {
+              "summary": "set_unhandled 请求中的无效元素 id"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "interfaces": {
+    "org_kde_kwin_shadow_manager": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 org_kde_kwin_shadow_manager 对象",
+            "text": "销毁 org_kde_kwin_shadow_manager 对象。"
+          }
+        }
+      }
+    },
+    "org_kde_kwin_shadow": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 org_kde_kwin_shadow 对象",
+            "text": "销毁 org_kde_kwin_shadow 对象。如果 org_kde_kwin_shadow 仍然设置在 wl_surface 上，阴影将立即移除。建议先在 org_kde_kwin_shadow_manager 上调用 unset 请求，然后提交 wl_surface 以应用更改。"
+          }
+        }
+      }
+    }
+  }
+}

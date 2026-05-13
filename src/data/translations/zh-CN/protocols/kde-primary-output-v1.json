@@ -1,0 +1,25 @@
+{
+    "interfaces": {
+        "kde_primary_output_v1": {
+            "description": {
+                "summary": "指定哪个是主显示器",
+                "text": "用于告知在已启用的输出中哪个是主显示器的协议。\n\n警告！此文件中描述的协议是桌面环境的实现细节。普通客户端不得使用此协议。可能会在不增加扩展主版本号的情况下添加不向后兼容的更改。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁主输出通知器"
+                    }
+                }
+            },
+            "events": {
+                "primary_output": {
+                    "description": {
+                        "summary": "提供当前主输出的名称",
+                        "text": "指定哪个输出是主输出，通过其 uuid 标识。有关更多信息，请参阅 kde_output_device_v2 uuid 事件。"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,126 @@
+{
+  "description": {
+    "summary": "Primary selection 协议",
+    "text": "此协议提供了与 X 服务器的 primary selection 设备匹配的能力。此 primary selection 是常用剪贴板选择的快捷方式，只需选中文本即可在其他地方复制。执行此操作的事实标准方式是鼠标中键，但不仅限于此。\n\n希望支持 primary selection 的客户端应创建一个 primary selection 源，并在文本选择更改时通过 wp_primary_selection_device.set_selection 将其设置为选择。为了尽量减少指针驱动文本选择中的调用，应在操作完成后仅执行一次。类似地，当文本取消选择时应设置 NULL 源。\n\nwp_primary_selection_offer 对象首先通过 wp_primary_selection_device.data_offer 事件公布。在此事件之后，primary data offer 将立即发出 wp_primary_selection_offer.offer 事件以告知所提供的 mime 类型。\n\n当 primary selection 更改时，具有键盘焦点的客户端将接收 wp_primary_selection_device.selection 事件。只有具有键盘焦点的客户端才会收到带有非 NULL wp_primary_selection_offer 的此类事件。在键盘焦点更改期间，先前具有焦点的客户端将接收带有 NULL wp_primary_selection_offer 的 wp_primary_selection_device 事件。\n\n为了请求 primary selection 数据，客户端必须传递与触发操作的按下事件相关的最近序列号。如果合成器认为该序列号有效且最近，wp_primary_selection_source.send 事件将在另一端发生以开始传输。拥有 primary selection 的客户端应写入请求的数据，并立即关闭文件描述符。\n\n如果 primary selection 所有者客户端在传输期间消失，读取数据的客户端将接收 wp_primary_selection_device.selection 事件，并附带关闭的文件描述符以表示终止。"
+  },
+  "interfaces": {
+    "zwp_primary_selection_device_manager_v1": {
+      "description": {
+        "summary": "X primary selection 模拟",
+        "text": "primary selection 设备管理器是一个单例全局对象，提供对 primary selection 的访问。它允许创建 wp_primary_selection_source 对象，以及检索每个 seat 的 wp_primary_selection_device 对象。"
+      },
+      "requests": {
+        "create_source": {
+          "description": {
+            "summary": "创建新的 primary selection 源",
+            "text": "创建新的 primary selection 源。"
+          }
+        },
+        "get_device": {
+          "description": {
+            "summary": "创建新的 primary selection 设备",
+            "text": "为给定 seat 创建新的数据设备。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 primary selection 设备管理器",
+            "text": "销毁 primary selection 设备管理器。"
+          }
+        }
+      }
+    },
+    "zwp_primary_selection_device_v1": {
+      "requests": {
+        "set_selection": {
+          "description": {
+            "summary": "设置 primary selection",
+            "text": "替换当前选择。primary selection 的先前所有者将接收 wp_primary_selection_source.cancelled 事件。\n\n要取消选择，将源设置为 NULL。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 primary selection 设备",
+            "text": "销毁 primary selection 设备。"
+          }
+        }
+      },
+      "events": {
+        "data_offer": {
+          "description": {
+            "summary": "介绍新的 wp_primary_selection_offer",
+            "text": "介绍可用于接收当前 primary selection 的新 wp_primary_selection_offer 对象。紧随此事件之后，新的 wp_primary_selection_offer 对象将发送 wp_primary_selection_offer.offer 事件以描述所提供的 mime 类型。"
+          }
+        },
+        "selection": {
+          "description": {
+            "summary": "通告新的 primary selection",
+            "text": "wp_primary_selection_device.selection 事件用于通知客户端新的 primary selection。此事件在介绍此对象的 wp_primary_selection.data_offer 之后以及 offer 通过 wp_primary_selection_offer.offer 宣布其 mime 类型之后发送。\n\ndata_offer 在收到新的 offer 或 NULL 之前或客户端失去键盘焦点之前有效。客户端必须在此事件上销毁先前的 selection data_offer（如有）。"
+          }
+        }
+      }
+    },
+    "zwp_primary_selection_offer_v1": {
+      "description": {
+        "summary": "提供传输 primary selection 内容",
+        "text": "wp_primary_selection_offer 表示将 primary selection 剪贴板内容传输到客户端的 offer。与 wl_data_offer 类似，该 offer 还描述了数据可以转换为的 mime 类型，并提供了将数据直接传输到客户端的机制。"
+      },
+      "requests": {
+        "receive": {
+          "description": {
+            "summary": "请求传输数据",
+            "text": "要传输 primary selection 剪贴板的内容，客户端发出此请求并指示它想要接收的 mime 类型。传输通过传递的文件描述符（通常使用 pipe 系统调用创建）进行。源客户端以请求的 mime 类型表示写入数据，然后关闭文件描述符。\n\n接收客户端从管道的读取端读取直到 EOF 并关闭其端，此时传输完成。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 primary selection offer",
+            "text": "销毁 primary selection offer。"
+          }
+        }
+      },
+      "events": {
+        "offer": {
+          "description": {
+            "summary": "通告提供的 mime 类型",
+            "text": "在通过 wp_primary_selection_device.data_offer 宣布 wp_primary_selection_offer 后立即发送。每个提供的 mime 类型发送一个事件。"
+          }
+        }
+      }
+    },
+    "zwp_primary_selection_source_v1": {
+      "description": {
+        "summary": "提供替换 primary selection 的内容",
+        "text": "wp_primary_selection_offer 的源端，它提供了描述所提供的数据并响应传输 primary selection 剪贴板请求内容的方式。"
+      },
+      "requests": {
+        "offer": {
+          "description": {
+            "summary": "添加提供的 mime 类型",
+            "text": "此请求将 mime 类型添加到向目标通告的 mime 类型集合中。可以多次调用以提供多种类型。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 primary selection 源",
+            "text": "销毁 primary selection 源。"
+          }
+        }
+      },
+      "events": {
+        "send": {
+          "description": {
+            "summary": "发送 primary selection 内容",
+            "text": "从客户端请求当前 primary selection 内容。通过传递的文件描述符发送指定的 mime 类型，然后关闭它。"
+          }
+        },
+        "cancelled": {
+          "description": {
+            "summary": "请求 primary selection 内容被取消",
+            "text": "此 primary selection 源不再有效。客户端应清理并销毁此 primary selection 源。"
+          }
+        }
+      }
+    }
+  }
+}

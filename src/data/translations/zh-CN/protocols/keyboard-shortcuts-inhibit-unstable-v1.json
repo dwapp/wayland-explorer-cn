@@ -1,0 +1,65 @@
+{
+  "description": {
+    "summary": "用于抑制 compositor 键盘快捷键的协议",
+    "text": "此协议规定了一种方式，允许客户端请求 compositor 忽略其自身的键盘快捷键（针对给定的 seat），以便将来自该 seat 的所有按键事件转发到 surface。\n\n警告！此文件中描述的实验性协议可能会进行不向后兼容的更改。向后兼容的更改可能会与相应的接口版本号递增一起添加。\n不向后兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被声明为稳定版本，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号也将被重置。"
+  },
+  "interfaces": {
+    "zwp_keyboard_shortcuts_inhibit_manager_v1": {
+      "description": {
+        "summary": "键盘快捷键管理器的上下文对象",
+        "text": "用于抑制 compositor 键盘快捷键的全局接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁键盘快捷键抑制器对象",
+            "text": "销毁键盘快捷键抑制器管理器。"
+          }
+        },
+        "inhibit_shortcuts": {
+          "description": {
+            "summary": "创建新的键盘快捷键抑制器对象",
+            "text": "为给定的 surface 和给定的 seat 创建一个新的键盘快捷键抑制器对象。\n\n如果指定的 seat 和 surface 已经被抑制快捷键，compositor 将引发协议错误 \"already_inhibited\"。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_inhibited": {
+              "summary": "该 surface 的快捷键已被抑制"
+            }
+          }
+        }
+      }
+    },
+    "zwp_keyboard_shortcuts_inhibitor_v1": {
+      "description": {
+        "summary": "键盘快捷键抑制器的上下文对象",
+        "text": "键盘快捷键抑制器指示 compositor 在关联的 surface 拥有键盘焦点时忽略其自身的键盘快捷键。因此，当该 surface 在给定的 seat 上拥有键盘焦点时，它将接收来自指定 seat 的所有按键事件，即使这些事件通常会被 compositor 用于其自身的快捷键。\n\n然而，Wayland compositor 没有义务禁用其所有快捷键，可能会保留一些特殊组合键供自己使用，包括但不限于允许用户在客户端不配合时强制恢复正常键盘事件路由的组合键。compositor 也可以使用相同的组合键来重新激活先前因用户请求而停用的快捷键抑制器。\n\n当 compositor 恢复其自身的键盘快捷键时，会发送 \"inactive\" 事件通知客户端该键盘快捷键抑制器不再对该 surface 和 seat 有效，客户端不应期望接收所有键盘事件。\n\n当键盘快捷键抑制器处于非活动状态时，客户端无法强制重新激活该抑制器。\n\n用户可以选择使用 compositor 提供的任何机制来重新启用先前停用的键盘快捷键抑制器，在这种情况下 compositor 将发送 \"active\" 事件通知客户端。\n\n如果 surface 被销毁、取消映射或失去该 seat 的键盘焦点，键盘快捷键抑制器将变得无关紧要，compositor 将恢复其自身的键盘快捷键，但此情况下不会发送 \"inactive\" 事件。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁键盘快捷键抑制器对象",
+            "text": "从关联的 wl_surface 中移除键盘快捷键抑制器。"
+          }
+        }
+      },
+      "events": {
+        "active": {
+          "description": {
+            "summary": "快捷键已被抑制",
+            "text": "此事件表示快捷键抑制器处于活动状态。\n\ncompositor 每次代表 surface 抑制 compositor 快捷键时都会发送此事件。当处于活动状态时，客户端可能会接收通常由 compositor 保留的输入事件（参见 zwp_keyboard_shortcuts_inhibitor_v1）。\n\n这通常发生在初始请求 \"inhibit_shortcuts\" 首次变为活动状态时，或用户指示 compositor 使用其提供的任何机制重新启用现有快捷键抑制器时。"
+          }
+        },
+        "inactive": {
+          "description": {
+            "summary": "快捷键已恢复",
+            "text": "此事件表示快捷键抑制器处于非活动状态，compositor 恢复了正常的快捷键处理。"
+          }
+        }
+      }
+    }
+  }
+}

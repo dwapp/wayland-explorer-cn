@@ -1,0 +1,88 @@
+{
+  "interfaces": {
+    "zkde_screencast_unstable_v1": {
+      "description": {
+        "summary": "用于管理不同显示器和窗口的 PipeWire 流的协议",
+        "text": "警告！此文件中描述的协议是桌面环境的实现细节。普通客户端不得使用此协议。可能会在不增加扩展主版本号的情况下引入不兼容的变更。"
+      },
+      "requests": {
+        "stream_output": {
+          "description": {
+            "summary": "从给定源请求一个流"
+          }
+        },
+        "stream_window": {
+          "description": {
+            "summary": "从给定源请求一个流"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 zkde_screencast_unstable_v1 对象",
+            "text": "销毁 zkde_screencast_unstable_v1 对象。"
+          }
+        },
+        "stream_virtual_output": {
+          "description": {
+            "summary": "从新的虚拟输出请求一个流"
+          }
+        },
+        "stream_region": {
+          "description": {
+            "summary": "从工作区中的区域请求一个流",
+            "text": "从版本 5 起，如果给定的 scale 为 0.0，合成器将为该区域选择最高的缩放因子。"
+          }
+        },
+        "stream_virtual_output_with_description": {
+          "description": {
+            "summary": "从新的虚拟输出请求一个流"
+          }
+        }
+      },
+      "enums": {
+        "pointer": {
+          "description": {
+            "summary": "流消费者的附加属性"
+          },
+          "entries": {
+            "hidden": {
+              "summary": "不显示光标"
+            },
+            "embedded": {
+              "summary": "在流上渲染光标"
+            },
+            "metadata": {
+              "summary": "通过 PipeWire 发送光标位置的元数据"
+            }
+          }
+        }
+      }
+    },
+    "zkde_screencast_stream_unstable_v1": {
+      "requests": {
+        "close": {
+          "description": {
+            "summary": "表示流已结束，通信完成。"
+          }
+        }
+      },
+      "events": {
+        "closed": {
+          "description": {
+            "summary": "通知服务器已停止该流。客户端现在应调用 close。"
+          }
+        },
+        "created": {
+          "description": {
+            "summary": "通知已创建一个 PipeWire 流"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "提供错误消息，使客户端知道 created 事件不会到达，客户端应关闭该资源。"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "interfaces": {
+    "weston_desktop_shell": {
+      "description": {
+        "summary": "创建桌面小部件和辅助工具",
+        "text": "传统用户界面可以依赖此接口来定义典型桌面的基础。目前可以设置背景、面板和锁定表面。"
+      },
+      "requests": {
+        "set_grab_surface": {
+          "description": {
+            "summary": "设置抓取表面",
+            "text": "此请求设置的表面将在抓取期间在位置 0, 0 处接收虚假的 pointer.enter 事件，并应设置适当的光标图像，如紧接在 enter 事件之前发送的 grab_cursor 事件所述。"
+          }
+        },
+        "desktop_ready": {
+          "description": {
+            "summary": "桌面已准备好显示",
+            "text": "告知服务器，已绘制足够的桌面元素使桌面看起来已准备好使用。在启动期间，服务器可以使用黑屏等待此请求，然后再开始淡入桌面。如果桌面的客户端部分需要很长时间来初始化，我们避免显示临时的垃圾内容。"
+          }
+        },
+        "set_panel_position": {
+          "description": {
+            "summary": "设置面板位置",
+            "text": "告知 shell 面板位于屏幕的哪一侧。这样新窗口就不会与面板重叠，最大化窗口也能正确最大化。"
+          }
+        }
+      },
+      "events": {
+        "prepare_lock_surface": {
+          "description": {
+            "summary": "告知客户端创建并设置锁定表面",
+            "text": "告知客户端我们希望它创建并设置锁定表面，即请求用户解锁屏幕的 GUI。锁定表面通过 'set_lock_surface' 公布。无论客户端是否实际实现锁定，它都必须发送 'unlock' 请求以恢复正常桌面。"
+          }
+        },
+        "grab_cursor": {
+          "description": {
+            "summary": "告知客户端在抓取期间显示什么光标",
+            "text": "此事件将在抓取表面上的虚假 enter 事件之前立即发送。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_argument": {
+              "summary": "请求中提供了无效参数"
+            }
+          }
+        }
+      }
+    },
+    "weston_screensaver": {
+      "description": {
+        "summary": "实现屏保的接口",
+        "text": "一次只能有一个客户端绑定此接口。"
+      },
+      "requests": {
+        "set_surface": {
+          "description": {
+            "summary": "将表面类型设置为屏保",
+            "text": "屏保表面通常是隐藏的，只有在空闲超时后才可见。"
+          }
+        }
+      }
+    }
+  }
+}

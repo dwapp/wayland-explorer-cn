@@ -1,0 +1,17 @@
+{
+  "interfaces": {
+    "org_kde_kwin_slide": {
+      "description": {
+        "summary": "将 surface 从一个位置滑动到另一个位置",
+        "text": "请求 compositor 将 surface 从一个位置以滑动动画移动到另一个位置。\n\nfrom 参数提供滑动动画起始位置的提示，offset 是从屏幕边缘开始动画的距离。"
+      },
+      "requests": {
+        "release": {
+          "description": {
+            "summary": "释放 slide 对象"
+          }
+        }
+      }
+    }
+  }
+}

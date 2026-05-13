@@ -1,0 +1,24 @@
+{
+    "interfaces": {
+        "weston_direct_display_v1": {
+            "description": {
+                "summary": "Weston 直接显示",
+                "text": "Weston 扩展，指示合成器避免将 linux-dmabuf 协议创建的 dmabuf 导入到除显示控制器之外的任何地方。\n\n合成器已经会尽可能使用直接扫描输出，但无法保证在此过程中不会先将 dmabuf 导入 GPU。此扩展确保客户端的合成器永远不会尝试导入 GPU，而是直接传递给显示控制器。\n\n客户端可以利用此扩展将 dmabuf 缓冲区传递给显示控制器， potentially 提高性能并降低带宽使用。\n\n最后，客户端可以将此扩展与 content-protection 结合使用，从而避免任何 GPU 交互并提供安全内容路径。此外，在某些情况下，dmabuf 分配的内存位于特殊设计的内存区域中，当 GPU 尝试读取时会被视为非法内存访问。\n\n警告：此接口设计上可能会破坏截图功能，因为截图时可能涉及合成。另外请注意，如果提供的 dmabuf 无法被 KMS 导入，客户端连接将被终止。\n\n警告：此扩展要求 linux-dmabuf 协议和 zwp_linux_buffer_params_v1 已由 zwp_linux_buffer_v1 创建。"
+            },
+            "requests": {
+                "enable": {
+                    "description": {
+                        "summary": "将缓冲区转发到显示控制器",
+                        "text": "此请求告知合成器不要将 dmabuf 导入 GPU，以完全绕过它，使缓冲区直接由显示控制器扫描输出。如果硬件不支持或没有可用资源直接扫描输出缓冲区，合成器应在原位安装占位符。合成器可以对 dmabuf 进行检查，如果 dmabuf 似乎无法直接使用，则拒绝创建 wl_buffer。\n\n假设 zwp_linux_buffer_params_v1 已由 zwp_linux_dmabuf_v1_create_params 创建。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "销毁工厂对象",
+                        "text": "销毁工厂对象，但不影响任何其他对象。"
+                    }
+                }
+            }
+        }
+    }
+}

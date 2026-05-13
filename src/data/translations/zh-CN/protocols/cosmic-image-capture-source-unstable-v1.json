@@ -1,0 +1,28 @@
+{
+    "description": {
+        "summary": "COSMIC 图像捕获源",
+        "text": "此协议扩展了 ext-image-capture-source-v1，添加了额外的捕获源。"
+    },
+    "interfaces": {
+        "zcosmic_workspace_image_capture_source_manager_v1": {
+            "description": {
+                "summary": "用于输出的图像源管理器",
+                "text": "用于为 wl_output 对象创建图像源对象的管理器。"
+            },
+            "requests": {
+                "create_source": {
+                    "description": {
+                        "summary": "为输出创建源对象",
+                        "text": "为工作区创建源对象。从此源捕获的图像将显示与工作区相同的内容。某些元素可能会被省略，例如已标记为对捕获透明的光标和覆盖层。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "删除此对象",
+                        "text": "销毁管理器。客户端可以随时发送此请求，由管理器创建的对象在其销毁后仍然有效。"
+                    }
+                }
+            }
+        }
+    }
+}

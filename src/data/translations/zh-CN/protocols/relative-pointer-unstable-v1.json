@@ -1,0 +1,49 @@
+{
+  "description": {
+    "summary": "相对指针运动事件协议",
+    "text": "此协议规定了一组接口，用于使客户端能够接收不受屏障（如显示器边缘或其他指针屏障）阻碍的相对指针事件。\n\n要开始接收相对指针事件，客户端必须首先绑定全局接口 \"wp_relative_pointer_manager\"（如果 compositor 支持相对指针运动事件，该接口将由 registry 暴露）。创建相对指针管理器代理对象后，客户端使用它通过 \"get_relative_pointer\" 请求（传入 wl_pointer）创建实际的相对指针对象。然后，相对指针运动事件将在适用时通过新创建的相对指针对象的代理传输。有关更多详细信息，请参阅相对指针接口的文档。\n\n警告！此文件中描述的实验性协议可能会进行不向后兼容的更改。向后兼容的更改可能会与相应的接口版本号递增一起添加。不向后兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被声明为稳定版本，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号也将被重置。"
+  },
+  "interfaces": {
+    "zwp_relative_pointer_manager_v1": {
+      "description": {
+        "summary": "获取相对指针对象",
+        "text": "用于获取给定指针的相对指针对象的全局接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁相对指针管理器对象",
+            "text": "客户端用于通知服务器它将不再使用此相对指针管理器对象。"
+          }
+        },
+        "get_relative_pointer": {
+          "description": {
+            "summary": "获取相对指针对象",
+            "text": "给定 wl_pointer 对象，创建相对指针接口。有关更多详细信息，请参阅 wp_relative_pointer 接口。"
+          }
+        }
+      }
+    },
+    "zwp_relative_pointer_v1": {
+      "description": {
+        "summary": "相对指针对象",
+        "text": "wp_relative_pointer 对象是 wl_pointer 接口的扩展，用于发送相对指针事件。它与同一 seat 的 wl_pointer 对象共享相同的焦点，并且仅在拥有焦点时才会发送事件。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "释放相对指针对象"
+          }
+        }
+      },
+      "events": {
+        "relative_motion": {
+          "description": {
+            "summary": "相对指针运动",
+            "text": "来自与此对象关联的 seat 的指针的相对 x/y 指针运动。\n\n相对运动与常规 wl_pointer 运动事件具有相同的维度，只是它们不代表绝对位置。例如，将指针从 (x, y) 移动到 (x', y') 将具有等效的相对运动 (x' - x, y' - y)。如果指针运动导致绝对指针位置被裁剪（例如被显示器边缘裁剪），相对运动不受裁剪影响，将代表未裁剪的运动。\n\n此事件还包含非加速运动增量。非加速增量在适用时是应用运动加速和其他变换（如规范化）之前的常规指针运动增量。\n\n请注意，非加速增量不代表从某些设备读取的 \"原始\" 事件。指针运动加速是设备和配置特定的，非加速增量和加速增量在某些设备上可能具有相同的值。\n\n相对运动不与 wl_pointer.motion 事件耦合，可以与此类事件组合发送，也可以独立发送。也可能存在发送 wl_pointer.motion 但没有相对运动的场景。源自同一物理运动的绝对和相对运动事件的顺序不保证。\n\n如果客户端需要按钮事件或焦点状态，它可以从与 wp_relative_pointer 对象关联的同一 seat 的 wl_pointer 对象接收它们。"
+          }
+        }
+      }
+    }
+  }
+}

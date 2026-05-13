@@ -1,0 +1,81 @@
+{
+  "description": {
+    "summary": "控制输出的电源管理模式",
+    "text": "此协议允许客户端控制当前 compositor 空间中输出的电源管理模式。其目的是允许特殊客户端（如桌面 shell）在系统空闲时关闭输出。\n\n要修改当前不在 compositor 空间中的输出，请参阅 wlr-output-management。\n\n警告！此文件中描述的协议是实验性的，可能会进行不兼容的更改。兼容的更改可以与相应的接口版本递增一起添加。\n不兼容的更改通过递增协议和接口名称中的版本号并重置接口版本来完成。\n一旦协议宣布为稳定，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。"
+  },
+  "interfaces": {
+    "zwlr_output_power_manager_v1": {
+      "description": {
+        "summary": "创建每输出电源管理的管理器",
+        "text": "此接口是一个管理器，允许创建每输出的电源管理模式控制。"
+      },
+      "requests": {
+        "get_output_power": {
+          "description": {
+            "summary": "获取输出的电源管理",
+            "text": "创建一个输出电源管理模式控制，可用于调整给定输出的电源管理模式。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "管理器创建的所有对象将保持有效，直到调用相应的销毁请求。"
+          }
+        }
+      }
+    },
+    "zwlr_output_power_v1": {
+      "description": {
+        "summary": "调整输出的电源管理模式",
+        "text": "此对象提供设置输出电源管理模式的请求。"
+      },
+      "requests": {
+        "set_mode": {
+          "description": {
+            "summary": "设置输出的省电模式",
+            "text": "将输出的省电模式设置为给定模式。模式更改立即生效。如果输出不支持给定模式，将发送 failed 事件。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁此电源管理",
+            "text": "销毁输出电源管理模式控制对象。"
+          }
+        }
+      },
+      "events": {
+        "mode": {
+          "description": {
+            "summary": "报告电源管理模式变更",
+            "text": "报告输出的电源管理模式变更。\n\nmode 事件在输出更改其电源管理模式后发送。原因可能是客户端使用了 set_mode，或 compositor 决定更改输出的模式。\n此事件也会在对象创建时立即发送，以便客户端了解当前的电源管理模式。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "对象不再有效",
+            "text": "此事件表示输出电源管理模式控制不再有效。这可能由多种原因导致，包括：\n- 输出不支持电源管理\n- 另一个客户端已经拥有该输出的独占电源管理模式控制\n- 输出消失\n\n收到此事件后，客户端应销毁此对象。"
+          }
+        }
+      },
+      "enums": {
+        "mode": {
+          "entries": {
+            "off": {
+              "summary": "输出已关闭"
+            },
+            "on": {
+              "summary": "输出已开启，无省电"
+            }
+          }
+        },
+        "error": {
+          "entries": {
+            "invalid_mode": {
+              "summary": "不存在的省电模式"
+            }
+          }
+        }
+      }
+    }
+  }
+}

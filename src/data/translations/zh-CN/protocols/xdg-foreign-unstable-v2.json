@@ -1,0 +1,124 @@
+{
+  "description": {
+    "summary": "用于导出 xdg surface 句柄的协议",
+    "text": "此协议指定了一种引用不同客户端 surface 的方法。有了这样的引用，客户端可以通过使用此协议提供的接口来操纵其自身 surface 与其他客户端 surface 之间的关系。例如，将自己的一些 surface 堆叠在其他客户端 surface 的上方。\n\n为了使客户端 A 获得客户端 B 的 surface 的引用，客户端 B 必须首先使用 xdg_exporter.export_toplevel 导出其 surface。执行此操作后，客户端 B 将收到一个句柄（唯一字符串），它可以以某种方式（例如 D-Bus）与客户端 A 共享。客户端 A 从客户端 B 收到句柄后，可以使用 xdg_importer.import_toplevel 创建对客户端 B 刚刚导出的 surface 的引用。有关详细信息，请参阅相应的请求。\n\n此协议的一个可能用例是进程外对话框。例如，当没有文件系统访问权限的沙盒客户端需要用户在文件系统上选择文件时，在沙盒环境支持下，它可以导出其 surface，将导出的 surface 句柄传递给可以显示文件浏览器对话框并将其堆叠在沙盒客户端 surface 上方的非沙盒进程。\n\n警告！此文件中描述的协议是实验性的，可能会进行向后不兼容的更改。可能会添加向后兼容的更改，并相应地更新接口版本。向后不兼容的更改通过在协议和接口名称中增加版本号并重置接口版本来完成。一旦协议被宣布为稳定版本，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。"
+  },
+  "interfaces": {
+    "zxdg_exporter_v2": {
+      "description": {
+        "summary": "用于导出 surface 的接口",
+        "text": "用于导出可稍后使用 xdg_importer 导入的 surface 的全局接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xdg_exporter 对象",
+            "text": "通知 compositor xdg_exporter 对象将不再使用。"
+          }
+        },
+        "export_toplevel": {
+          "description": {
+            "summary": "导出一个 toplevel surface",
+            "text": "export_toplevel 请求导出传递的 surface，以便以后可以通过 xdg_importer 导入。调用时，将创建一个新的 xdg_exported 对象，并且 xdg_exported.handle 将立即发送。有关详细信息，请参阅相应的接口和事件。\n\n一个 surface 可以被多次导出，每个导出的句柄可以多次用于创建 xdg_imported。只有 xdg_toplevel 等效的 surface 才能被导出，否则将发送 invalid_surface 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "错误值",
+            "text": "这些错误可以在响应无效的 xdg_exporter 请求时发出。"
+          },
+          "entries": {
+            "invalid_surface": {
+              "summary": "surface 不是 xdg_toplevel"
+            }
+          }
+        }
+      }
+    },
+    "zxdg_importer_v2": {
+      "description": {
+        "summary": "用于导入 surface 的接口",
+        "text": "用于导入由 xdg_exporter 导出的 surface 的全局接口。通过此接口，客户端可以创建对另一个客户端 surface 的引用。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xdg_importer 对象",
+            "text": "通知 compositor xdg_importer 对象将不再使用。"
+          }
+        },
+        "import_toplevel": {
+          "description": {
+            "summary": "导入一个 toplevel surface",
+            "text": "import_toplevel 请求从任何客户端导入一个 surface，给定通过使用 xdg_exporter.export_toplevel 导出该 surface 而获取的句柄。调用时，将创建一个新的 xdg_imported 对象。此新对象表示导入的 surface，导入客户端可以使用它来操纵其关系。有关详细信息，请参阅 xdg_imported。"
+          }
+        }
+      }
+    },
+    "zxdg_exported_v2": {
+      "description": {
+        "summary": "已导出的 surface 句柄",
+        "text": "xdg_exported 对象表示对 surface 的导出引用。只要 xdg_exported 对象未被销毁，就可以引用导出的 surface。销毁 xdg_exported 将使导入者使用 xdg_imported 建立的任何关系无效。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "取消导出已导出的 surface",
+            "text": "撤销先前导出的 surface。这将使导入者使用通过 xdg_exported.handle 发送的句柄创建的 xdg_imported 设置的任何关系无效。"
+          }
+        }
+      },
+      "events": {
+        "handle": {
+          "description": {
+            "summary": "已导出的 surface 句柄",
+            "text": "handle 事件包含此导出 surface 引用的唯一句柄。它可以与任何客户端共享，然后客户端可以通过调用 xdg_importer.import_toplevel 使用它来导入 surface。一个句柄可以多次用于导入 surface。"
+          }
+        }
+      }
+    },
+    "zxdg_imported_v2": {
+      "description": {
+        "summary": "已导入的 surface 句柄",
+        "text": "xdg_imported 对象表示对由某个客户端导出的 surface 的导入引用。客户端可以使用此接口来操纵其自身 surface 与导入的 surface 之间的关系。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xdg_imported 对象",
+            "text": "通知 compositor 它将不再使用 xdg_imported 对象。此时可能已建立的任何关系都将被无效化。"
+          }
+        },
+        "set_parent_of": {
+          "description": {
+            "summary": "设置为某个 surface 的父级",
+            "text": "将导入的 surface 设置为客户端某个 surface 的父级。传递的 surface 必须是 xdg_toplevel 等效的，否则将发送 invalid_surface 协议错误。调用此函数将建立 surface 到 surface 的关系，具有与 xdg_toplevel.set_parent 相同的堆叠和定位语义。"
+          }
+        }
+      },
+      "events": {
+        "destroyed": {
+          "description": {
+            "summary": "已导入的 surface 句柄已被销毁",
+            "text": "已导入的 surface 句柄已被销毁，已建立的任何关系都已被无效化。这可能由于各种原因发生，例如如果导出的 surface 或导出的 surface 句柄已被销毁，如果用于导入的句柄无效。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "错误值",
+            "text": "这些错误可以在响应无效的 xdg_imported 请求时发出。"
+          },
+          "entries": {
+            "invalid_surface": {
+              "summary": "surface 不是 xdg_toplevel"
+            }
+          }
+        }
+      }
+    }
+  }
+}

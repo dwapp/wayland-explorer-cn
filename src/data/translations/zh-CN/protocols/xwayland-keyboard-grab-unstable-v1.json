@@ -1,0 +1,42 @@
+{
+  "description": {
+    "summary": "用于从 Xwayland 抓取键盘的协议",
+    "text": "此协议是特定于应用程序的，旨在满足 X11 协议通过 Xwayland 的需求。它为 Xwayland 提供了一种方式，可以请求将所有键盘事件转发到一个 surface，即使该 surface 没有键盘焦点。\n\n在 X11 协议中，客户端可以请求对键盘进行\"活动抓取\"。成功后，所有按键事件仅报告给正在抓取的 X11 客户端。有关详细信息，请参阅 XGrabKeyboard(3)。\n\n核心 Wayland 协议没有活动键盘抓取的概念。当在 Xwayland 中运行时，X11 应用程序可以在 Xwayland 内部获取活动抓取，但这无法转换到 Wayland compositor，后者可能会将输入焦点设置到其他 surface。这样做会破坏 X11 客户端的假设，即所有按键事件都会报告给正在抓取的客户端。\n\n此协议指定了一种方式，让 Xwayland 请求将所有键盘定向到给定的 surface。该协议不保证 compositor 会接受此请求，也不规定用户界面如何处理响应。例如，compositor 可以通知用户所有按键事件现在都转发到给定的客户端 surface，或者它可以请求用户许可。\n\ncompositor 必须将对此特定于应用程序的协议的访问限制为仅 Xwayland。\n\n警告！此文件中描述的协议是实验性的，可能会进行向后不兼容的更改。向后兼容的更改可能会与相应的接口版本号提升一起添加。\n向后不兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被声明为稳定，协议和接口名称中的 \"z\" 前缀和版本号将被移除，接口版本号将被重置。"
+  },
+  "interfaces": {
+    "zwp_xwayland_keyboard_grab_manager_v1": {
+      "description": {
+        "summary": "键盘抓取管理器的上下文对象",
+        "text": "用于抓取键盘的全局接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁键盘抓取管理器",
+            "text": "销毁键盘抓取管理器。"
+          }
+        },
+        "grab_keyboard": {
+          "description": {
+            "summary": "将键盘抓取到一个 surface",
+            "text": "grab_keyboard 请求请求抓取键盘，强制将给定 seat 的键盘焦点置于给定的 surface 上。\n\n该协议不保证抓取一定会被满足，也不要求 compositor 在抓取永远无法满足时发送错误。因此，可能会请求一个永远不会生效的键盘抓取。\n\n该协议：\n* 不保证抓取本身会应用于某个 surface，compositor 可能会静默忽略抓取请求，\n* 不保证即使抓取已应用于某个 surface，也会向此客户端发送任何事件，\n* 不保证发送给此客户端的事件是详尽的，compositor 可能会过滤某些事件供自己使用，\n* 不保证发送给此客户端的事件是连续的，compositor 可能会在抓取名义上处于活动状态时更改和重新路由键盘事件。"
+          }
+        }
+      }
+    },
+    "zwp_xwayland_keyboard_grab_v1": {
+      "description": {
+        "summary": "用于抓取键盘的接口",
+        "text": "用于抓取键盘的全局接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁已抓取的键盘对象",
+            "text": "销毁已抓取的键盘对象。如果适用，compositor 将取消键盘抓取。"
+          }
+        }
+      }
+    }
+  }
+}

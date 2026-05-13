@@ -1,0 +1,241 @@
+{
+    "interfaces": {
+        "zcosmic_workspace_manager_v1": {
+            "description": {
+                "summary": "列出和控制工作区",
+                "text": "工作区（也称为虚拟桌面）是表面的分组。具有工作区概念的合成器可能一次只显示部分此类表面组（即\"活动\"工作区的表面）。\"激活\"工作区是请求合成器正常显示该工作区的表面，而合成器可能隐藏或以其他方式弱化仅与\"非活动\"工作区关联的表面。工作区按其对应的输出集分组，可能仅包含来自这些输出的表面。这样，每个输出可以有自己的工作区集，或者所有输出（或任何其他任意分组）共享工作区。合成器可以选择在概念上将每组工作区排列在 N 维网格中。\n\n此协议的目的是通过向任务栏和 Dock 提供工作区列表及其属性，并允许它们激活和停用工作区，从而实现任务栏和 Dock 的创建。\n\n客户端绑定 zcosmic_workspace_manager_v1 后，每个工作区将通过 workspace 事件发送。"
+            },
+            "requests": {
+                "commit": {
+                    "description": {
+                        "summary": "所有关于工作区的请求已发送完毕",
+                        "text": "客户端在发送完其他请求后必须发送此请求。合成器必须原子地处理 commit 请求之前的一系列请求。\n\n这允许工作区属性的更改被视为原子的，即使它们通过多个事件发生，即使它们涉及多个 zcosmic_workspace_handle_v1 对象，例如停用一个工作区并激活另一个。"
+                    }
+                },
+                "stop": {
+                    "description": {
+                        "summary": "停止发送事件",
+                        "text": "表示客户端不再希望接收新工作区组的事件。但合成器可能会发出更多工作区事件，直到发出 finished 事件。\n\n客户端在此请求之后不得发送任何更多请求。"
+                    }
+                }
+            },
+            "events": {
+                "workspace_group": {
+                    "description": {
+                        "summary": "工作区组已创建",
+                        "text": "每当创建新的工作区组时，都会发出此事件。\n\n工作区组的所有初始详细信息（工作区、输出）将通过 zcosmic_workspace_group_handle_v1 中的相应事件在此事件之后立即发送。"
+                    }
+                },
+                "done": {
+                    "description": {
+                        "summary": "所有关于工作区组的信息已发送完毕",
+                        "text": "在所有工作区组中的所有更改发送完毕后发送此事件。\n\n这允许将一个或多个 zcosmic_workspace_group_handle_v1 属性和 zcosmic_workspace_handle_v1 属性的更改视为原子的，即使它们通过多个事件发生。特别是，当输出从一个工作区组移动到另一个时，会向两个相关的 zcosmic_workspace_group_handle_v1 对象发送 output_enter 和 output_leave 事件。合成器仅在更新两个工作区组中的输出信息后才发送 done 事件。"
+                    }
+                },
+                "finished": {
+                    "description": {
+                        "summary": "合成器已完成 workspace_manager 的处理",
+                        "text": "此事件表示合成器已完成向 zcosmic_workspace_manager_v1 发送事件。服务器将在发送此请求后立即销毁该对象，因此它将变为无效，客户端应释放与其关联的任何资源。"
+                    }
+                }
+            }
+        },
+        "zcosmic_workspace_group_handle_v1": {
+            "description": {
+                "summary": "分配给一组输出的工作区组",
+                "text": "zcosmic_workspace_group_handle_v1 对象表示分配了一组输出并包含多个工作区的工作区组。\n\n分配给工作区组的输出集通过 output_enter 和 output_leave 事件传递给客户端，其工作区通过 workspace 事件传递。\n\n例如，每个输出有一组工作区的合成器可以为每个输出公布一个工作区组（及其工作区），而工作区跨越所有输出的合成器可以为所有输出公布单个工作区组。"
+            },
+            "requests": {
+                "create_workspace": {
+                    "description": {
+                        "summary": "创建新工作区",
+                        "text": "请求合成器创建具有给定名称的新工作区。\n\n不保证合成器会创建新工作区，也不保证创建的工作区会有提供的名称。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 zcosmic_workspace_group_handle_v1 对象",
+                        "text": "销毁 zcosmic_workspace_group_handle_v1 对象。\n\n当客户端不再想使用工作区对象或在 remove 事件之后最终确定对象销毁时，应调用此请求。"
+                    }
+                }
+            },
+            "events": {
+                "capabilities": {
+                    "description": {
+                        "summary": "合成器能力",
+                        "text": "此事件公布合成器支持的功能。如果某个功能不受支持，客户端应隐藏或禁用暴露此功能的 UI 元素。例如，如果合成器不公布创建工作区的支持，则不应显示触发 create_workspace 请求的按钮。\n\n合成器将忽略它不支持的请求。例如，不公布创建工作区支持的合成器将忽略 create_workspace 请求。\n\n合成器必须在创建 zcosmic_workspace_group_handle_v1 后发送此事件一次。当功能发生变化时，合成器必须再次发送此事件。\n\n功能以本机字节序的 32 位无符号整数数组形式发送。"
+                    }
+                },
+                "output_enter": {
+                    "description": {
+                        "summary": "输出已分配给工作区组",
+                        "text": "每当输出被分配到工作区组时，都会发出此事件。"
+                    }
+                },
+                "output_leave": {
+                    "description": {
+                        "summary": "输出已从工作区组中移除",
+                        "text": "每当输出从工作区组中移除时，都会发出此事件。"
+                    }
+                },
+                "workspace": {
+                    "description": {
+                        "summary": "工作区已添加到工作区组",
+                        "text": "每当创建新工作区时，都会发出此事件。工作区只能是单个工作区组的成员，不能被重新分配。\n\n工作区的所有初始详细信息（名称、坐标、状态）将通过 zcosmic_workspace_handle_v1 中的相应事件在此事件之后立即发送。"
+                    }
+                },
+                "remove": {
+                    "description": {
+                        "summary": "此工作区组已被销毁",
+                        "text": "此事件意味着 zcosmic_workspace_group_handle_v1 已被销毁。保证不会再有此 zcosmic_workspace_group_handle_v1 的任何事件。zext_workspace_group_handle_v1 变为惰性，因此除 destroy 请求外，任何请求都将被忽略。\n\n合成器必须在移除工作区组之前移除属于该工作区组的所有工作区。"
+                    }
+                }
+            },
+            "enums": {
+                "zcosmic_workspace_group_capabilities_v1": {
+                    "entries": {
+                        "create_workspace": {
+                            "summary": "create_workspace 请求可用"
+                        }
+                    }
+                }
+            }
+        },
+        "zcosmic_workspace_handle_v1": {
+            "description": {
+                "summary": "处理一组表面的工作区",
+                "text": "zcosmic_workspace_handle_v1 对象表示处理一组表面的工作区。\n\n每个工作区都有一个名称（通过 name 事件传递给客户端）、一个状态列表（通过 state 事件传递给客户端），以及可选的一组坐标（通过 coordinates 事件传递给客户端）。客户端可以请求合成器激活或停用工作区。\n\n每个工作区只能属于单个工作区组。根据合成器策略，不同工作区组中可能有同名的工作区，但这些工作区仍然是独立的（例如其中一个可能是活动的，而另一个不是）。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 zcosmic_workspace_handle_v1 对象",
+                        "text": "销毁 zcosmic_workspace_handle_v1 对象。\n\n当客户端不再想使用工作区对象或在 remove 事件之后最终确定对象销毁时，应调用此请求。"
+                    }
+                },
+                "activate": {
+                    "description": {
+                        "summary": "激活工作区",
+                        "text": "请求激活此工作区。\n\n不保证工作区会被实际激活，行为可能取决于合成器。例如，激活工作区可能会也可能不会停用同一组中的所有其他工作区。"
+                    }
+                },
+                "deactivate": {
+                    "description": {
+                        "summary": "停用工作区",
+                        "text": "请求停用此工作区。\n\n不保证工作区会被实际停用。"
+                    }
+                },
+                "remove": {
+                    "description": {
+                        "summary": "移除工作区",
+                        "text": "请求移除此工作区。\n\n不保证工作区会被实际移除。"
+                    }
+                },
+                "rename": {
+                    "description": {
+                        "summary": "重命名此工作区",
+                        "text": "请求重命名此工作区。\n\n不保证工作区会被实际重命名。"
+                    }
+                },
+                "set_tiling_state": {
+                    "description": {
+                        "summary": "更改此工作区的平铺状态",
+                        "text": "请求更改此工作区的平铺状态。\n\n不保证工作区会实际更改其平铺状态。"
+                    }
+                }
+            },
+            "events": {
+                "name": {
+                    "description": {
+                        "summary": "工作区名称已更改",
+                        "text": "在 zcosmic_workspace_handle_v1 创建后立即发出此事件，并在工作区名称每次更改时发出。"
+                    }
+                },
+                "coordinates": {
+                    "description": {
+                        "summary": "工作区坐标已更改",
+                        "text": "此事件用于将工作区组织到工作区组内的 N 维网格中，如果支持，在 zcosmic_workspace_handle_v1 创建后立即发出，并在工作区坐标每次更改时发出。如果合成器不以这种方式在概念上排列工作区，则可能不发送此事件。如果合成器只是简单编号工作区而没有任何几何解释，它们可以发送 1D 坐标，客户端不应将其解释为暗示任何几何形状。发送空数组表示合成器不再以几何方式排序工作区。\n\n坐标有任意 N 个维度，每个维度有一个 uint32 位置。按照惯例，如果 N > 1，第一个维度是 X，第二个是 Y，第三个是 Z，依此类推。但合成器可以选择利用这些事件来实现更新颖的工作区布局约定。不保证网格被填充或有界；坐标 1 可能有一个工作区，坐标 1000 有另一个，中间没有。但在工作区组内，工作区必须具有相同维度的唯一坐标。"
+                    }
+                },
+                "state": {
+                    "description": {
+                        "summary": "工作区状态已更改",
+                        "text": "在 zcosmic_workspace_handle_v1 创建后立即发出此事件，并在工作区状态每次更改时发出，无论是由于合成器操作还是此协议中的请求。"
+                    }
+                },
+                "capabilities": {
+                    "description": {
+                        "summary": "合成器能力",
+                        "text": "此事件公布合成器支持的功能。如果某个功能不受支持，客户端应隐藏或禁用暴露此功能的 UI 元素。例如，如果合成器不公布移除工作区的支持，则不应显示触发 remove 请求的按钮。\n\n合成器将忽略它不支持的请求。例如，不公布移除支持的合成器将忽略 remove 请求。\n\n合成器必须在创建 zcosmic_workspace_handle_v1 后发送此事件一次。当功能发生变化时，合成器必须再次发送此事件。\n\n功能以本机字节序的 32 位无符号整数数组形式发送。"
+                    }
+                },
+                "remove": {
+                    "description": {
+                        "summary": "此工作区已被销毁",
+                        "text": "此事件意味着 zcosmic_workspace_handle_v1 已被销毁。保证不会再有此 zcosmic_workspace_handle_v1 的任何事件。zext_workspace_handle_v1 变为惰性，因此除 destroy 请求外，任何请求都将被忽略。"
+                    }
+                },
+                "tiling_state": {
+                    "description": {
+                        "summary": "指示此工作区是否启用平铺行为",
+                        "text": "在 zcosmic_workspace_handle_v1 创建后立即发出此事件，并在工作区平铺状态每次更改时发出，无论是由于合成器操作还是此协议中的请求。"
+                    }
+                }
+            },
+            "enums": {
+                "state": {
+                    "description": {
+                        "summary": "工作区的状态类型",
+                        "text": "工作区可以具有的不同状态。"
+                    },
+                    "entries": {
+                        "active": {
+                            "summary": "工作区处于活动状态"
+                        },
+                        "urgent": {
+                            "summary": "工作区请求关注"
+                        },
+                        "hidden": {
+                            "description": {
+                                "summary": "工作区不可见",
+                                "text": "工作区在其工作区组中不可见，尝试可视化合成器工作区状态的客户端不应显示此类工作区。"
+                            }
+                        }
+                    }
+                },
+                "zcosmic_workspace_capabilities_v1": {
+                    "entries": {
+                        "activate": {
+                            "summary": "activate 请求可用"
+                        },
+                        "deactivate": {
+                            "summary": "deactivate 请求可用"
+                        },
+                        "remove": {
+                            "summary": "remove 请求可用"
+                        },
+                        "rename": {
+                            "summary": "rename 请求可用"
+                        },
+                        "set_tiling_state": {
+                            "summary": "set_tiling_state 请求可用"
+                        }
+                    }
+                },
+                "tiling_state": {
+                    "description": {
+                        "summary": "工作区可能具有的平铺状态类型"
+                    },
+                    "entries": {
+                        "floating_only": {
+                            "summary": "工作区没有活动的平铺属性"
+                        },
+                        "tiling_enabled": {
+                            "summary": "工作区已启用平铺行为"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

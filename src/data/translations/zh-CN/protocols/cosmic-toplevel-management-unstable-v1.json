@@ -1,0 +1,141 @@
+{
+  "interfaces": {
+    "zcosmic_toplevel_manager_v1": {
+      "description": {
+        "summary": "控制已打开的应用",
+        "text": "此协议允许任务栏等客户端请求合成器对已打开的 toplevel 执行典型操作。合成器在所有情况下都可以自由忽略该请求。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 zcosmic_toplevel_manager_v1",
+            "text": "此请求表示客户端已完成使用 zcosmic_toplevel_manager_v1 对象，可以安全销毁。"
+          }
+        },
+        "close": {
+          "description": {
+            "summary": "请求关闭 toplevel",
+            "text": "如果合成器接受此请求，将发送 zcosmic_toplevel_handle_v1.closed 事件。"
+          }
+        },
+        "activate": {
+          "description": {
+            "summary": "请求激活 toplevel",
+            "text": "如果合成器接受此请求，将发送 zcosmic_toplevel_handle_v1.state 事件。"
+          }
+        },
+        "set_maximized": {
+          "description": {
+            "summary": "请求最大化 toplevel",
+            "text": "如果合成器接受此请求，将发送 zcosmic_toplevel_handle_v1.state 事件。"
+          }
+        },
+        "unset_maximized": {
+          "description": {
+            "summary": "请求取消最大化 toplevel",
+            "text": "如果合成器接受此请求，将发送 zcosmic_toplevel_handle_v1.state 事件。"
+          }
+        },
+        "set_minimized": {
+          "description": {
+            "summary": "请求最小化 toplevel",
+            "text": "如果合成器接受此请求，将发送 zcosmic_toplevel_handle_v1.state 事件。"
+          }
+        },
+        "unset_minimized": {
+          "description": {
+            "summary": "请求取消最小化 toplevel",
+            "text": "如果合成器接受此请求，将发送 zcosmic_toplevel_handle_v1.state 事件。"
+          }
+        },
+        "set_fullscreen": {
+          "description": {
+            "summary": "请求将 toplevel 设为全屏",
+            "text": "如果合成器接受此请求，将发送 zcosmic_toplevel_handle_v1.state 事件，可能还会发送 zcosmic_toplevel_handle_v1.output_enter/output_leave 事件。\n\noutput 参数是对合成器的提示，可能会被忽略。NULL 值表示如果合成器接受全屏请求，应选择目标输出。"
+          }
+        },
+        "unset_fullscreen": {
+          "description": {
+            "summary": "请求取消 toplevel 的全屏状态",
+            "text": "如果合成器接受此请求，将发送 zcosmic_toplevel_handle_v1.state 事件。"
+          }
+        },
+        "set_rectangle": {
+          "description": {
+            "summary": "指定代表 toplevel 的矩形区域",
+            "text": "如果使用此协议的客户端显示与 toplevel 对应的 UI 元素，它可以使用此请求告知服务器此类关系。服务器可以使用此信息，例如作为最小化动画的目标。\n\n如果客户端设置了多个矩形，则只考虑最近设置的矩形。\n\n尺寸以表面局部坐标给出。\n\n设置 width=height=0 将移除当前矩形（如果已设置）。"
+          }
+        },
+        "move_to_workspace": {
+          "description": {
+            "summary": "将 toplevel 移动到工作区",
+            "text": "将窗口移动到给定输出上的工作区。"
+          }
+        },
+        "set_sticky": {
+          "description": {
+            "summary": "请求将 toplevel 设为固定",
+            "text": "如果合成器接受此请求，将发送 zcosmic_toplevel_handle_v1.state 事件。"
+          }
+        },
+        "unset_sticky": {
+          "description": {
+            "summary": "请求取消 toplevel 的固定状态",
+            "text": "如果合成器接受此请求，将发送 zcosmic_toplevel_handle_v1.state 事件。"
+          }
+        },
+        "move_to_ext_workspace": {
+          "description": {
+            "summary": "将 toplevel 移动到工作区",
+            "text": "将窗口移动到给定输出上的工作区。"
+          }
+        }
+      },
+      "events": {
+        "capabilities": {
+          "description": {
+            "summary": "合成器能力",
+            "text": "此事件通告合成器支持的能力。如果某个能力不受支持，客户端应隐藏或禁用暴露此功能的 UI 元素。例如，如果合成器不支持关闭 toplevel，则不应显示触发关闭请求的按钮。\n\n合成器将忽略它不支持的请求。例如，不支持关闭 toplevel 的合成器将忽略关闭请求。\n\n合成器必须在创建 zcosmic_toplevel_manager_v1 后发送此事件一次。当能力发生变化时，合成器必须再次发送此事件。\n\n能力以本机字节序的 32 位无符号整数数组发送。"
+          }
+        }
+      },
+      "enums": {
+        "zcosmic_toplelevel_management_capabilities_v1": {
+          "entries": {
+            "close": {
+              "summary": "关闭请求可用"
+            },
+            "activate": {
+              "summary": "激活请求可用"
+            },
+            "maximize": {
+              "summary": "set_maximized 和 unset_maximized 请求可用"
+            },
+            "minimize": {
+              "summary": "set_minimized 和 unset_minimized 请求可用"
+            },
+            "fullscreen": {
+              "summary": "set_fullscreen 和 unset_fullscreen 请求可用"
+            },
+            "move_to_workspace": {
+              "summary": "move_to_workspace 请求可用"
+            },
+            "sticky": {
+              "summary": "set_sticky 和 unset_sticky 请求可用"
+            },
+            "move_to_ext_workspace": {
+              "summary": "move_to_ext_workspace 请求可用"
+            }
+          }
+        },
+        "error": {
+          "entries": {
+            "invalid_rectangle": {
+              "summary": "提供的矩形无效"
+            }
+          }
+        }
+      }
+    }
+  }
+}

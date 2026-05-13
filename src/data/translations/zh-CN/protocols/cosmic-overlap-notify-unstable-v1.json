@@ -1,0 +1,57 @@
+{
+  "interfaces": {
+    "zcosmic_overlap_notify_v1": {
+      "description": {
+        "summary": "获取其他元素遮挡 layer surface 的通知",
+        "text": "此协议的目的是使 layer-shell 客户端能够在其 surface 部分被其他元素（目前为 toplevel 和其他 layer-surface）遮挡时获得通知。\n\n你可以为任何 zwlr_layer_surface_v1 surface 请求通知对象，该对象将发出重叠事件。"
+      },
+      "requests": {
+        "notify_on_overlap": {
+          "description": {
+            "summary": "当 layer-shell 被 toplevel 遮挡时获得通知",
+            "text": "请求通知 toplevel 和 layer-surface 进入和离开给定 zwlr_layer_surface_v1 的 surface 区域。这可用于实现自动隐藏功能。\n\n要停止接收通知，销毁返回的 zcosmic_overlap_notification_v1 对象。"
+          }
+        }
+      }
+    },
+    "zcosmic_overlap_notification_v1": {
+      "description": {
+        "summary": "订阅 layer-surface 上重叠的 toplevel"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁通知对象",
+            "text": "当客户端不再对重叠通知感兴趣时，应调用此请求。"
+          }
+        }
+      },
+      "events": {
+        "toplevel_enter": {
+          "description": {
+            "summary": "Toplevel 进入 surface 区域",
+            "text": "一个 ext_foreign_toplevel_handle_v1 已进入 surface 区域。\n\n此事件将为每个代表此 toplevel 的 ext_foreign_toplevel_handle_v1 发出一次。\n\nCompositor 可以通过为同一 toplevel 发送额外的 toplevel_enter 事件来更新重叠区域，而无需在中间发送 toplevel_leave。"
+          }
+        },
+        "toplevel_leave": {
+          "description": {
+            "summary": "Toplevel 离开 surface 区域",
+            "text": "一个 ext_foreign_toplevel_handle_v1 已离开 surface 区域。\n\n此事件将为每个代表此 toplevel 的 ext_foreign_toplevel_handle_v1 发出一次。"
+          }
+        },
+        "layer_enter": {
+          "description": {
+            "summary": "Layer surface 进入 surface 区域",
+            "text": "一个 zwlr_layer_surface_v1 已进入 surface 区域。\n\nCompositor 可以通过为同一 surface 发送额外的 layer_enter 事件来更新重叠区域，而无需在中间发送 layer_leave。\n\n重叠区域是相对于用于创建此通知对象的 zwlr_layer_surface_v1 的 surface 坐标给出的。"
+          }
+        },
+        "layer_leave": {
+          "description": {
+            "summary": "Layer surface 离开 surface 区域",
+            "text": "一个 zwlr_layer_surface_v1 已离开 surface 区域。"
+          }
+        }
+      }
+    }
+  }
+}

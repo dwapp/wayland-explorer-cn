@@ -1,0 +1,128 @@
+{
+  "interfaces": {
+    "treeland_wallpaper_notifier_v1": {
+      "description": {
+        "summary": "壁纸源变更的通知接口",
+        "text": "treeland_wallpaper_notifier_v1 接口提供关于合成器管理的壁纸源的可用性和生命周期的通知。\n\n此接口纯粹是事件驱动的。客户端在壁纸源被添加、变为活动状态或被移除时接收事件，并可相应地更新其内部状态或用户界面。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁壁纸通知器对象",
+            "text": "销毁此 treeland_wallpaper_notifier_v1 对象。\n\n在由此对象创建的壁纸 surface 对象仍然存在时销毁已绑定的 treeland_wallpaper_notifier_v1 对象是非法的，将导致协议错误。"
+          }
+        }
+      },
+      "events": {
+        "add": {
+          "description": {
+            "summary": "通知有新的壁纸源",
+            "text": "当新的壁纸源被添加或变为活动状态时，合成器发送此事件。\n\nsource_type 参数描述壁纸源的类型。\nfile_source 参数的含义取决于报告的 source_type。"
+          }
+        },
+        "remove": {
+          "description": {
+            "summary": "通知壁纸源已被移除",
+            "text": "此事件指示由 file_source 标识的壁纸源不再可用。\n\n收到此事件后，客户端应丢弃与该壁纸源关联的任何内部状态，且不得再引用它。"
+          }
+        }
+      },
+      "enums": {
+        "wallpaper_source_type": {
+          "entries": {
+            "image": {
+              "summary": "壁纸源为图片"
+            },
+            "video": {
+              "summary": "壁纸源为视频"
+            }
+          }
+        }
+      }
+    },
+    "treeland_wallpaper_shell_v1": {
+      "description": {
+        "summary": "壁纸 shell 全局接口",
+        "text": "treeland_wallpaper_shell_v1 接口是由合成器暴露的全局对象，允许客户端将壁纸角色分配给 wl_surface 并创建壁纸 surface 对象。\n\n壁纸 surface 表示旨在作为桌面壁纸显示的内容，如静态图像或动态媒体源，并与一个 wl_surface 关联。\n\n此接口遵循其他 Wayland 协议使用的 shell 模式：将特定角色分配给 wl_surface 并管理壁纸 surface 的生命周期和行为。\n\n此接口是单例的。在同一时间，最多只有一个客户端可以绑定到 treeland_wallpaper_shell_v1。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁壁纸 shell 对象",
+            "text": "销毁此 treeland_wallpaper_shell_v1 对象。\n\n在由此对象创建的 treeland_wallpaper_surface_v1 对象仍然存在时销毁已绑定的 treeland_wallpaper_shell_v1 对象是非法的，将导致协议错误。"
+          }
+        },
+        "get_treeland_wallpaper_surface": {
+          "description": {
+            "summary": "创建壁纸 surface",
+            "text": "创建一个 treeland_wallpaper_surface_v1 对象并将壁纸角色分配给给定的 wl_surface。\n\n提供的 wl_surface 必须尚未有角色，在用作壁纸 surface 期间，不得分配任何其他角色。\n\nfile_source 参数指定初始壁纸源标识符。其解释取决于合成器选择的壁纸源类型。"
+          }
+        }
+      }
+    },
+    "treeland_wallpaper_surface_v1": {
+      "description": {
+        "summary": "壁纸 surface 控制器",
+        "text": "treeland_wallpaper_surface_v1 接口控制壁纸 surface 的行为。\n\n壁纸 surface 绑定到一个 wl_surface，并定义该 surface 应如何调整大小、定位以及与合成器的壁纸管理逻辑同步。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁壁纸 surface",
+            "text": "销毁壁纸 surface 对象并释放其与底层 wl_surface 的关联。\n\n调用此请求后，壁纸 surface 对象变为无效，不得再次使用。\n\n此请求应仅在客户端打算永久停止使用壁纸 surface 时发送，例如客户端正在关闭时或收到此 surface 的 treeland_wallpaper_produce_v1.removed 事件后。"
+          }
+        },
+        "source_failed": {
+          "description": {
+            "summary": "报告壁纸源故障",
+            "text": "向合成器报告客户端侧的壁纸相关操作已失败。\n\n当客户端无法打开、加载或以其他方式处理配置的壁纸源时，可以发送此请求。\n合成器可以将此信息用于诊断、策略决策或调整内部状态。\n\n可能的错误值包括：\n- invalid_source：指定的壁纸源无效、不受支持或无法处理。\n  这是致命错误，指示在重试前应验证源。\n- permission_denied：客户端没有权限访问指定的壁纸源。"
+          }
+        }
+      },
+      "events": {
+        "position": {
+          "description": {
+            "summary": "更新壁纸位置或进度",
+            "text": "此事件提供与壁纸关联的位置值。\n\n位置值的语义由合成器定义。\n它可以表示滚动偏移、动画进度或播放位置。\n该值以定点数 [0, 1.0] 表示。"
+          }
+        },
+        "pause": {
+          "description": {
+            "summary": "暂停壁纸更新",
+            "text": "此事件指示客户端暂停壁纸更新或动画。\n\n收到此事件后，客户端应停止推进任何基于时间或动画的壁纸内容，直到收到 play 事件。"
+          }
+        },
+        "set_playback_rate": {
+          "description": {
+            "summary": "设置壁纸播放速率",
+            "text": "设置壁纸内容的播放速度。\n\n速率为 1.0 表示正常速度。\n速率为 0.0 表示暂停状态。"
+          }
+        },
+        "play": {
+          "description": {
+            "summary": "恢复壁纸更新",
+            "text": "此事件指示客户端在暂停后恢复壁纸更新或动画。"
+          }
+        },
+        "slow_down": {
+          "description": {
+            "summary": "请求壁纸更新逐渐减速",
+            "text": "此事件指示客户端逐步降低壁纸内容的播放或动画更新速率，直到完全停止。\n\n减速应是平滑连续的，而非突然的。\n\nduration 参数指定减速应持续的时间（以毫秒为单位）。\n经过此持续时间后，客户端应认为壁纸已暂停。\n\n持续时间为 0 表示客户端应立即暂停。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_source": {
+              "summary": "指定的壁纸源无效、不受支持或加载失败"
+            },
+            "permission_denied": {
+              "summary": "打开指定壁纸源时权限被拒绝"
+            }
+          }
+        }
+      }
+    }
+  }
+}

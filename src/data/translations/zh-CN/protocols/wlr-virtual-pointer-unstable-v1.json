@@ -1,0 +1,102 @@
+{
+  "interfaces": {
+    "zwlr_virtual_pointer_v1": {
+      "description": {
+        "summary": "虚拟指针",
+        "text": "此协议允许客户端模拟物理指针设备。这些请求大多是 wl_pointer 中指定的请求的镜像。"
+      },
+      "requests": {
+        "motion": {
+          "description": {
+            "summary": "指针相对运动事件",
+            "text": "指针相对于上一次请求移动了相对量。\n\n值在全局合成器空间中。"
+          }
+        },
+        "motion_absolute": {
+          "description": {
+            "summary": "指针绝对运动事件",
+            "text": "指针在绝对坐标系中移动。\n\nx 的值范围从 0 到 x_extent，y 的值范围从 0 到 y_extent。"
+          }
+        },
+        "button": {
+          "description": {
+            "summary": "按钮事件",
+            "text": "按钮被按下或释放。"
+          }
+        },
+        "axis": {
+          "description": {
+            "summary": "轴事件",
+            "text": "滚动和其他轴请求。"
+          }
+        },
+        "frame": {
+          "description": {
+            "summary": "指针事件序列的结束",
+            "text": "表示逻辑上属于同一组的事件集。"
+          }
+        },
+        "axis_source": {
+          "description": {
+            "summary": "轴源事件",
+            "text": "滚动和其他轴的源信息。"
+          }
+        },
+        "axis_stop": {
+          "description": {
+            "summary": "轴停止事件",
+            "text": "滚动和其他轴的停止通知。"
+          }
+        },
+        "axis_discrete": {
+          "description": {
+            "summary": "轴点击事件",
+            "text": "滚动和其他轴的离散步进信息。\n\n此事件允许客户端使用离散值扩展通常使用 axis 事件发送的数据。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁虚拟指针对象"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_axis": {
+              "summary": "客户端发送了无效的轴枚举值"
+            },
+            "invalid_axis_source": {
+              "summary": "客户端发送了无效的轴源枚举值"
+            }
+          }
+        }
+      }
+    },
+    "zwlr_virtual_pointer_manager_v1": {
+      "description": {
+        "summary": "虚拟指针管理器",
+        "text": "此对象允许客户端创建单独的虚拟指针对象。"
+      },
+      "requests": {
+        "create_virtual_pointer": {
+          "description": {
+            "summary": "创建一个新的虚拟指针",
+            "text": "创建一个新的虚拟指针。可选的 seat 是对合成器的建议。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁虚拟指针管理器"
+          }
+        },
+        "create_virtual_pointer_with_output": {
+          "description": {
+            "summary": "创建一个新的虚拟指针",
+            "text": "创建一个新的虚拟指针。seat 和 output 参数是可选的。如果设置了 seat 参数，合成器应将输入设备分配给请求的 seat。如果设置了 output 参数，合成器应将输入设备映射到请求的输出。"
+          }
+        }
+      }
+    }
+  }
+}

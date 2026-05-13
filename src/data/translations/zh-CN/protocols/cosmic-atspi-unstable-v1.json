@@ -1,0 +1,54 @@
+{
+  "description": {
+    "summary": "atspi 无障碍协议",
+    "text": "此协议提供了 at-spi2-core 库中 AtspiDevice 的相对直接的映射，因此可以为其添加 Wayland 后端。\n\n这为屏幕阅读器快捷键绑定提供了一种工作方式。\n\n这是在更好的协议可用之前的临时解决方案。"
+  },
+  "interfaces": {
+    "cosmic_atspi_manager_v1": {
+      "description": {
+        "summary": "atspi 管理器全局对象",
+        "text": "用于添加按键捕获和监控按键输入的管理器。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁全局对象",
+            "text": "所有仍处于活动状态的捕获将被禁用。"
+          }
+        },
+        "add_key_grab": {
+          "description": {
+            "summary": "添加按键组合的捕获",
+            "text": "捕获给定的按键组合，使其不会被发送到客户端。"
+          }
+        },
+        "remove_key_grab": {
+          "description": {
+            "summary": "移除按键组合的捕获",
+            "text": "禁用通过 add_key_grab 添加的捕获。"
+          }
+        },
+        "grab_keyboard": {
+          "description": {
+            "summary": "捕获键盘",
+            "text": "捕获键盘，使按键输入不会被发送到客户端。"
+          }
+        },
+        "ungrab_keyboard": {
+          "description": {
+            "summary": "取消捕获键盘",
+            "text": "禁用通过 grab_keyboard 添加的捕获。"
+          }
+        }
+      },
+      "events": {
+        "key_events_eis": {
+          "description": {
+            "summary": "获取 eis socket fd",
+            "text": "生成一个可与 libei 配合使用的 fd，用于监控键盘输入。"
+          }
+        }
+      }
+    }
+  }
+}

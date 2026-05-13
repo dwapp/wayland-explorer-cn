@@ -1,0 +1,84 @@
+{
+  "interfaces": {
+    "org_kde_kwin_server_decoration_manager": {
+      "description": {
+        "summary": "服务端窗口装饰管理器",
+        "text": "此接口允许协调服务器是否应在代表 shell surface（wl_shell_surface 或类似物）的 wl_surface 周围创建服务端窗口装饰。通过通告对此接口的支持，服务器表明它支持服务端装饰。\n\n与 zxdg_decoration_manager_v1 一起使用时行为未定义。"
+      },
+      "requests": {
+        "create": {
+          "description": {
+            "summary": "为给定 surface 创建服务端装饰对象",
+            "text": "当客户端创建服务端装饰对象时，表明它支持该协议。客户端应告知服务器它是否需要服务端装饰，或者将提供客户端装饰。\n\n如果客户端没有为 surface 创建服务端装饰对象，服务器会将其解释为缺乏对该协议的支持，并将其视为客户端装饰。尽管如此，客户端装饰的 surface 仍应使用此协议向服务器表明它不需要服务端装饰。"
+          }
+        }
+      },
+      "events": {
+        "default_mode": {
+          "description": {
+            "summary": "服务器使用的默认模式",
+            "text": "此事件在绑定接口后立即发出。它包含装饰的默认模式。当创建新的服务端装饰对象时，该新对象将处于默认模式，直到第一个 request_mode 被请求。\n\n服务器可以随时更改默认模式。"
+          }
+        }
+      },
+      "enums": {
+        "mode": {
+          "description": {
+            "summary": "request_mode 和事件 mode 中使用的可能值"
+          },
+          "entries": {
+            "None": {
+              "summary": "无装饰：surface 完全不被装饰，无论是服务端还是客户端。例如不应被装饰的弹出 surface。"
+            },
+            "Client": {
+              "summary": "客户端装饰：装饰是 surface 和客户端的一部分。"
+            },
+            "Server": {
+              "summary": "服务端装饰：服务器将 surface 嵌入装饰框架中。"
+            }
+          }
+        }
+      }
+    },
+    "org_kde_kwin_server_decoration": {
+      "requests": {
+        "release": {
+          "description": {
+            "summary": "释放服务端装饰对象"
+          }
+        },
+        "request_mode": {
+          "description": {
+            "summary": "surface 想要使用的装饰模式"
+          }
+        }
+      },
+      "events": {
+        "mode": {
+          "description": {
+            "summary": "服务器应用的新装饰模式",
+            "text": "此事件在装饰创建后直接发出，代表服务器的基本装饰策略。例如，希望所有 surface 都使用客户端装饰的服务器将发送 Client，希望服务端装饰的服务器将发送 Server。\n\n客户端可以通过装饰请求请求不同的模式。服务器将通过另一个具有相同模式的事件来确认这一点。因此，即使服务器偏好服务端装饰，也可以强制使用客户端装饰。\n\n服务器可以随时发出此事件。在这种情况下，客户端可以再次请求不同的模式。服务器有责任防止反馈循环。"
+          }
+        }
+      },
+      "enums": {
+        "mode": {
+          "description": {
+            "summary": "request_mode 和事件 mode 中使用的可能值"
+          },
+          "entries": {
+            "None": {
+              "summary": "无装饰：surface 完全不被装饰，无论是服务端还是客户端。例如不应被装饰的弹出 surface。"
+            },
+            "Client": {
+              "summary": "客户端装饰：装饰是 surface 和客户端的一部分。"
+            },
+            "Server": {
+              "summary": "服务端装饰：服务器将 surface 嵌入装饰框架中。"
+            }
+          }
+        }
+      }
+    }
+  }
+}

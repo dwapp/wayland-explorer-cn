@@ -1,0 +1,117 @@
+{
+  "description": {
+    "summary": "捕获顶层窗口的内容",
+    "text": "此协议允许客户端请求将另一个顶层窗口的表面导出到缓冲区中。\n\n特别适用于共享单个窗口。"
+  },
+  "interfaces": {
+    "hyprland_toplevel_export_manager_v1": {
+      "description": {
+        "summary": "通知客户端并开始捕获的管理器",
+        "text": "此对象是一个管理器，提供从源开始捕获的请求。"
+      },
+      "requests": {
+        "capture_toplevel": {
+          "description": {
+            "summary": "捕获一个顶层窗口",
+            "text": "捕获顶层窗口（窗口）的下一帧。\n\n捕获的帧不会包含任何服务器端装饰，并且会忽略合成器设置的几何形状，例如圆角。\n\n它将包含所有子表面和弹出窗口，但后者将被裁剪到基础表面的几何形状内。\n\nhandle 参数指窗口的地址，如在 `hyprctl clients` 中看到的那样。例如，d161e7b0 对应的值为 3512854448。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "管理器创建的所有对象将保持有效，直到调用相应的销毁请求。"
+          }
+        },
+        "capture_toplevel_with_wlr_toplevel_handle": {
+          "description": {
+            "summary": "捕获一个顶层窗口",
+            "text": "与 capture_toplevel 相同，但使用 zwlr_foreign_toplevel_handle_v1 句柄。"
+          }
+        }
+      }
+    },
+    "hyprland_toplevel_export_frame_v1": {
+      "description": {
+        "summary": "准备好进行复制的帧",
+        "text": "此对象代表单个帧。\n\n创建后，将发送一系列缓冲区事件，每个事件代表一种支持的缓冲区类型。随后发送 \"buffer_done\" 事件，表示所有支持的缓冲区类型已枚举完毕。客户端随后可以发送 \"copy\" 请求。如果捕获成功，合成器将发送 \"flags\" 事件，然后是 \"ready\" 事件。\n\nwl_shm 缓冲区始终被支持，即保证会发送 \"buffer\" 事件。\n\n如果捕获失败，将发送 \"failed\" 事件。这可能发生在 \"ready\" 事件之前的任何时间。\n\n收到 \"ready\" 或 \"failed\" 事件后，客户端应销毁该帧。"
+      },
+      "requests": {
+        "copy": {
+          "description": {
+            "summary": "复制帧",
+            "text": "将帧复制到提供的缓冲区。缓冲区必须具有正确的大小，参见 hyprland_toplevel_export_frame_v1.buffer 和 hyprland_toplevel_export_frame_v1.linux_dmabuf。缓冲区需要具有支持的格式。\n\n如果帧复制成功，将发送 \"flags\" 和 \"ready\" 事件。否则，将发送 \"failed\" 事件。\n\n此事件将等待适当的损坏区域进行复制，除非 ignore_damage 参数设置为非零值。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "删除此对象，无论是否已使用",
+            "text": "销毁该帧。客户端可以在任何时候发送此请求。"
+          }
+        }
+      },
+      "events": {
+        "buffer": {
+          "description": {
+            "summary": "wl_shm 缓冲区信息",
+            "text": "提供此帧需要使用的 wl_shm 缓冲区参数信息。如果支持 wl_shm 缓冲区，此事件在帧创建后发送一次。"
+          }
+        },
+        "damage": {
+          "description": {
+            "summary": "携带损坏区域的坐标",
+            "text": "此事件在未设置 ignore_damage 时，在 ready 事件之前发送。每个 copy 请求可能生成多次。\n\n参数描述了自上一次 copy 请求以来发生变化的区域周围的包围盒。\n\n在 copy 调用和 ready 事件之间接收到的所有区域的并集是自上一次 ready 事件以来的总损坏区域。"
+          }
+        },
+        "flags": {
+          "description": {
+            "summary": "帧标志",
+            "text": "提供关于帧的标志。此事件在 \"ready\" 事件之前发送一次。"
+          }
+        },
+        "ready": {
+          "description": {
+            "summary": "表示帧已可供读取",
+            "text": "帧复制完成后立即调用，表示帧可供读取。此事件包含呈现发生的时间。\n\n时间戳以 tv_sec_hi、tv_sec_lo、tv_nsec 三元组表示，每个分量都是无符号 32 位值。整秒在 tv_sec 中，它是 tv_sec_hi 和 tv_sec_lo 组合的 64 位值，额外的小数部分在 tv_nsec 中以纳秒为单位。因此，对于有效时间戳，tv_nsec 必须在 [0, 999999999] 范围内。秒部分在启动时可能有任意偏移。\n\n收到此事件后，客户端应销毁该对象。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "帧复制失败",
+            "text": "此事件表示尝试的帧复制失败。\n\n收到此事件后，客户端应销毁该对象。"
+          }
+        },
+        "linux_dmabuf": {
+          "description": {
+            "summary": "linux-dmabuf 缓冲区信息",
+            "text": "提供此帧需要使用的 linux-dmabuf 缓冲区参数信息。如果支持 linux-dmabuf 缓冲区，此事件在帧创建后发送一次。"
+          }
+        },
+        "buffer_done": {
+          "description": {
+            "summary": "所有缓冲区类型已报告",
+            "text": "此事件在所有缓冲区事件发送完毕后发送一次。\n\n客户端应继续创建一种支持类型的缓冲区，并发送 \"copy\" 请求。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_used": {
+              "summary": "该对象已被用于复制 wl_buffer"
+            },
+            "invalid_buffer": {
+              "summary": "缓冲区属性无效"
+            }
+          }
+        },
+        "flags": {
+          "entries": {
+            "y_invert": {
+              "summary": "内容是 y 轴翻转的"
+            }
+          }
+        }
+      }
+    }
+  }
+}

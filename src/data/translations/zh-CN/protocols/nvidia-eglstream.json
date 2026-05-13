@@ -1,0 +1,107 @@
+{
+  "interfaces": {
+    "wl_eglstream": {
+      "enums": {
+        "error": {
+          "entries": {
+            "bad_alloc": {
+              "summary": "分配错误"
+            },
+            "bad_handle": {
+              "summary": "句柄错误"
+            },
+            "bad_attribs": {
+              "summary": "属性错误"
+            },
+            "bad_address": {
+              "summary": "IP 地址错误"
+            }
+          }
+        },
+        "handle_type": {
+          "description": {
+            "summary": "流句柄类型",
+            "text": "- fd：给定的句柄表示文件描述符，EGLStream 连接必须按照 EGL_KHR_stream_cross_process_fd 中的描述进行。\n\n- inet：EGLStream 连接必须使用 inet 地址和端口进行，如 EGL_NV_stream_socket 中的描述。给定的句柄可以被忽略，但 inet 地址和端口必须作为属性提供。\n\n- socket：给定的句柄表示 unix 套接字，EGLStream 连接必须按照 EGL_NV_stream_socket 中的描述进行。"
+          },
+          "entries": {
+            "fd": {
+              "summary": "文件描述符"
+            },
+            "inet": {
+              "summary": "Inet 连接"
+            },
+            "socket": {
+              "summary": "Unix 套接字"
+            }
+          }
+        },
+        "attrib": {
+          "description": {
+            "summary": "流创建属性",
+            "text": "- inet_addr：给定属性编码客户端套接字的 IPv4 地址。IPv4 地址和端口必须同时设置。\n\n- inet_port：给定属性编码客户端套接字的端口。IPv4 地址和端口必须同时设置。\n\n- y_inverted：给定属性编码流图像相对于 Wayland 协议约定的默认反转值。Vulkan 应用将设置为 'true'，而 OpenGL 应用将设置为 'false'。\n注意：EGL_NV_stream_origin 是关于流帧方向的权威来源，应查询以获取准确值。给定的属性是 '最佳猜测' 回退机制，仅在查询 EGL_NV_stream_origin 失败时使用。"
+          },
+          "entries": {
+            "inet_addr": {
+              "summary": "Inet IPv4 地址"
+            },
+            "inet_port": {
+              "summary": "IP 端口"
+            },
+            "y_inverted": {
+              "summary": "图像 Y 反转位"
+            }
+          }
+        }
+      }
+    },
+    "wl_eglstream_display": {
+      "requests": {
+        "create_stream": {
+          "description": {
+            "summary": "从给定句柄创建 wl_buffer",
+            "text": "创建对应于给定句柄的 wl_buffer。属性列表可用于定义额外的 EGLStream 连接数据（如 inet 地址/端口）。\n服务器可以使用 wl_buffer 中编码的信息创建其 EGLStream 句柄。"
+          }
+        },
+        "swap_interval": {
+          "description": {
+            "summary": "更改 EGLStream 消费者的交换间隔",
+            "text": "设置给定 EGLStream 消费者的交换间隔。交换间隔在服务器端被静默限制在有效范围内。"
+          }
+        }
+      },
+      "events": {
+        "caps": {
+          "description": {
+            "summary": "服务器能力事件",
+            "text": "在绑定 wl_eglstream_display 时发送能力事件。\n它允许服务器通告其支持的功能，以便客户端知道哪些是安全可用的。"
+          }
+        },
+        "swapinterval_override": {
+          "description": {
+            "summary": "服务器交换间隔覆盖事件",
+            "text": "当客户端通过 swap_interval() 请求交换间隔设置，且存在覆盖使该请求被忽略时，将发出 swapinterval_override 事件。\nswapinterval_override 事件将提供覆盖值，以便客户端知晓。"
+          }
+        }
+      },
+      "enums": {
+        "cap": {
+          "description": {
+            "summary": "wl_eglstream_display 能力代码",
+            "text": "此枚举值应作为位掩码使用。\n\n- stream_fd：服务器支持如 EGL_KHR_stream_cross_process_fd 中描述的 EGLStream 连接。\n\n- stream_inet：服务器支持如 EGL_NV_stream_socket 中描述的 EGLStream inet 连接。\n\n- stream_socket：服务器支持如 EGL_NV_stream_socket 中描述的 EGLStream unix 套接字连接。"
+          },
+          "entries": {
+            "stream_fd": {
+              "summary": "使用 FD 的流连接"
+            },
+            "stream_inet": {
+              "summary": "流 inet 连接"
+            },
+            "stream_socket": {
+              "summary": "流 unix 连接"
+            }
+          }
+        }
+      }
+    }
+  }
+}

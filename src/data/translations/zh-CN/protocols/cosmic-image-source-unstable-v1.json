@@ -1,0 +1,97 @@
+{
+  "description": {
+    "summary": "不透明的图像源对象",
+    "text": "此协议作为屏幕捕获协议与潜在图像源（如 output 和 toplevel）之间的中介。\n\n此协议将来可能会扩展以支持更多图像源，从而将这些图像源添加到使用图像源对象的其他协议中，而无需修改这些协议。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会添加向后兼容的更改，并相应地更新接口版本。向后不兼容的更改只能通过创建新的扩展主版本来完成。"
+  },
+  "interfaces": {
+    "zcosmic_image_source_v1": {
+      "description": {
+        "summary": "不透明的图像源对象",
+        "text": "图像源对象是可捕获资源的不透明描述符。此资源可以是从中派生图像的任何类型的实体。\n\n请注意，由于 zcosmic_image_source_v1 对象是从多个独立的工厂接口创建的，因此 zcosmic_image_source_v1 接口固定在版本 1。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁此对象"
+          }
+        }
+      }
+    },
+    "zcosmic_output_image_source_manager_v1": {
+      "description": {
+        "summary": "用于 output 的图像源管理器",
+        "text": "用于为 wl_output 对象创建图像源对象的管理器。"
+      },
+      "requests": {
+        "create_source": {
+          "description": {
+            "summary": "为 output 创建源对象",
+            "text": "为 output 创建源对象。从此源捕获的图像将显示与 output 相同的内容。某些元素可能会被省略，例如已标记为对捕获透明的光标和覆盖层。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁此对象"
+          }
+        }
+      }
+    },
+    "zcosmic_workspace_image_source_manager_v1": {
+      "description": {
+        "summary": "用于 output 的图像源管理器",
+        "text": "用于为 wl_output 对象创建图像源对象的管理器。"
+      },
+      "requests": {
+        "create_source": {
+          "description": {
+            "summary": "为 output 创建源对象",
+            "text": "为工作区创建源对象。从此源捕获的图像将显示与工作区相同的内容。某些元素可能会被省略，例如已标记为对捕获透明的光标和覆盖层。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁此对象"
+          }
+        }
+      }
+    },
+    "zcosmic_ext_workspace_image_source_manager_v1": {
+      "description": {
+        "summary": "用于 output 的图像源管理器",
+        "text": "用于为 wl_output 对象创建图像源对象的管理器。"
+      },
+      "requests": {
+        "create_source": {
+          "description": {
+            "summary": "为 output 创建源对象",
+            "text": "为工作区创建源对象。从此源捕获的图像将显示与工作区相同的内容。某些元素可能会被省略，例如已标记为对捕获透明的光标和覆盖层。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁此对象"
+          }
+        }
+      }
+    },
+    "zcosmic_toplevel_image_source_manager_v1": {
+      "description": {
+        "summary": "用于 toplevel 的图像源管理器",
+        "text": "用于为 zcosmic_toplevel_handle_v1 对象创建图像源对象的管理器。"
+      },
+      "requests": {
+        "create_source": {
+          "description": {
+            "summary": "为 toplevel 创建源对象",
+            "text": "为 toplevel 句柄创建源对象。从此源捕获的图像将显示与 toplevel 相同的内容。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁此对象"
+          }
+        }
+      }
+    }
+  }
+}

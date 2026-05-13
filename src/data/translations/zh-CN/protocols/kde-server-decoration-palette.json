@@ -1,0 +1,29 @@
+{
+  "interfaces": {
+    "org_kde_kwin_server_decoration_palette_manager": {
+      "description": {
+        "summary": "服务端装饰调色板管理器接口",
+        "text": "此接口允许客户端更改服务端装饰的调色板。"
+      }
+    },
+    "org_kde_kwin_server_decoration_palette": {
+      "description": {
+        "summary": "服务端装饰调色板接口",
+        "text": "此接口允许客户端更改服务端装饰的调色板。"
+      },
+      "requests": {
+        "set_palette": {
+          "description": {
+            "summary": "设置服务端窗口装饰的调色板",
+            "text": "应应用于窗口装饰的配色方案。\n绝对文件路径，或用户配置目录中的调色板名称。\n服务端可以选择不遵循请求的样式。"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "释放调色板对象"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "description": {
+    "summary": "管理输出的 gamma 表",
+    "text": "此协议允许特权客户端设置输出的 gamma 表。\n\n警告！此文件中描述的实验性协议可能会进行向后不兼容的更改。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后不兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被宣布为稳定版本，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。"
+  },
+  "interfaces": {
+    "zwlr_gamma_control_manager_v1": {
+      "description": {
+        "summary": "创建逐输出 gamma 控制的管理器",
+        "text": "此接口是一个管理器，允许创建逐输出的 gamma 控制。"
+      },
+      "requests": {
+        "get_gamma_control": {
+          "description": {
+            "summary": "获取输出的 gamma 控制",
+            "text": "创建一个可用于调整提供的输出的 gamma 表的 gamma 控制。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "管理器创建的所有对象仍将保持有效，直到调用适当的销毁请求。"
+          }
+        }
+      }
+    },
+    "zwlr_gamma_control_v1": {
+      "description": {
+        "summary": "调整输出的 gamma 表",
+        "text": "此接口允许客户端调整特定输出的 gamma 表。\n\n客户端将接收 gamma 大小，然后能够设置 gamma 表。合成器可以随时发送 failed 事件，指示此对象不再有效。\n\n每个输出最多只能有一个 gamma 控制对象，该对象对此特定输出具有独占访问权。当 gamma 控制对象被销毁时，gamma 表将恢复为其原始值。"
+      },
+      "requests": {
+        "set_gamma": {
+          "description": {
+            "summary": "设置 gamma 表",
+            "text": "设置 gamma 表。文件描述符可以内存映射以提供原始 gamma 表，其中包含红色、绿色和蓝色通道的连续 gamma 坡道。每个 gamma 坡道是一个 16 字节无符号整数数组，其长度与 gamma 大小相同。\n\n文件描述符数据的长度必须是 gamma 大小的三倍。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁此控制",
+            "text": "销毁 gamma 控制对象。如果对象仍然有效，这将恢复原始 gamma 表。"
+          }
+        }
+      },
+      "events": {
+        "gamma_size": {
+          "description": {
+            "summary": "gamma 坡道的大小",
+            "text": "广播每个 gamma 坡道的大小。\n\n此事件在 gamma 控制对象创建时立即发送。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "对象不再有效",
+            "text": "此事件表示 gamma 控制不再有效。这可能由于多种原因发生，包括：\n- 输出不支持 gamma 表\n- 设置 gamma 表失败\n- 另一个客户端已对此输出具有独占 gamma 控制\n- 合成器已将 gamma 控制转移给另一个客户端\n\n收到此事件后，客户端应销毁此对象。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_gamma": {
+              "summary": "无效的 gamma 表"
+            }
+          }
+        }
+      }
+    }
+  }
+}

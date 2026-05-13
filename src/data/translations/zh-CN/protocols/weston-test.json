@@ -1,0 +1,74 @@
+{
+  "interfaces": {
+    "weston_test": {
+      "description": {
+        "summary": "Weston 内部测试",
+        "text": "Weston 合成器的内部测试工具。\n\n需要强调的是，这些工具绝不应在运行 Weston 测试之外使用。weston-test.so 模块绝不应被安装。\n\n这些请求可能允许客户端执行非常危险的操作。"
+      },
+      "requests": {
+        "client_break": {
+          "description": {
+            "summary": "请求合成器在某处暂停执行",
+            "text": "请求合成器在某处暂停执行。当执行暂停时，合成器将向客户端发出共享信号量。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "touch_up_with_coordinate": {
+              "summary": "无效坐标"
+            }
+          }
+        },
+        "breakpoint": {
+          "entries": {
+            "post_repaint": {
+              "summary": "输出重绘之后（过滤类型：wl_output）"
+            },
+            "post_latch": {
+              "summary": "输出锁存之后（过滤类型：wl_output）"
+            }
+          }
+        }
+      }
+    },
+    "weston_test_runner": {
+      "description": {
+        "summary": "Weston 内部测试",
+        "text": "这是 Weston 内部测试的全局单例接口。\n\n此接口允许测试客户端触发合成器端的测试过程。这对于实际测试在合成器插件中但也需要特定客户端存在的情况非常有用。\n\n此接口由包含测试代码的合成器插件实现。\n\n测试客户端使用 \"run\" 请求启动测试。在收到 \"finished\" 事件之前，不得发送另一个 \"run\" 请求。如果合成器端测试成功，则发送 \"finished\" 事件。如果合成器端测试失败，合成器应发送 \"test_failed\" 协议错误，但也可能以错误退出（例如 SEGV）。\n\n未知的测试名称将引发 \"unknown_test\" 协议错误。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁测试运行器对象"
+          }
+        },
+        "run": {
+          "description": {
+            "summary": "运行指定的测试"
+          }
+        }
+      },
+      "events": {
+        "finished": {
+          "description": {
+            "summary": "测试已完成"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "test_failed": {
+              "summary": "合成器测试失败"
+            },
+            "unknown_test": {
+              "summary": "无法识别的测试名称"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "interfaces": {
+    "zwp_virtual_keyboard_v1": {
+      "description": {
+        "summary": "虚拟键盘",
+        "text": "虚拟键盘为应用程序提供了模拟物理键盘行为的请求。\n\n此接口可由客户端单独使用以提供原始输入事件，也可配合输入法协议使用。"
+      },
+      "requests": {
+        "keymap": {
+          "description": {
+            "summary": "键盘映射",
+            "text": "向 compositor 提供一个文件描述符，可通过内存映射来提供键盘映射描述。\n\nformat 取值来自 keymap_format 枚举。"
+          }
+        },
+        "key": {
+          "description": {
+            "summary": "按键事件",
+            "text": "按键被按下或释放。\ntime 参数是毫秒精度的时间戳，基准未定义。同一对象的所有请求必须使用相同的时钟。\n\n发送此请求前必须先设置 keymap。\n\nstate 取值来自 key_state 枚举。"
+          }
+        },
+        "modifiers": {
+          "description": {
+            "summary": "修饰键和组状态",
+            "text": "通知 compositor 修饰键和/或组状态已改变，应更新状态。\n\n客户端应使用 wl_keyboard.modifiers 事件来同步其内部状态与 seat 状态。\n\n发送此请求前必须先设置 keymap。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁虚拟键盘对象"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "no_keymap": {
+              "summary": "未设置 keymap"
+            }
+          }
+        }
+      }
+    },
+    "zwp_virtual_keyboard_manager_v1": {
+      "description": {
+        "summary": "虚拟键盘管理器",
+        "text": "虚拟键盘管理器允许应用程序提供键盘输入事件，如同来自物理键盘一样。"
+      },
+      "requests": {
+        "create_virtual_keyboard": {
+          "description": {
+            "summary": "创建新的虚拟键盘",
+            "text": "创建一个与 seat 关联的新虚拟键盘。\n\n如果 compositor 允许键盘执行任意操作，当不受信任的客户端请求新键盘时，应报错。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "unauthorized": {
+              "summary": "客户端未被授权使用此接口"
+            }
+          }
+        }
+      }
+    }
+  }
+}

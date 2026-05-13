@@ -1,0 +1,123 @@
+{
+  "description": {
+    "summary": "在客户端缓冲区上捕获屏幕内容",
+    "text": "此协议允许客户端请求合成器将部分屏幕内容复制到客户端缓冲区。\n\n警告！此文件中描述的协议是实验性的，可能会进行不兼容的更改。向后兼容的更改可能会与相应的接口版本号一起添加。向后不兼容的更改通过在协议和接口名称中增加版本号并重置接口版本号来完成。一旦协议宣布稳定，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。\n\n注意！此协议已弃用，不适用于生产环境。应改用 ext-image-copy-capture-v1 协议。"
+  },
+  "interfaces": {
+    "zwlr_screencopy_manager_v1": {
+      "description": {
+        "summary": "通知客户端并开始捕获的管理器",
+        "text": "此对象是一个管理器，提供从源开始捕获的请求。"
+      },
+      "requests": {
+        "capture_output": {
+          "description": {
+            "summary": "捕获输出",
+            "text": "捕获整个输出的下一帧。"
+          }
+        },
+        "capture_output_region": {
+          "description": {
+            "summary": "捕获输出的区域",
+            "text": "捕获输出区域的下一帧。\n\n区域以输出逻辑坐标给出，参见 xdg_output.logical_size。区域将被裁剪到输出范围。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "管理器创建的所有对象将仍然有效，直到调用它们相应的销毁请求。"
+          }
+        }
+      }
+    },
+    "zwlr_screencopy_frame_v1": {
+      "description": {
+        "summary": "准备复制的帧",
+        "text": "此对象表示单个帧。\n\n创建时，将发送一系列缓冲区事件，每个事件代表一种支持的缓冲区类型。随后发送 \"buffer_done\" 事件以指示所有支持的缓冲区类型已被枚举。客户端随后将能够发送 \"copy\" 请求。如果捕获成功，合成器将发送 \"flags\" 事件，然后是 \"ready\" 事件。\n\n对于版本 2 或更低的对象，始终支持 wl_shm 缓冲区，即保证会发送 \"buffer\" 事件。\n\n如果捕获失败，则发送 \"failed\" 事件。这可以在 \"ready\" 事件之前的任何时候发生。\n\n一旦收到 \"ready\" 或 \"failed\" 事件，客户端应销毁该帧。"
+      },
+      "requests": {
+        "copy": {
+          "description": {
+            "summary": "复制帧",
+            "text": "将帧复制到提供的缓冲区。缓冲区必须具有正确的大小，参见 zwlr_screencopy_frame_v1.buffer 和 zwlr_screencopy_frame_v1.linux_dmabuf。缓冲区需要具有支持的格式。\n\n如果帧复制成功，将发送 \"flags\" 和 \"ready\" 事件。否则，将发送 \"failed\" 事件。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "删除此对象，无论是否使用",
+            "text": "销毁帧。客户端可以随时发送此请求。"
+          }
+        },
+        "copy_with_damage": {
+          "description": {
+            "summary": "在帧损坏时复制",
+            "text": "与 copy 相同，但等待有损坏时才复制。"
+          }
+        }
+      },
+      "events": {
+        "buffer": {
+          "description": {
+            "summary": "wl_shm 缓冲区信息",
+            "text": "提供此帧需要使用的 wl_shm 缓冲区参数信息。如果支持 wl_shm 缓冲区，则在帧创建后发送一次此事件。"
+          }
+        },
+        "flags": {
+          "description": {
+            "summary": "帧标志",
+            "text": "提供有关帧的标志。此事件在 \"ready\" 事件之前发送一次。"
+          }
+        },
+        "ready": {
+          "description": {
+            "summary": "指示帧可供读取",
+            "text": "在帧复制完成后调用，指示帧可供读取。此事件包括演示发生的时间。\n\n时间戳表示为 tv_sec_hi、tv_sec_lo、tv_nsec 三元组，每个组件为无符号 32 位值。整秒在 tv_sec 中，它是 tv_sec_hi 和 tv_sec_lo 组合的 64 位值，附加的小数部分在 tv_nsec 中以纳秒为单位。因此，对于有效时间戳，tv_nsec 必须在 [0, 999999999] 范围内。秒部分在开始时可能有任意偏移。\n\n收到此事件后，客户端应销毁对象。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "帧复制失败",
+            "text": "此事件指示尝试的帧复制失败。\n\n收到此事件后，客户端应销毁对象。"
+          }
+        },
+        "damage": {
+          "description": {
+            "summary": "携带损坏区域的坐标",
+            "text": "当请求 copy_with_damage 时，此事件在 ready 事件之前发送。对于每个 copy_with_damage 请求，可能会生成多次。\n\n参数描述了自上次从当前 screencopy manager 实例派生的 copy 请求以来发生变化的区域周围的框。\n\n在调用 copy_with_damage 和 ready 事件之间收到的所有区域的并集是自上次 ready 事件以来的总损坏。"
+          }
+        },
+        "linux_dmabuf": {
+          "description": {
+            "summary": "linux-dmabuf 缓冲区信息",
+            "text": "提供此帧需要使用的 linux-dmabuf 缓冲区参数信息。如果支持 linux-dmabuf 缓冲区，则在帧创建后发送一次此事件。"
+          }
+        },
+        "buffer_done": {
+          "description": {
+            "summary": "所有缓冲区类型已报告",
+            "text": "在所有缓冲区事件发送后发送一次此事件。\n\n客户端应继续创建一种支持类型的缓冲区，并发送 \"copy\" 请求。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_used": {
+              "summary": "该对象已被用于复制 wl_buffer"
+            },
+            "invalid_buffer": {
+              "summary": "缓冲区属性无效"
+            }
+          }
+        },
+        "flags": {
+          "entries": {
+            "y_invert": {
+              "summary": "内容是 Y 轴翻转的"
+            }
+          }
+        }
+      }
+    }
+  }
+}

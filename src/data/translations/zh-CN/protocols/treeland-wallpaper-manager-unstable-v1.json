@@ -1,0 +1,99 @@
+{
+  "interfaces": {
+    "treeland_wallpaper_manager_v1": {
+      "description": {
+        "summary": "壁纸管理器接口",
+        "text": "treeland_wallpaper_manager_v1 接口是一个全局对象，用于为指定的输出创建壁纸对象。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 treeland_wallpaper_manager_v1",
+            "text": "销毁此 treeland_wallpaper_manager_v1 对象。\n\n在由此 treeland_wallpaper_manager_v1 对象实例创建的壁纸仍然存在时，销毁已绑定的 treeland_wallpaper_manager_v1 对象是非法的，将导致协议错误。"
+          }
+        },
+        "get_treeland_wallpaper": {
+          "description": {
+            "summary": "为输出创建壁纸对象",
+            "text": "创建一个绑定到指定 wl_output 的 treeland_wallpaper_v1 对象。\n\n合成器可以强制规定对于给定的（输出、角色）组合只存在一个壁纸。\n\n当关联了 surface 时，合成器将跟踪该 surface 所属的工作区。\n每当工作区发生变化时，合成器可以通知客户端该工作区当前使用的壁纸文件路径。\n\n注意：treeland_wallpaper_v1 对象必须在关联的 wl_surface 被销毁之前销毁。"
+          }
+        }
+      }
+    },
+    "treeland_wallpaper_v1": {
+      "description": {
+        "summary": "用于设置和管理壁纸内容的壁纸对象接口",
+        "text": "treeland_wallpaper_v1 接口表示由合成器为特定输出和角色创建的壁纸实例。\n\n客户端提供的壁纸源存储在合成器端并由其管理。\n一旦设置了壁纸源，合成器可以独立于客户端对其进行缓存、重用或持久化。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁壁纸对象",
+            "text": "销毁 treeland_wallpaper_v1 对象并释放合成器端与之关联的所有资源。\n\n调用此请求后，客户端不得再使用该壁纸对象。"
+          }
+        },
+        "set_image_source": {
+          "description": {
+            "summary": "设置图片壁纸源",
+            "text": "将图片设置为壁纸源，应用于当前的 wl_output 和活动工作区。\n除锁屏壁纸外，每个 wl_output 只能设置一个壁纸。\n支持的格式：\n\n- JPG / JPEG（联合图像专家组）\n\n合成器将尝试加载并显示指定的图像文件。\n如果文件无法访问、解码或格式不受支持，合成器将发出包含相应错误代码的 failed 事件。\n\n访问控制：此协议接受客户端提供的 file_source，\n如 /usr/share/wallpapers/xxx 或 /var/cache/wallpapers/xxxx。\n合成器将执行文件验证。"
+          }
+        },
+        "set_video_source": {
+          "description": {
+            "summary": "设置视频壁纸源",
+            "text": "将视频文件设置为壁纸源，应用于当前的 wl_output 和活动工作区。\n除锁屏壁纸外，每个 wl_output 只能设置一个壁纸。\n支持的格式：\n\n- MP4\n- AVI\n- MOV\n\n合成器负责解码和呈现视频。\n播放行为（如循环、同步和性能特性）由合成器定义。\n\n如果视频源无法打开或解码，将发出 failed 事件。\n\n访问控制：此协议接受客户端提供的 file_source，\n如 /usr/share/wallpapers/xxx 或 /var/cache/wallpapers/xxxx。\n合成器将执行文件验证。"
+          }
+        }
+      },
+      "events": {
+        "failed": {
+          "description": {
+            "summary": "指示壁纸操作失败",
+            "text": "当壁纸相关请求失败时发出此事件。\n\n失败可能发生在源加载、验证或运行时设置期间。\n错误代码提供有关失败原因的附加信息。\n\n可能的错误值包括：\n- already_used：壁纸源已被配置。这不是致命错误，仅作为通知。\n- invalid_source：指定的壁纸源无效、不受支持或无法处理。\n  这是致命错误，客户端应在重试前验证源。\n- permission_denied：权限被拒绝，请检查文件权限。"
+          }
+        },
+        "changed": {
+          "description": {
+            "summary": "指示壁纸源已更改",
+            "text": "合成器发出此事件通知客户端与此 treeland_wallpaper_v1 对象关联的壁纸源已更改。\n\n此事件可能在初始对象设置期间发出，也可能在由于非此客户端发起的外部因素（如合成器策略决策、影响活动壁纸的工作区切换（锁屏壁纸除外）或其他系统组件）导致壁纸更改时发出。\n\n因为桌面壁纸设计为支持不同的工作区，如果客户端是 surface，其显示工作区的更改也会发送事件（参考 set_reference_surface）。\n\n此事件提供当前壁纸源类型和对应的源文件路径。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_used": {
+              "summary": "壁纸文件已被使用并缓存在壁纸端"
+            },
+            "invalid_source": {
+              "summary": "指定的壁纸源无效、不受支持或加载失败"
+            },
+            "permission_denied": {
+              "summary": "打开指定壁纸源时权限被拒绝"
+            }
+          }
+        },
+        "wallpaper_source_type": {
+          "entries": {
+            "image": {
+              "summary": "壁纸源为图片"
+            },
+            "video": {
+              "summary": "壁纸源为视频"
+            }
+          }
+        },
+        "wallpaper_role": {
+          "entries": {
+            "desktop": {
+              "summary": "桌面环境壁纸"
+            },
+            "lockscreen": {
+              "summary": "锁屏壁纸"
+            }
+          }
+        }
+      }
+    }
+  }
+}

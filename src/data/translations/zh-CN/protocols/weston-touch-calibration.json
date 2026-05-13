@@ -1,0 +1,157 @@
+{
+  "interfaces": {
+    "weston_touch_calibration": {
+      "description": {
+        "summary": "Weston 触摸屏校准接口",
+        "text": "这是用于校准触摸屏输入坐标变换的全局接口。建议将此接口设为特权接口。\n\n客户端可以使用此接口显示校准图案并接收未校准的触摸坐标，从而便于计算校准变换，使屏幕上的实际触摸位置与其预期坐标对齐。\n\n客户端绑定后，合成器立即发送 touch_device 事件。\n\n客户端从 touch_device 事件中选择一个触摸设备，创建一个 wl_surface，然后为该 wl_surface 和选定的触摸设备创建一个 weston_touch_calibrator。客户端等待合成器发送 configure 事件，然后开始绘制第一个校准图案。收到 configure 事件后，客户端将迭代绘制图案、通过 weston_touch_calibrator 获取触摸输入，以及使用 weston_touch_calibrator.convert 将像素坐标转换为预期触摸坐标，直到获得足够的对应关系来计算校准变换或合成器取消校准。\n\n一旦客户端成功计算出新的校准，它可以使用 weston_touch_calibration.save 请求将新校准加载到合成器中。合成器可以采用此新校准并可以将其写入持久存储。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "解绑",
+            "text": "销毁与全局接口的绑定，不影响已通过此接口创建的任何对象。"
+          }
+        },
+        "create_calibrator": {
+          "description": {
+            "summary": "为表面赋予校准器角色",
+            "text": "这将校准器角色赋予表面，并将其与给定的触摸输入设备绑定。\n\n如果表面已有角色，则引发 invalid_surface 错误。\n\n如果设备字符串不是 touch_device 事件的 device 参数所通告的设备之一，则引发 invalid_device 错误。\n\n如果合成器中已存在 weston_touch_calibrator 协议对象，则引发 already_exists 错误。此限制是针对整个合成器的，而非特定客户端。"
+          }
+        },
+        "save": {
+          "description": {
+            "summary": "保存触摸设备的校准数据",
+            "text": "此请求要求合成器保存给定触摸输入设备的校准数据。合成器可以忽略此请求。\n\n如果设备字符串不是 touch_device 事件的 device 参数所通告的设备之一，则引发 invalid_device 错误。\n\n该数组必须恰好包含六个 'float'（系统上 C 语言使用的 32 位浮点格式）数字。对于以下形式的 3x3 校准矩阵：\n@code\n( a b c )\n( d e f )\n( 0 0 1 )\n@endcode\n数组必须包含值 { a, b, c, d, e, f }。有关坐标空间的定义，请参阅 libinput_device_config_calibration_set_matrix()。"
+          }
+        }
+      },
+      "events": {
+        "touch_device": {
+          "description": {
+            "summary": "通告触摸屏输入设备",
+            "text": "当客户端绑定到 weston_touch_calibration 时，会为每个可校准的触摸屏发送一个 touch_device 事件。这是唯一发送此事件的时间。合成器中添加的触摸设备不会为现有的 weston_touch_calibration 对象生成事件。\n\n事件携带触摸设备标识和关联的输出或显示连接器名称。\n\n在使用 udev 的平台上，设备标识是 udev sys 路径。它是绝对路径，以 sys 挂载点开头。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "全局接口错误"
+          },
+          "entries": {
+            "invalid_surface": {
+              "summary": "给定的 wl_surface 已有角色"
+            },
+            "invalid_device": {
+              "summary": "给定的设备无效"
+            },
+            "already_exists": {
+              "summary": "校准器已被创建"
+            }
+          }
+        }
+      }
+    },
+    "weston_touch_calibrator": {
+      "description": {
+        "summary": "特定触摸设备的校准器表面",
+        "text": "创建时，此对象与特定触摸设备绑定。合成器发送一个 configure 事件，客户端必须使用关联的 wl_surface 遵守该事件。\n\n客户端向表面提交内容后，合成器可以抓取触摸输入设备，阻止其发出正常的触摸事件，在正确的输出上显示表面，并通过此协议对象中继来自触摸设备的输入事件。\n\n来自非绑定到此对象的触摸设备的触摸事件必须至少在触摸按下时生成 wrong_touch 事件，并且不得生成正常或校准触摸事件。\n\n在任何时候，合成器可以通过发送 cancel_calibration 事件来选择取消校准过程。如果触摸设备消失或任何其他原因阻止合成器端继续校准，也应使用此事件。\n\n如果 wl_surface 被销毁，合成器必须取消校准。\n\n触摸事件坐标和转换结果以校准单位传递。校准单位精确覆盖设备坐标范围。校准单位在闭区间 [0.0, 1.0] 中，映射到 32 位无符号整数。整数可以通过除以 2^32-1 转换为实值。校准矩阵必须从 [0.0, 1.0] 实值计算，但矩阵元素不需要落入该范围。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁校准器",
+            "text": "如果表面已映射，则取消映射。如果存在输入设备抓取，则释放。表面失去其校准器角色。"
+          }
+        },
+        "convert": {
+          "description": {
+            "summary": "从表面坐标转换为原始坐标",
+            "text": "此请求要求合成器将表面局部坐标转换为适用于关联触摸设备的预期触摸输入坐标。目的是客户端使用此请求转换在校准期间用户应触摸的标记位置。\n\n如果合成器已取消校准，转换结果应为零，不会引发错误。\n\n作为此请求参数给出的坐标相对于关联的 wl_surface。\n\n如果客户端在向 wl_surface 提交有效内容之前请求转换，则引发 not_mapped 错误。\n\n如果坐标 x, y 在 wl_surface 内容之外，则引发 bad_coordinates 错误。"
+          }
+        }
+      },
+      "events": {
+        "configure": {
+          "description": {
+            "summary": "表面大小",
+            "text": "此事件告诉客户端设置表面的大小。客户端必须在下次使用 wl_buffer 提交时严格遵守该大小。\n\n此事件应在创建 weston_touch_calibrator 对象后作为响应发送一次。"
+          }
+        },
+        "cancel_calibration": {
+          "description": {
+            "summary": "取消校准过程",
+            "text": "当合成器想要取消校准并释放触摸设备抓取时发送此事件。如果表面已映射，合成器会取消映射。\n\nweston_touch_calibrator 对象将不再发送任何事件。客户端应销毁它。"
+          }
+        },
+        "invalid_touch": {
+          "description": {
+            "summary": "无法用于校准的用户触摸",
+            "text": "无论何种原因，用户操作导致的触摸事件无法用于校准。客户端应向用户显示触摸被拒绝的反馈。\n\n此事件的可能原因包括用户在有多个触摸屏时触摸了错误的触摸屏。当触摸屏被克隆且无法以其他方式识别用户应触摸哪个屏幕时，这尤其有用。\n\n另一个原因可能是触摸设备发送了超出其声明范围的坐标。如果移动使触摸点超出范围，合成器还应发送 'cancel' 事件以撤消触摸按下。"
+          }
+        },
+        "down": {
+          "description": {
+            "summary": "触摸按下事件及触摸序列的开始",
+            "text": "表面上出现了新的触摸点。此触摸点被分配一个唯一 ID。来自此触摸点的后续事件引用此 ID。该 ID 在触摸抬起事件后失效，并可能在未来被重用。\n\n有关坐标单位，请参阅 weston_touch_calibrator。"
+          }
+        },
+        "up": {
+          "description": {
+            "summary": "触摸事件序列的结束",
+            "text": "触摸点已消失。不会再发送此触摸点的事件，触摸点的 ID 被释放，并可能在未来的触摸按下事件中被重用。"
+          }
+        },
+        "motion": {
+          "description": {
+            "summary": "触摸点坐标的更新",
+            "text": "触摸点已更改坐标。\n\n有关坐标单位，请参阅 weston_touch_calibrator。"
+          }
+        },
+        "frame": {
+          "description": {
+            "summary": "触摸帧事件的结束",
+            "text": "表示逻辑上属于同一组的一组事件的结束。客户端应在继续之前累积帧内所有事件中的数据。\n\nwl_touch.frame 至少终止一个事件，但不保证帧内的事件集。客户端必须假设帧中未更新的任何状态与先前已知的状态相同。"
+          }
+        },
+        "cancel": {
+          "description": {
+            "summary": "触摸会话已取消",
+            "text": "如果合成器确定触摸流是全局手势，则发送此事件。不会再向客户端发送该特定手势的事件。触摸取消适用于此客户端表面上当前活动的所有触摸点。客户端负责完成触摸点，此表面上的未来触摸点可以重用触摸点 ID。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "校准器对象错误"
+          },
+          "entries": {
+            "bad_size": {
+              "summary": "表面大小不匹配"
+            },
+            "not_mapped": {
+              "summary": "未映射表面时无法执行请求的操作"
+            },
+            "bad_coordinates": {
+              "summary": "表面局部坐标超出范围"
+            }
+          }
+        }
+      }
+    },
+    "weston_touch_coordinate": {
+      "description": {
+        "summary": "坐标转换回复"
+      },
+      "events": {
+        "result": {
+          "description": {
+            "summary": "原始触摸空间中的坐标",
+            "text": "此事件返回从表面坐标到预期触摸设备坐标的转换结果。\n\n有关详情，请参阅 weston_touch_calibrator.convert。有关坐标单位，请参阅 weston_touch_calibrator。\n\n此事件销毁 weston_touch_coordinate 对象。"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "interfaces": {
+    "org_kde_kwin_appmenu_manager": {
+      "description": {
+        "summary": "应用程序菜单 DBus 地址接口",
+        "text": "此接口允许客户端将窗口（或 wl_surface）链接到在 DBus 上注册的 com.canonical.dbusmenu 接口。"
+      },
+      "requests": {
+        "create": {
+          "description": {
+            "summary": "创建应用程序菜单对象"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "销毁 org_kde_kwin_appmenu_manager 对象"
+          }
+        }
+      }
+    },
+    "org_kde_kwin_appmenu": {
+      "description": {
+        "summary": "应用程序菜单 DBus 地址接口",
+        "text": "应用程序菜单接口所在的 DBus 服务名称和对象路径。在发送此请求之前，该对象应在会话总线上注册。如果不适用，客户端应删除此对象。"
+      },
+      "requests": {
+        "set_address": {
+          "description": {
+            "summary": "初始化或更新应用程序菜单接口的位置",
+            "text": "设置或更新服务名称和对象路径。字符串应按照相关 DBus 规范以 Latin-1 格式格式化。"
+          }
+        },
+        "release": {
+          "description": {
+            "summary": "释放应用程序菜单对象"
+          }
+        }
+      }
+    }
+  }
+}

@@ -387,6 +387,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Experimental,
         protocol: require('./protocols/xx-session-management-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xx-session-management-v1.json'),
+        },
     },
     {
         id: 'xx-cutouts-v1',
@@ -394,6 +397,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Experimental,
         protocol: require('./protocols/xx-cutouts-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xx-cutouts-v1.json'),
+        },
     },
     {
         id: 'xx-keyboard-filter-v1',
@@ -401,6 +407,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Experimental,
         protocol: require('./protocols/xx-keyboard-filter-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xx-keyboard-filter-v1.json'),
+        },
     },
     {
         id: 'xx-text-input-v3',
@@ -415,6 +424,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Experimental,
         protocol: require('./protocols/xx-zones-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xx-zones-v1.json'),
+        },
     },
     {
         id: 'fullscreen-shell-unstable-v1',
@@ -422,6 +434,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/fullscreen-shell-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/fullscreen-shell-unstable-v1.json'),
+        },
     },
     {
         id: 'idle-inhibit-unstable-v1',
@@ -429,6 +444,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/idle-inhibit-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/idle-inhibit-unstable-v1.json'),
+        },
     },
     {
         id: 'input-method-unstable-v1',
@@ -443,6 +461,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/input-timestamps-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/input-timestamps-unstable-v1.json'),
+        },
     },
     {
         id: 'keyboard-shortcuts-inhibit-unstable-v1',
@@ -450,6 +471,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/keyboard-shortcuts-inhibit-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/keyboard-shortcuts-inhibit-unstable-v1.json'),
+        },
     },
     {
         id: 'linux-explicit-synchronization-unstable-v1',
@@ -457,6 +481,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/linux-explicit-synchronization-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/linux-explicit-synchronization-unstable-v1.json'),
+        },
         deprecated: [
             {
                 name: 'zwp_linux_explicit_synchronization_v1',
@@ -478,6 +505,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/pointer-constraints-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/pointer-constraints-unstable-v1.json'),
+        },
     },
     {
         id: 'pointer-gestures-unstable-v1',
@@ -485,6 +515,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/pointer-gestures-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/pointer-gestures-unstable-v1.json'),
+        },
     },
     {
         id: 'primary-selection-unstable-v1',
@@ -492,6 +525,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/primary-selection-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/primary-selection-unstable-v1.json'),
+        },
     },
     {
         id: 'relative-pointer-unstable-v1',
@@ -499,6 +535,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/relative-pointer-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/relative-pointer-unstable-v1.json'),
+        },
     },
     {
         id: 'text-input-unstable-v3',
@@ -506,6 +545,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/text-input-unstable-v3.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/text-input-unstable-v3.json'),
+        },
     },
     {
         id: 'xdg-decoration-unstable-v1',
@@ -513,6 +555,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/xdg-decoration-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xdg-decoration-unstable-v1.json'),
+        },
     },
     {
         id: 'xdg-foreign-unstable-v2',
@@ -520,6 +565,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/xdg-foreign-unstable-v2.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xdg-foreign-unstable-v2.json'),
+        },
     },
     {
         id: 'xdg-output-unstable-v1',
@@ -527,6 +575,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/xdg-output-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xdg-output-unstable-v1.json'),
+        },
     },
     {
         id: 'xwayland-keyboard-grab-unstable-v1',
@@ -534,6 +585,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/xwayland-keyboard-grab-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xwayland-keyboard-grab-unstable-v1.json'),
+        },
     },
     {
         id: 'wlr-data-control-unstable-v1',
@@ -541,6 +595,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WlrProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wlr-data-control-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wlr-data-control-unstable-v1.json'),
+        },
     },
     {
         id: 'wlr-export-dmabuf-unstable-v1',
@@ -548,6 +605,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WlrProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wlr-export-dmabuf-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wlr-export-dmabuf-unstable-v1.json'),
+        },
     },
     {
         id: 'wlr-foreign-toplevel-management-unstable-v1',
@@ -555,6 +615,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WlrProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wlr-foreign-toplevel-management-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wlr-foreign-toplevel-management-unstable-v1.json'),
+        },
     },
     {
         id: 'wlr-gamma-control-unstable-v1',
@@ -562,6 +625,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WlrProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wlr-gamma-control-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wlr-gamma-control-unstable-v1.json'),
+        },
     },
     {
         id: 'wlr-input-inhibitor-unstable-v1',
@@ -569,6 +635,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WlrProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wlr-input-inhibitor-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wlr-input-inhibitor-unstable-v1.json'),
+        },
     },
     {
         id: 'wlr-layer-shell-unstable-v1',
@@ -576,6 +645,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WlrProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wlr-layer-shell-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wlr-layer-shell-unstable-v1.json'),
+        },
     },
     {
         id: 'wlr-output-management-unstable-v1',
@@ -590,6 +662,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WlrProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wlr-output-power-management-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wlr-output-power-management-unstable-v1.json'),
+        },
     },
     {
         id: 'wlr-screencopy-unstable-v1',
@@ -597,6 +672,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WlrProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wlr-screencopy-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wlr-screencopy-unstable-v1.json'),
+        },
     },
     {
         id: 'wlr-virtual-pointer-unstable-v1',
@@ -604,6 +682,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WlrProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wlr-virtual-pointer-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wlr-virtual-pointer-unstable-v1.json'),
+        },
     },
     {
         id: 'input-method-unstable-v2',
@@ -620,6 +701,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-appmenu.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-appmenu.json'),
+        },
     },
     {
         id: 'kde-blur',
@@ -627,6 +711,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-blur.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-blur.json'),
+        },
     },
     {
         id: 'kde-contrast',
@@ -634,6 +721,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-contrast.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-contrast.json'),
+        },
     },
     {
         id: 'kde-dpms',
@@ -641,6 +731,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-dpms.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-dpms.json'),
+        },
     },
     {
         id: 'kde-external-brightness-v1',
@@ -648,6 +741,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-external-brightness-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-external-brightness-v1.json'),
+        },
     },
     {
         id: 'kde-fake-input',
@@ -655,6 +751,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-fake-input.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-fake-input.json'),
+        },
     },
     {
         id: 'kde-idle',
@@ -662,6 +761,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-idle.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-idle.json'),
+        },
         deprecated: [
             { name: 'org_kde_kwin_idle', reason: 'Use ext-idle-notify' },
             {
@@ -676,6 +778,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-keystate.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-keystate.json'),
+        },
     },
     {
         id: 'kde-lockscreen-overlay-v1',
@@ -683,6 +788,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-lockscreen-overlay-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-lockscreen-overlay-v1.json'),
+        },
     },
     {
         id: 'kde-output-management',
@@ -690,6 +798,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-output-management.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-output-management.json'),
+        },
     },
     {
         id: 'kde-output-management-v2',
@@ -704,6 +815,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-outputdevice.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-outputdevice.json'),
+        },
     },
     {
         id: 'kde-output-device-v2',
@@ -718,6 +832,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-output-order-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-output-order-v1.json'),
+        },
     },
     {
         id: 'kde-plasma-shell',
@@ -725,6 +842,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-plasma-shell.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-plasma-shell.json'),
+        },
     },
     {
         id: 'kde-plasma-virtual-desktop',
@@ -732,6 +852,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-plasma-virtual-desktop.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-plasma-virtual-desktop.json'),
+        },
     },
     {
         id: 'kde-plasma-window-management',
@@ -746,6 +869,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-primary-output-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-primary-output-v1.json'),
+        },
     },
     {
         id: 'kde-screen-edge-v1',
@@ -753,6 +879,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-screen-edge-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-screen-edge-v1.json'),
+        },
     },
     {
         id: 'kde-zkde-screencast-unstable-v1',
@@ -760,6 +889,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-zkde-screencast-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-zkde-screencast-unstable-v1.json'),
+        },
     },
     {
         id: 'kde-server-decoration',
@@ -767,6 +899,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-server-decoration.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-server-decoration.json'),
+        },
         deprecated: [
             {
                 name: 'org_kde_kwin_server_decoration_manager',
@@ -784,6 +919,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-server-decoration-palette.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-server-decoration-palette.json'),
+        },
     },
     {
         id: 'kde-shadow',
@@ -791,6 +929,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-shadow.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-shadow.json'),
+        },
     },
     {
         id: 'kde-slide',
@@ -798,6 +939,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-slide.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-slide.json'),
+        },
     },
     {
         id: 'hyprland-ctm-control-v1',
@@ -805,6 +949,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.HyprlandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/hyprland-ctm-control-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/hyprland-ctm-control-v1.json'),
+        },
     },
     {
         id: 'hyprland-focus-grab-v1',
@@ -812,6 +959,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.HyprlandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/hyprland-focus-grab-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/hyprland-focus-grab-v1.json'),
+        },
     },
     {
         id: 'hyprland-global-shortcuts-v1',
@@ -826,6 +976,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.HyprlandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/hyprland-surface-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/hyprland-surface-v1.json'),
+        },
     },
     {
         id: 'hyprland-toplevel-export-v1',
@@ -833,6 +986,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.HyprlandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/hyprland-toplevel-export-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/hyprland-toplevel-export-v1.json'),
+        },
     },
     {
         id: 'hyprland-lock-notify-v1',
@@ -840,6 +996,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.HyprlandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/hyprland-lock-notify-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/hyprland-lock-notify-v1.json'),
+        },
     },
     {
         id: 'hyprland-toplevel-mapping-v1',
@@ -847,6 +1006,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.HyprlandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/hyprland-toplevel-mapping-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/hyprland-toplevel-mapping-v1.json'),
+        },
     },
     {
         id: 'cosmic-a11y-unstable-v1',
@@ -854,6 +1016,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-a11y-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-a11y-unstable-v1.json'),
+        },
     },
     {
         id: 'cosmic-atspi-unstable-v1',
@@ -861,6 +1026,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-atspi-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-atspi-unstable-v1.json'),
+        },
     },
     {
         id: 'cosmic-image-capture-source-unstable-v1',
@@ -868,6 +1036,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-image-capture-source-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-image-capture-source-unstable-v1.json'),
+        },
     },
     {
         id: 'cosmic-image-source-unstable-v1',
@@ -875,6 +1046,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-image-source-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-image-source-unstable-v1.json'),
+        },
     },
     {
         id: 'cosmic-output-management-unstable-v1',
@@ -882,6 +1056,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-output-management-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-output-management-unstable-v1.json'),
+        },
     },
     {
         id: 'cosmic-overlap-notify-unstable-v1',
@@ -889,6 +1066,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-overlap-notify-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-overlap-notify-unstable-v1.json'),
+        },
     },
     {
         id: 'cosmic-screencopy-unstable-v1',
@@ -910,6 +1090,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-toplevel-info-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-toplevel-info-unstable-v1.json'),
+        },
     },
     {
         id: 'cosmic-toplevel-management-unstable-v1',
@@ -917,6 +1100,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-toplevel-management-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-toplevel-management-unstable-v1.json'),
+        },
     },
     {
         id: 'cosmic-workspace-unstable-v1',
@@ -924,6 +1110,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-workspace-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-workspace-unstable-v1.json'),
+        },
     },
     {
         id: 'cosmic-workspace-unstable-v2',
@@ -931,6 +1120,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-workspace-unstable-v2.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-workspace-unstable-v2.json'),
+        },
     },
     {
         id: 'ivi-application',
@@ -938,6 +1130,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WestonProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/ivi-application.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ivi-application.json'),
+        },
     },
     {
         id: 'ivi-hmi-controller',
@@ -945,6 +1140,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WestonProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/ivi-hmi-controller.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/ivi-hmi-controller.json'),
+        },
     },
     {
         id: 'text-cursor-position',
@@ -959,6 +1157,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WestonProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/weston-content-protection.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/weston-content-protection.json'),
+        },
     },
     {
         id: 'weston-debug',
@@ -966,6 +1167,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WestonProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/weston-debug.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/weston-debug.json'),
+        },
     },
     {
         id: 'weston-desktop-shell',
@@ -973,6 +1177,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WestonProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/weston-desktop-shell.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/weston-desktop-shell.json'),
+        },
     },
     {
         id: 'weston-direct-display',
@@ -980,6 +1187,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WestonProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/weston-direct-display.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/weston-direct-display.json'),
+        },
     },
     {
         id: 'weston-output-capture',
@@ -987,6 +1197,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WestonProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/weston-output-capture.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/weston-output-capture.json'),
+        },
     },
     {
         id: 'weston-test',
@@ -994,6 +1207,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WestonProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/weston-test.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/weston-test.json'),
+        },
     },
     {
         id: 'weston-touch-calibration',
@@ -1001,6 +1217,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WestonProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/weston-touch-calibration.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/weston-touch-calibration.json'),
+        },
     },
     {
         id: 'treeland-capture-unstable-v1',
@@ -1029,6 +1248,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-output-manager-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-output-manager-v1.json'),
+        },
     },
     {
         id: 'treeland-personalization-manager-v1',
@@ -1043,6 +1265,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-shortcut-manager-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-shortcut-manager-v1.json'),
+        },
     },
     {
         id: 'treeland-virtual-output-manager-v1',
@@ -1050,6 +1275,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-virtual-output-manager-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-virtual-output-manager-v1.json'),
+        },
     },
     {
         id: 'treeland-wallpaper-color-v1',
@@ -1057,6 +1285,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-wallpaper-color-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-wallpaper-color-v1.json'),
+        },
     },
     {
         id: 'treeland-window-management-v1',
@@ -1064,6 +1295,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-window-management-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-window-management-v1.json'),
+        },
     },
     {
         id: 'treeland-wallpaper-manager-unstable-v1',
@@ -1071,6 +1305,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-wallpaper-manager-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-wallpaper-manager-unstable-v1.json'),
+        },
     },
     {
         id: 'treeland-wallpaper-shell-unstable-v1',
@@ -1078,6 +1315,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-wallpaper-shell-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-wallpaper-shell-unstable-v1.json'),
+        },
     },
     {
         id: 'river-control-unstable-v1',
@@ -1190,6 +1430,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/agl-shell-desktop.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/agl-shell-desktop.json'),
+        },
         externalUrl:
             'https://gerrit.automotivelinux.org/gerrit/gitweb?p=src/agl-compositor.git;a=blob;f=protocol/agl-shell-desktop.xml;h=e4445bd071f242b229789c68dc71d04ea2eed140;hb=HEAD',
     },
@@ -1199,6 +1442,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/agl-screenshooter.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/agl-screenshooter.json'),
+        },
         externalUrl:
             'https://gerrit.automotivelinux.org/gerrit/gitweb?p=src/agl-compositor.git;a=blob;f=protocol/agl-screenshooter.xml;h=231c8cf3abae63b7bdc12d318559ffb4bf6d9a0e;hb=HEAD',
     },
@@ -1208,6 +1454,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/aura-output-management.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/aura-output-management.json'),
+        },
         externalUrl:
             'https://source.chromium.org/chromium/chromium/src/+/master:components/exo/wayland/protocol/aura-output-management.xml',
     },
@@ -1235,6 +1484,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/overlay-prioritizer.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/overlay-prioritizer.json'),
+        },
         externalUrl:
             'https://source.chromium.org/chromium/chromium/src/+/master:components/exo/wayland/protocol/overlay-prioritizer.xml',
     },
@@ -1253,6 +1505,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/virtual-keyboard-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/virtual-keyboard-unstable-v1.json'),
+        },
         externalUrl:
             'https://gitlab.freedesktop.org/wlroots/wlroots/-/blob/5adf325333602d5b1e7ccdeb122633bbc8040ace/protocol/virtual-keyboard-unstable-v1.xml',
     },
@@ -1271,6 +1526,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/nvidia-eglstream.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/nvidia-eglstream.json'),
+        },
         externalUrl:
             'https://github.com/NVIDIA/egl-wayland/blob/master/wayland-eglstream/wayland-eglstream.xml',
     },
@@ -1280,6 +1538,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/nvidia-eglstream-controller.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/nvidia-eglstream-controller.json'),
+        },
         externalUrl:
             'https://github.com/NVIDIA/egl-wayland/blob/master/wayland-eglstream/wayland-eglstream-controller.xml',
     },
@@ -1289,6 +1550,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/gtk-shell.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/gtk-shell.json'),
+        },
         externalUrl:
             'https://gitlab.gnome.org/GNOME/gtk/-/blob/main/gdk/wayland/protocol/gtk-shell.xml',
     },

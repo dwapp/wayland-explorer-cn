@@ -1,0 +1,75 @@
+{
+  "description": {
+    "summary": "Hyprland 特定的 wl_surface 扩展",
+    "text": "此协议暴露 Hyprland 特定的 wl_surface 属性。"
+  },
+  "interfaces": {
+    "hyprland_surface_manager_v1": {
+      "description": {
+        "summary": "Hyprland surface 对象管理器",
+        "text": "此接口允许客户端创建 Hyprland surface 对象。"
+      },
+      "requests": {
+        "get_hyprland_surface": {
+          "description": {
+            "summary": "创建一个 Hyprland surface 对象",
+            "text": "为给定的 Wayland surface 创建一个 Hyprland surface 对象。\n\n如果该 wl_surface 已经关联了一个 hyprland_surface_v1 对象（即使来自不同的管理器），则创建操作将产生协议错误。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 Hyprland surface 管理器",
+            "text": "销毁 surface 管理器。\n此操作不会销毁已存在的 surface 对象。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_constructed": {
+              "summary": "wl_surface 已经拥有一个 Hyprland surface 对象"
+            }
+          }
+        }
+      }
+    },
+    "hyprland_surface_v1": {
+      "description": {
+        "summary": "Hyprland 特定的 wl_surface 属性",
+        "text": "此接口允许访问 wl_surface 的 Hyprland 特定属性。\n\n一旦 wl_surface 被销毁，Hyprland surface 对象也必须随之销毁。所有其他操作都将产生协议错误。"
+      },
+      "requests": {
+        "set_opacity": {
+          "description": {
+            "summary": "设置 surface 的整体不透明度",
+            "text": "设置 surface 整体不透明度的乘数。\n此乘数不仅适用于 surface 的内容，还适用于视觉效果（如 surface 背后的模糊效果）。\n\n默认值为 1.0。\n设置超出 0.0 - 1.0（含）范围的值将产生协议错误。\n在调用 wl_surface.commit 之前不会生效。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 Hyprland surface 接口",
+            "text": "销毁 Hyprland surface 对象，在下次 wl_surface.commit 时将此接口提供的属性重置为默认值。"
+          }
+        },
+        "set_visible_region": {
+          "description": {
+            "summary": "设置 surface 的可见区域",
+            "text": "此请求设置 surface 中包含可见内容的区域。\n可见内容指的是 alpha 值大于零的内容。\n\n可见区域是为 compositor 提供的优化提示，使其可以避免绘制 surface 中不可见的部分。设置一个未包含 surface 中所有内容的可见区域可能导致部分内容未被绘制。\n\n可见区域以 buffer 本地坐标指定。\n\ncompositor 会忽略超出 surface 范围的可见区域部分。当区域的所有部分都超出 buffer 几何范围时，compositor 可以完全避免渲染该 surface。\n\n可见区域的初始值为空。设置可见区域具有拷贝语义，wl_region 对象可以立即销毁。NULL wl_region 会使可见区域被设置为空。\n\n在调用 wl_surface.commit 之前不会生效。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "no_surface": {
+              "summary": "wl_surface 已被销毁"
+            },
+            "out_of_range": {
+              "summary": "给定的不透明度不在 0.0 - 1.0（含）范围内"
+            }
+          }
+        }
+      }
+    }
+  }
+}

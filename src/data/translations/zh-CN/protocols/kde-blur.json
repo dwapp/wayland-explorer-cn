@@ -1,0 +1,13 @@
+{
+  "interfaces": {
+    "org_kde_kwin_blur": {
+      "requests": {
+        "release": {
+          "description": {
+            "summary": "释放模糊对象"
+          }
+        }
+      }
+    }
+  }
+}

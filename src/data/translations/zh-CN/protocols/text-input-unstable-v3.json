@@ -1,0 +1,229 @@
+{
+    "description": {
+        "summary": "文本组合协议",
+        "text": "此协议允许合成器充当输入法并向应用程序发送文本。文本输入对象用于管理应用程序中通常是文本输入字段的状态。\n\n本文档在使用\"必须\"、\"应当\"、\"可以\"等词语时遵循 RFC 2119。\n\n警告！此文件中描述的协议是实验性的，可能会进行向后不兼容的更改。向后兼容的更改可以与相应的接口版本号一起添加。向后不兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被宣布为稳定，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。"
+    },
+    "interfaces": {
+        "zwp_text_input_v3": {
+            "description": {
+                "summary": "文本输入",
+                "text": "zwp_text_input_v3 接口表示与 seat 关联的文本输入和输入法。它提供 enter/leave 事件以跟踪 seat 的文本输入焦点。\n\n请求用于启用/禁用文本输入对象和设置状态信息，如周围文本和选定文本或内容类型。有关输入文本的信息通过 preedit_string 和 commit_string 事件发送到文本输入对象。\n\n文本是有效的 UTF-8 编码，索引和长度以字节为单位。索引不得指向代码点内的中间字节：它们必须指向代码点的第一个字节或缓冲区的末尾。长度必须在两个有效索引之间测量。\n\n焦点在表面之间移动将导致发出 zwp_text_input_v3.enter 和 zwp_text_input_v3.leave 事件。聚焦的表面必须在键盘焦点在 UI 的可编辑和不可编辑元素之间移动时提交 zwp_text_input_v3.enable 和 zwp_text_input_v3.disable 请求。这两个请求不需要配对，合成器必须能够处理连续的相同请求序列。\n\n状态由状态请求（set_surrounding_text、set_content_type 和 set_cursor_rectangle）和 commit 请求发送。在 enter 事件或 disable 请求之后，所有状态信息都失效，需要由客户端重新发送。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 wp_text_input",
+                        "text": "销毁 wp_text_input 对象。同时禁用通过此 wp_text_input 对象启用的所有表面。"
+                    }
+                },
+                "enable": {
+                    "description": {
+                        "summary": "请求启用文本输入",
+                        "text": "在先前从 enter 事件获得的表面上请求文本输入。\n\n每次聚焦的文本输入更改为新的时（包括在当前表面内），都必须发出此请求。当当前表面上不再有任何输入焦点时使用 zwp_text_input_v3.disable。\n\n客户端不得在单个 seat 上启用多个文本输入，并应在启用新文本输入之前禁用当前文本输入。在同一 seat 上已启用另一个文本输入时启用文本输入的请求必须被合成器忽略。\n\n此请求重置与先前 enable、disable、set_surrounding_text、set_text_change_cause、set_content_type 和 set_cursor_rectangle 请求相关的所有状态，以及与 preedit_string、commit_string 和 delete_surrounding_text 事件相关的状态。\n\n如果文本输入支持必要的功能，set_surrounding_text、set_content_type 和 set_cursor_rectangle 请求必须跟在此请求之后。\n\n此请求设置的状态是双缓冲的。它将在下一个 zwp_text_input_v3.commit 请求时应用，并保持有效直到下一个提交的 enable 或 disable 请求。\n\n更改必须由合成器在发出 zwp_text_input_v3.commit 请求后应用。"
+                    }
+                },
+                "disable": {
+                    "description": {
+                        "summary": "在表面上禁用文本输入",
+                        "text": "显式禁用当前表面上的文本输入（通常当表面上没有任何文本输入框获得焦点时）。\n\n此请求设置的状态是双缓冲的。它将在下一个 zwp_text_input_v3.commit 请求时应用。"
+                    }
+                },
+                "set_surrounding_text": {
+                    "description": {
+                        "summary": "设置周围文本",
+                        "text": "设置输入周围的纯文本，不包括预编辑文本。\n\n客户端应通知合成器此请求携带的任何值的任何更改，包括处理传入文本输入事件引起的更改以及其他机制（如键盘输入）引起的更改。\n\n如果客户端不知道光标周围的文本，则不应发出此请求，以向合成器表示缺乏支持。\n\n文本是 UTF-8 编码的，应包括光标位置、完整的选择以及它们前后的额外字符。Wayland 消息有最大长度限制，因此文本不能超过 4000 字节。\n\n光标是文本缓冲区中光标的字节偏移量。\n\n锚点是文本缓冲区中选择锚点的字节偏移量。如果没有选定的文本，锚点与光标相同。\n\n如果存在任何预编辑文本，为了此事件的目的，它将被光标替换。\n\n此请求设置的值是双缓冲的。它们将在下一个 zwp_text_input_v3.commit 请求时应用，并保持有效直到下一个提交的 enable 或 disable 请求。\n\n受影响字段的初始状态为空，表示文本输入不支持发送周围文本。如果应用了空值，后续更改尝试可能无效。"
+                    }
+                },
+                "set_text_change_cause": {
+                    "description": {
+                        "summary": "指示周围文本更改的原因",
+                        "text": "告知合成器光标周围的文本更改的原因。\n\n每当客户端检测到文本、光标或锚点位置的外部更改时，必须向合成器发出此请求。此请求旨在让输入法有机会以适当的方式更新预编辑文本，例如在用户开始用键盘输入时将其移除。\n\ncause 描述更改的来源。\n\n此请求设置的值是双缓冲的。它必须在下一个 zwp_text_input_v3.commit 请求时应用并重置为初始值。\n\ncause 的初始值是 input_method。"
+                    }
+                },
+                "set_content_type": {
+                    "description": {
+                        "summary": "设置内容用途和提示",
+                        "text": "设置内容用途和内容提示。用途是输入字段的基本用途，提示标志允许修改某些行为。\n\n此请求设置的值是双缓冲的。它们将在下一个 zwp_text_input_v3.commit 请求时应用。后续更新尝试可能无效。这些值保持有效直到下一个提交的 enable 或 disable 请求。\n\nhint 的初始值是 none，purpose 的初始值是 normal。"
+                    }
+                },
+                "set_cursor_rectangle": {
+                    "description": {
+                        "summary": "设置光标位置",
+                        "text": "将光标周围的区域标记为表面局部坐标中的 x、y、width、height 矩形。\n\n允许合成器将带有单词建议的窗口放在光标附近，而不会遮挡正在输入的文本。\n\n如果客户端不知道编辑文本的位置，则不应发出此请求，以向合成器表示缺乏支持。\n\n此请求设置的值是双缓冲的。它们将在下一个 zwp_text_input_v3.commit 请求时应用，并保持有效直到下一个提交的 enable 或 disable 请求。\n\n描述光标矩形的初始值为空。这意味着文本输入不支持描述光标区域。如果应用了空值，后续更改尝试可能无效。"
+                    }
+                },
+                "commit": {
+                    "description": {
+                        "summary": "提交状态",
+                        "text": "原子地应用最近发送到合成器的状态更改。\n\ncommit 请求建立和更新客户端的状态，必须在任何更改后发出以应用它们。\n\n文本输入状态（启用状态、内容用途、内容提示、周围文本和更改原因、光标矩形）在文本输入的上下文中是概念上双缓冲的，即在提交的 enable 请求和后续提交的 enable 或 disable 请求之间。\n\n协议请求修改待处理状态，而不是输入法使用的当前状态。commit 请求原子地应用所有待处理状态，替换当前状态。提交后，新的待处理状态如每个相关请求所记录。\n\n请求按到达顺序应用。\n\n除非另有说明，否则当前和待处理状态均不会被修改。\n\n合成器必须计算来自每个 zwp_text_input_v3 对象的 commit 请求数量，并将该计数用作 done 事件中的序列号。"
+                    }
+                }
+            },
+            "events": {
+                "enter": {
+                    "description": {
+                        "summary": "enter 事件",
+                        "text": "通知此 seat 的文本输入焦点在某个表面上。\n\n如果客户端创建了多个文本输入对象，合成器必须将此事件发送给所有对象。\n\n当 seat 具有键盘功能时，文本输入焦点跟随键盘焦点。此事件为文本输入对象设置当前表面。"
+                    }
+                },
+                "leave": {
+                    "description": {
+                        "summary": "leave 事件",
+                        "text": "通知此 seat 的文本输入焦点不再在某个表面上。客户端应重置先前设置的任何预编辑字符串。\n\nleave 通知清除当前表面。它在新焦点的 enter 通知之前发送。leave 事件后，合成器必须忽略来自任何文本输入实例的请求，直到下一个 enter 事件。\n\n当 seat 具有键盘功能时，文本输入焦点跟随键盘焦点。"
+                    }
+                },
+                "preedit_string": {
+                    "description": {
+                        "summary": "预编辑",
+                        "text": "通知何时应在当前光标位置设置新的组合文本（预编辑）。必须移除先前设置的任何组合文本。必须移除任何先前存在的选定文本。\n\n参数 text 包含预编辑字符串缓冲区。\n\n参数 cursor_begin 和 cursor_end 以字节为单位相对于提交的文本缓冲区的开头计数。当两者都等于 -1 时应隐藏光标。\n\n客户端可以将它们表示为一行（如果两个值相同），否则表示为文本高亮。\n\n此事件设置的值是双缓冲的。它们必须在下一个 zwp_text_input_v3.done 事件时应用并重置为初始值。\n\ntext 的初始值是空字符串，cursor_begin、cursor_end 和 cursor_hidden 都是 0。"
+                    }
+                },
+                "commit_string": {
+                    "description": {
+                        "summary": "文本提交",
+                        "text": "通知何时应将文本插入编辑器小部件。要提交的文本可以是按键后的单个字符，也可以是某些组合（预编辑）的结果。\n\n此事件设置的值是双缓冲的。它们必须在下一个 zwp_text_input_v3.done 事件时应用并重置为初始值。\n\ntext 的初始值是空字符串。"
+                    }
+                },
+                "delete_surrounding_text": {
+                    "description": {
+                        "summary": "删除周围文本",
+                        "text": "通知何时应删除当前光标位置周围的文本。\n\nbefore_length 和 after_length 是当前光标索引前后要删除的字节数（不包括选择）。\n\n如果存在预编辑文本，实际上 before_length 从其开头计数，after_length 从其结尾计数（参见 done 事件序列）。\n\n此事件设置的值是双缓冲的。它们必须在下一个 zwp_text_input_v3.done 事件时应用并重置为初始值。\n\nbefore_length 和 after_length 的初始值都是 0。"
+                    }
+                },
+                "done": {
+                    "description": {
+                        "summary": "应用更改",
+                        "text": "指示应用程序应用 preedit_string、commit_string 和 delete_surrounding_text 事件请求的状态更改。与这些事件相关的状态是双缓冲的，每个都修改待处理状态。此事件用待处理状态替换当前状态。\n\n应用程序必须按以下顺序评估更改：\n\n1. 用光标替换现有预编辑字符串。\n2. 删除请求的周围文本。\n3. 在光标位于其末尾处插入 commit 字符串。\n4. 计算要发送的周围文本。\n5. 在光标位置插入新的预编辑文本。\n6. 将光标放在预编辑文本内。\n\n序列号反映合成器已知的 zwp_text_input_v3 对象的最后状态。serial 参数的值必须等于该对象上已发出的 commit 请求数量。\n\n当客户端收到序列号与过去的 commit 请求数量不同的 done 事件时，必须照常继续评估和应用更改，只是不应更改 zwp_text_input_v3 对象的当前状态。在收到匹配序列的 zwp_text_input_v3.done 事件后，应发送并提交 zwp_text_input_v3 对象上的所有待处理状态请求（set_surrounding_text、set_content_type 和 set_cursor_rectangle）。"
+                    }
+                }
+            },
+            "enums": {
+                "change_cause": {
+                    "description": {
+                        "summary": "文本更改原因",
+                        "text": "周围文本或光标位置更改的原因。"
+                    },
+                    "entries": {
+                        "input_method": {
+                            "summary": "输入法引起的更改"
+                        },
+                        "other": {
+                            "summary": "输入法以外的原因引起的更改"
+                        }
+                    }
+                },
+                "content_hint": {
+                    "description": {
+                        "summary": "内容提示",
+                        "text": "内容提示是一个位掩码，允许修改文本输入的行为。"
+                    },
+                    "entries": {
+                        "none": {
+                            "summary": "无特殊行为"
+                        },
+                        "completion": {
+                            "summary": "建议单词补全"
+                        },
+                        "spellcheck": {
+                            "summary": "建议单词更正"
+                        },
+                        "auto_capitalization": {
+                            "summary": "在句子开头切换到大写字母"
+                        },
+                        "lowercase": {
+                            "summary": "首选小写字母"
+                        },
+                        "uppercase": {
+                            "summary": "首选大写字母"
+                        },
+                        "titlecase": {
+                            "summary": "首选标题和标题的大小写（可能取决于语言）"
+                        },
+                        "hidden_text": {
+                            "summary": "字符应被隐藏"
+                        },
+                        "sensitive_data": {
+                            "summary": "输入的文本不应被存储"
+                        },
+                        "latin": {
+                            "summary": "只应输入拉丁字符"
+                        },
+                        "multiline": {
+                            "summary": "文本输入是多行的"
+                        }
+                    }
+                },
+                "content_purpose": {
+                    "description": {
+                        "summary": "内容用途",
+                        "text": "内容用途允许指定文本输入的主要用途。\n\n这允许输入法显示带有额外字符的特殊用途输入面板，或禁止某些字符。"
+                    },
+                    "entries": {
+                        "normal": {
+                            "summary": "默认输入，允许所有字符"
+                        },
+                        "alpha": {
+                            "summary": "只允许字母字符"
+                        },
+                        "digits": {
+                            "summary": "只允许数字"
+                        },
+                        "number": {
+                            "summary": "输入数字（包括小数分隔符和符号）"
+                        },
+                        "phone": {
+                            "summary": "输入电话号码"
+                        },
+                        "url": {
+                            "summary": "输入 URL"
+                        },
+                        "email": {
+                            "summary": "输入电子邮件地址"
+                        },
+                        "name": {
+                            "summary": "输入人名"
+                        },
+                        "password": {
+                            "summary": "输入密码（与 sensitive_data 提示组合使用）"
+                        },
+                        "pin": {
+                            "summary": "输入是数字密码（与 sensitive_data 提示组合使用）"
+                        },
+                        "date": {
+                            "summary": "输入日期"
+                        },
+                        "time": {
+                            "summary": "输入时间"
+                        },
+                        "datetime": {
+                            "summary": "输入日期和时间"
+                        },
+                        "terminal": {
+                            "summary": "用于终端的输入"
+                        }
+                    }
+                }
+            }
+        },
+        "zwp_text_input_manager_v3": {
+            "description": {
+                "summary": "文本输入管理器",
+                "text": "文本输入对象的工厂。此对象是全局单例。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 wp_text_input_manager",
+                        "text": "销毁 wp_text_input_manager 对象。"
+                    }
+                },
+                "get_text_input": {
+                    "description": {
+                        "summary": "创建新的文本输入对象",
+                        "text": "为给定的 seat 创建新的文本输入对象。"
+                    }
+                }
+            }
+        }
+    }
+}

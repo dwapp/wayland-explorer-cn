@@ -1,0 +1,31 @@
+{
+    "interfaces": {
+        "kde_output_order_v1": {
+            "description": {
+                "summary": "宣告输出的顺序",
+                "text": "宣告桌面环境组件应在输出上放置的顺序。合成器将在全局绑定时以及每次更改时发送输出列表。\n\n警告！此文件中描述的协议是桌面环境的实现细节。普通客户端不得使用此协议。可能会在不增加扩展主版本号的情况下添加不向后兼容的更改。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁输出顺序通知器"
+                    }
+                }
+            },
+            "events": {
+                "output": {
+                    "description": {
+                        "summary": "输出名称",
+                        "text": "指定由 wl_output.name 标识的输出。"
+                    }
+                },
+                "done": {
+                    "description": {
+                        "summary": "完成",
+                        "text": "指定输出列表已完成。在下一个 output 事件时，将开始新的列表。"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,62 @@
+{
+  "description": {
+    "summary": "输入事件的高分辨率时间戳",
+    "text": "此协议为客户端指定了一种请求和接收输入事件高分辨率时间戳的方式。\n\n警告！此文件中描述的协议是实验性的，可能会进行不兼容的更改。兼容的更改可以与相应的接口版本递增一起添加。\n不兼容的更改通过递增协议和接口名称中的版本号并重置接口版本来完成。\n一旦协议宣布为稳定，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。"
+  },
+  "interfaces": {
+    "zwp_input_timestamps_manager_v1": {
+      "description": {
+        "summary": "高分辨率输入时间戳的上下文对象",
+        "text": "用于请求输入事件高分辨率时间戳的全局接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁输入时间戳管理器对象",
+            "text": "通知服务器客户端将不再使用此协议对象。由此对象创建的现有对象不受影响。"
+          }
+        },
+        "get_keyboard_timestamps": {
+          "description": {
+            "summary": "订阅高分辨率键盘时间戳事件",
+            "text": "创建一个新的输入时间戳对象，表示订阅所有携带时间戳的 wl_keyboard 事件的高分辨率时间戳事件。\n\n如果关联的 wl_keyboard 对象失效（无论是通过客户端操作（如释放）还是服务器端更改），输入时间戳对象将变为惰性状态，客户端应通过调用 zwp_input_timestamps_v1.destroy 来销毁它。"
+          }
+        },
+        "get_pointer_timestamps": {
+          "description": {
+            "summary": "订阅高分辨率指针时间戳事件",
+            "text": "创建一个新的输入时间戳对象，表示订阅所有携带时间戳的 wl_pointer 事件的高分辨率时间戳事件。\n\n如果关联的 wl_pointer 对象失效（无论是通过客户端操作（如释放）还是服务器端更改），输入时间戳对象将变为惰性状态，客户端应通过调用 zwp_input_timestamps_v1.destroy 来销毁它。"
+          }
+        },
+        "get_touch_timestamps": {
+          "description": {
+            "summary": "订阅高分辨率触摸时间戳事件",
+            "text": "创建一个新的输入时间戳对象，表示订阅所有携带时间戳的 wl_touch 事件的高分辨率时间戳事件。\n\n如果关联的 wl_touch 对象失效（无论是通过客户端操作（如释放）还是服务器端更改），输入时间戳对象将变为惰性状态，客户端应通过调用 zwp_input_timestamps_v1.destroy 来销毁它。"
+          }
+        }
+      }
+    },
+    "zwp_input_timestamps_v1": {
+      "description": {
+        "summary": "输入时间戳的上下文对象",
+        "text": "为一组订阅的输入事件提供高分辨率时间戳事件。订阅的输入事件集由创建此对象时使用的 zwp_input_timestamps_manager_v1 请求决定。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁输入时间戳对象",
+            "text": "通知服务器客户端将不再使用此协议对象。服务器处理请求后，将不再发出时间戳事件。"
+          }
+        }
+      },
+      "events": {
+        "timestamp": {
+          "description": {
+            "summary": "高分辨率时间戳事件",
+            "text": "timestamp 事件与后续第一个携带时间戳且属于此对象订阅的输入事件集的输入事件关联。\n\n此事件提供的时间戳是关联输入事件时间戳的高分辨率版本。提供的时间戳与关联输入事件时间戳处于同一时钟域，且精度至少与关联输入事件时间戳相同。\n\n时间戳以 tv_sec_hi、tv_sec_lo、tv_nsec 三元组表示，每个分量为无符号 32 位值。整秒在 tv_sec 中，它是由 tv_sec_hi 和 tv_sec_lo 组合的 64 位值，额外的小数部分在 tv_nsec 中以纳秒为单位。因此，对于有效时间戳，tv_nsec 必须在 [0, 999999999] 范围内。"
+          }
+        }
+      }
+    }
+  }
+}

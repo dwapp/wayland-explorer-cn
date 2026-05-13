@@ -1,0 +1,103 @@
+{
+  "interfaces": {
+    "zwp_linux_explicit_synchronization_v1": {
+      "description": {
+        "summary": "提供显式同步的协议",
+        "text": "此全局接口是一个工厂接口，允许客户端按 surface 请求缓冲区的显式同步。\n\n参见 zwp_linux_surface_synchronization_v1 了解更多信息。\n\n此接口派生自 Chromium 的 zcr_linux_explicit_synchronization_v1。\n\n注意：此协议已被 linux-drm-syncobj 取代。\n\n警告！此文件中描述的协议是实验性的，可能会进行向后不兼容的更改。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后不兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被声明为稳定，协议和接口名称中的 \"z\" 前缀和版本号将被移除，接口版本号将被重置。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁显式同步工厂对象",
+            "text": "销毁此显式同步工厂对象。其他对象，包括由此工厂创建的 zwp_linux_surface_synchronization_v1 对象，不受此请求影响。"
+          }
+        },
+        "get_synchronization": {
+          "description": {
+            "summary": "扩展 surface 接口以提供显式同步",
+            "text": "为给定的 wl_surface 实例化一个接口扩展以提供显式同步。\n\n如果给定的 wl_surface 已经关联了显式同步对象，则引发 synchronization_exists 协议错误。\n\n管理缓冲区队列和 wl_surface 提交的图形 API（如 EGL 或 Vulkan）可能在内部使用此扩展。如果客户端正在为 wl_surface 使用此类 API，则不应直接在该 surface 上使用此扩展，以避免引发 synchronization_exists 协议错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "synchronization_exists": {
+              "summary": "该 surface 已关联同步对象"
+            }
+          }
+        }
+      }
+    },
+    "zwp_linux_surface_synchronization_v1": {
+      "description": {
+        "summary": "per-surface 显式同步支持",
+        "text": "此对象实现了 per-surface 的显式同步。\n\n同步是指对缓冲区执行的流水线操作的协调。大多数 GPU 客户端将安排异步操作来渲染缓冲区，然后立即将缓冲区发送给 compositor 以附加到 surface。\n\n在隐式同步中，确保渲染操作在 compositor 显示缓冲区之前完成是由内核或用户空间图形驱动程序处理的实现细节。\n\n相比之下，在显式同步中，dma_fence 对象标记异步操作完成的时间。提交缓冲区时，客户端提供一个 acquire fence，compositor 在访问缓冲区之前将等待该 fence。Wayland 服务器通过 zwp_linux_buffer_release_v1 对象通知客户端，可能附带一个 release fence，告知 compositor 将不再因请求 release 事件的特定提交而访问缓冲区内容。\n\n每个 surface 在任何时候只能与此接口的一个对象关联。\n\n在此接口的版本 1 中，显式同步仅保证支持使用任何版本的 wp_linux_dmabuf 缓冲区工厂创建的缓冲区。版本 2 还保证支持不透明 EGL 缓冲区，这是 EGL_WL_bind_wayland_display 扩展中描述的平台特定缓冲区类型。Compositor 可以自由支持额外的缓冲区类型。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁同步对象",
+            "text": "销毁此显式同步对象。\n\n自上次提交以来由此对象通过 set_acquire_fence 设置的任何 fence 将被服务器丢弃。在上次提交之前由此对象设置的 fence 不受影响。\n\n由此对象创建的 zwp_linux_buffer_release_v1 对象不受此请求影响。"
+          }
+        },
+        "set_acquire_fence": {
+          "description": {
+            "summary": "设置 acquire fence",
+            "text": "设置 acquire fence，该 fence 必须在 compositor 采样通过 wl_surface.attach 附加的缓冲区之前被信号通知。该 fence 是一个 dma_fence 内核对象。\n\nacquire fence 是双缓冲状态，将在关联 surface 的下一个 wl_surface.commit 请求时应用。因此，它仅适用于在提交时附加到 surface 的缓冲区。\n\n如果提供的 fd 不是有效的 dma_fence fd，则引发 INVALID_FENCE 错误。\n\n如果在同一提交周期内已经附加了 fence，则引发 DUPLICATE_FENCE 错误。\n\n如果关联的 wl_surface 已被销毁，则引发 NO_SURFACE 错误。\n\n如果在 surface 提交时附加的缓冲区不支持显式同步，则引发 UNSUPPORTED_BUFFER 错误。\n\n如果在 surface 提交时没有附加缓冲区，则引发 NO_BUFFER 错误。"
+          }
+        },
+        "get_release": {
+          "description": {
+            "summary": "获取最后附加缓冲区的 release fence",
+            "text": "创建一个监听客户端通过 wl_surface.attach 附加的缓冲区释放的监听器。参见 zwp_linux_buffer_release_v1 文档了解更多信息。\n\nrelease 对象是双缓冲状态，将在 wl_surface.commit 时与附加到 surface 的缓冲区关联。\n\n如果在同一提交周期内已经为该 surface 请求了 zwp_linux_buffer_release_v1 对象，则引发 DUPLICATE_RELEASE 错误。\n\n如果关联的 wl_surface 已被销毁，则引发 NO_SURFACE 错误。\n\n如果在 surface 提交时没有附加缓冲区，则引发 NO_BUFFER 错误。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_fence": {
+              "summary": "客户端指定的 fence 无法导入"
+            },
+            "duplicate_fence": {
+              "summary": "单次 surface 提交添加了多个 fence"
+            },
+            "duplicate_release": {
+              "summary": "单次 surface 提交添加了多个 release"
+            },
+            "no_surface": {
+              "summary": "关联的 wl_surface 已被销毁"
+            },
+            "unsupported_buffer": {
+              "summary": "缓冲区不支持显式同步"
+            },
+            "no_buffer": {
+              "summary": "未附加缓冲区"
+            }
+          }
+        }
+      }
+    },
+    "zwp_linux_buffer_release_v1": {
+      "description": {
+        "summary": "缓冲区释放显式同步",
+        "text": "此对象是响应 zwp_linux_surface_synchronization_v1.get_release 请求而实例化的。\n\n它提供了 wl_buffer.release 事件的替代方案，为单个 wl_surface.commit 请求提供唯一的释放。release 事件还支持显式同步，为客户端提供 fence FD 以进行同步。\n\n对于 wl_surface.commit 请求，将恰好发出 fenced_release 或 immediate_release 事件之一。Compositor 可以逐个选择使用哪个事件。\n\n此事件不会替代 wl_buffer.release 事件；服务器仍然需要发送这些事件。\n\n一旦缓冲区释放对象发送了 \"fenced_release\" 或 \"immediate_release\" 事件，它将自动被销毁。"
+      },
+      "events": {
+        "fenced_release": {
+          "description": {
+            "summary": "带 fence 的缓冲区释放",
+            "text": "当 compositor 完成对关联缓冲区的相关提交使用时发送，提供一个 dma_fence，当 compositor 对该缓冲区的所有操作完成后将被信号通知。\n\n一旦 fence 被信号通知，并且假设关联的缓冲区没有来自其他 wl_surface.commit 请求的待处理释放，则不需要额外的显式或隐式同步即可安全重用或销毁缓冲区。\n\n此事件销毁 zwp_linux_buffer_release_v1 对象。"
+          }
+        },
+        "immediate_release": {
+          "description": {
+            "summary": "立即释放缓冲区",
+            "text": "当 compositor 完成对关联缓冲区的相关提交使用时发送，并且要么未使用它执行任何操作，要么保证其对该缓冲区的所有操作已完成。\n\n收到此事件后，并且假设关联的缓冲区没有来自其他 wl_surface.commit 请求的待处理释放，则不需要额外的显式或隐式同步即可安全重用或销毁缓冲区。\n\n此事件销毁 zwp_linux_buffer_release_v1 对象。"
+          }
+        }
+      }
+    }
+  }
+}

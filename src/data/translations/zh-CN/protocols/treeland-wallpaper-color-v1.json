@@ -1,0 +1,34 @@
+{
+  "interfaces": {
+    "treeland_wallpaper_color_manager_v1": {
+      "requests": {
+        "watch": {
+          "description": {
+            "summary": "监视壁纸颜色",
+            "text": "监视给定屏幕的壁纸颜色。"
+          }
+        },
+        "unwatch": {
+          "description": {
+            "summary": "取消监视壁纸颜色",
+            "text": "停止监视给定屏幕的壁纸颜色。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁上下文对象",
+            "text": "客户端不再关心壁纸颜色。"
+          }
+        }
+      },
+      "events": {
+        "output_color": {
+          "description": {
+            "summary": "输出颜色已更改",
+            "text": "通知客户端其监视的屏幕壁纸颜色已更改。\n当客户端请求监视时，也会立即发送此事件。"
+          }
+        }
+      }
+    }
+  }
+}

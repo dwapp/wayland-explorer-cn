@@ -1,0 +1,68 @@
+{
+  "description": {
+    "summary": "将输入焦点限制在一组 surface 上",
+    "text": "此协议允许客户端将输入焦点限制在一组特定的 surface 上，并在限制器被移除时接收通知。"
+  },
+  "interfaces": {
+    "hyprland_focus_grab_manager_v1": {
+      "description": {
+        "summary": "焦点抓取对象的管理器",
+        "text": "此接口允许客户端创建 surface 抓取对象。"
+      },
+      "requests": {
+        "create_grab": {
+          "description": {
+            "summary": "创建焦点抓取对象",
+            "text": "创建一个 surface 抓取对象。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁焦点抓取管理器",
+            "text": "销毁焦点抓取管理器。\n这不会销毁已存在的焦点抓取对象。"
+          }
+        }
+      }
+    },
+    "hyprland_focus_grab_v1": {
+      "description": {
+        "summary": "输入焦点限制器",
+        "text": "此接口将输入焦点限制在指定的 surface 白名单中，只要焦点抓取对象存在且至少有一个已提交的 surface。\n\n白名单内 surface 的鼠标和触摸事件将正常传递给该 surface，而白名单外的事件将清除抓取对象。键盘事件将传递给客户端，如果白名单中的 surface 尚未获得焦点，合成器选择的白名单中的 surface 将接收 wl_keyboard::enter 事件。\n\n当满足实现定义的条件（通常意味着在所有白名单 surface 之外发生鼠标或触摸输入）时，合成器将清除白名单，使抓取失效并发送 cleared 事件。如果合成器酌情启动了另一个焦点抓取或类似操作，也会发生同样的情况。"
+      },
+      "requests": {
+        "add_surface": {
+          "description": {
+            "summary": "将 surface 添加到焦点白名单",
+            "text": "将 surface 添加到白名单。销毁 surface 等同于显式调用 remove_surface，重复添加将被忽略。\n\n在调用 commit 之前不会生效。"
+          }
+        },
+        "remove_surface": {
+          "description": {
+            "summary": "从焦点白名单中移除 surface",
+            "text": "从白名单中移除 surface。销毁 surface 等同于显式调用此函数。\n\n如果抓取处于活动状态且被移除的 surface 已获得键盘焦点，另一个 surface 将在提交时获得焦点。\n\n在调用 commit 之前不会生效。"
+          }
+        },
+        "commit": {
+          "description": {
+            "summary": "提交焦点白名单",
+            "text": "提交对 surface 白名单的待处理更改。\n\n如果列表之前没有条目现在至少有一个，抓取将启动。如果之前有条目现在没有，抓取将变为失效状态。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁焦点抓取",
+            "text": "销毁抓取对象并在抓取处于活动状态时移除抓取。"
+          }
+        }
+      },
+      "events": {
+        "cleared": {
+          "description": {
+            "summary": "焦点抓取已被清除",
+            "text": "当活动的抓取被合成器取消时发送，无论原因为何。"
+          }
+        }
+      }
+    }
+  }
+}

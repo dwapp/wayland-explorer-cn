@@ -1,0 +1,41 @@
+{
+  "interfaces": {
+    "ivi_hmi_controller": {
+      "description": {
+        "summary": "设置和控制 IVI 风格的 UI"
+      },
+      "requests": {
+        "UI_ready": {
+          "description": {
+            "summary": "通知桌面已准备好绘制"
+          }
+        },
+        "workspace_control": {
+          "description": {
+            "summary": "开始由服务器控制 surface",
+            "text": "通过服务器控制 surface 的参考协议。为了通过服务器控制 surface，它将 seat 交给服务器，例如用于控制主屏幕。主屏幕有几个工作区用于分组 wayland 应用的启动器。这些工作区绘制在水平长的 surface 上，通过输入设备的动作来控制。例如，当发生从右到左的动作时，ivi-shell 中使用 ivi-layout 控制 surface 的视口。客户端可以通过 \"workspace_end_control\" 事件识别控制结束。"
+          }
+        },
+        "switch_mode": {
+          "description": {
+            "summary": "请求切换应用布局模式",
+            "text": "hmi-controller 加载到 ivi-shell 实现了 4 种布局类型作为参考：平铺、并排、全屏和随机。"
+          }
+        },
+        "home": {
+          "description": {
+            "summary": "请求显示/隐藏主屏幕",
+            "text": "主屏幕是用于启动 wayland 应用的启动器的参考实现。主屏幕有几个工作区用于分组 wayland 应用。通过在 weston.ini 中定义以下键，用户可以向工作区添加启动器图标来启动 wayland 应用。\n[ivi-launcher]\nworkspace-id=0\n：要添加启动器的工作区 ID\nicon-id=4001\n：用于绘制图标的 ivi_surface 的 ivi ID\nicon=/home/user/review/build-ivi-shell/data/icon_ivi_flower.png\n：图标图像的路径\npath=/home/user/review/build-ivi-shell/weston-dnd\n：wayland 应用的路径"
+          }
+        }
+      },
+      "events": {
+        "workspace_end_control": {
+          "description": {
+            "summary": "通知工作区控制结束"
+          }
+        }
+      }
+    }
+  }
+}

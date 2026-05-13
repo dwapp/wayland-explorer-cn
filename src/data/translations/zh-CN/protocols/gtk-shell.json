@@ -1,0 +1,10 @@
+{
+  "interfaces": {
+    "gtk_shell1": {
+      "description": {
+        "summary": "GTK 特定的扩展",
+        "text": "gtk_shell 是一个协议扩展，为实现它的客户端提供额外功能。"
+      }
+    }
+  }
+}

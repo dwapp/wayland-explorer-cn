@@ -1,0 +1,157 @@
+{
+  "description": {
+    "summary": "管理应用程序会话的协议",
+    "text": "此描述提供了此协议中定义的接口之间交互的高级概述。有关详细信息，请参见协议规范。\n\nxx_session_manager 协议声明了允许客户端从先前执行中恢复 toplevel 状态所必需的接口。xx_session_manager_v1.get_session 请求可用于获取表示一组 toplevel 状态的 xx_session_v1 资源。\n\n客户端可以通过 xx_session_v1.created 事件获取要在未来调用中使用的会话字符串。合成器将此字符串用作未来运行的可识别令牌，可能会在持久存储中存储有关相关 toplevel 的数据。\n\nToplevel 通过 xx_session_v1.add_toplevel 和 xx_session_toplevel_v1.remove 请求对进行管理。客户端将在 toplevel 映射之前通过 xx_session_v1.restore_toplevel 请求显式请求根据先前状态恢复 toplevel。\n\n警告！此文件中描述的实验性协议可能会进行向后不兼容的主要版本更改。不鼓励在没有 opt-in 机制的情况下公开此协议。"
+  },
+  "interfaces": {
+    "xx_session_manager_v1": {
+      "description": {
+        "summary": "管理应用程序的会话",
+        "text": "xx_session_manager 接口定义了创建和管理应用程序会话的基本请求。除非显式销毁，否则会话在应用程序和合成器重启之间保持不变。创建会话的目的是在合成器或应用程序重启之间维护应用程序的 xdg_toplevel 表面。合成器应记住给定会话中表面的尽可能多的状态，但不要求必须记住哪些状态。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁此对象",
+            "text": "除了销毁 xx_session_manager 对象之外没有其他效果。"
+          }
+        },
+        "get_session": {
+          "description": {
+            "summary": "创建或恢复会话",
+            "text": "创建与给定会话标识符字符串标识的现有会话或新会话对应的会话对象。当会话对象存在时，会话被视为\"正在使用\"。\n\n如果标识符字符串表示当前由同一客户端主动使用的会话，则引发 'in_use' 错误。如果其他客户端当前正在使用同一会话，新会话将替换管理关联状态。\n\n传递 NULL 以发起新会话。如果传递的 id 不表示有效会话，合成器将其视为传递了 NULL。\n\n客户端可以同时拥有任意数量的正在使用的会话。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "in_use": {
+              "summary": "请求的会话正在使用中"
+            }
+          }
+        },
+        "reason": {
+          "description": {
+            "summary": "获取会话的原因",
+            "text": "原因可能决定会话以何种方式恢复关联 toplevel 的窗口管理状态。\n\n例如，新启动的应用程序可能会在活动工作区上以恢复的大小和位置启动，而恢复的应用程序可能会恢复额外的状态，如活动工作区和堆叠顺序。"
+          },
+          "entries": {
+            "launch": {
+              "summary": "应用程序是新启动的",
+              "description": {
+                "summary": "应用程序是新启动的",
+                "text": "启动了新的应用程序实例，例如从应用程序启动器启动。"
+              }
+            },
+            "recover": {
+              "summary": "应用程序已恢复",
+              "description": {
+                "summary": "应用程序已恢复",
+                "text": "应用程序实例正在从例如合成器或应用程序崩溃中恢复。"
+              }
+            },
+            "session_restore": {
+              "summary": "应用程序已恢复",
+              "description": {
+                "summary": "应用程序已恢复",
+                "text": "应用程序实例已恢复，例如作为恢复会话的一部分，或由于资源限制而临时终止后恢复。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "xx_session_v1": {
+      "description": {
+        "summary": "应用程序的会话",
+        "text": "xx_session_v1 对象表示应用程序的会话。当对象存在时，所有已添加到会话的表面将具有合成器存储的状态，可以在以后重新应用。两个会话不能存在于同一标识符字符串中。\n\n添加到会话的表面的状态在更改时由合成器自动更新。\n\n已添加到会话的表面如果调用了 xdg_toplevel.destroy，则会自动从会话中移除。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁会话",
+            "text": "销毁会话对象，保留当前状态但不在状态更改时继续进行进一步更新。这使得关联的 xx_toplevel_session_v1 对象变为惰性。"
+          }
+        },
+        "remove": {
+          "description": {
+            "summary": "移除会话",
+            "text": "移除会话，使其不再可用于恢复。合成器应响应此请求从其存储中删除与此会话相关的数据。"
+          }
+        },
+        "add_toplevel": {
+          "description": {
+            "summary": "向会话添加新表面",
+            "text": "尝试将给定表面添加到会话。传递的名称用于标识正在恢复的窗口，并可用于在会话中存储特定于窗口的状态。\n\n使用已被会话管理且具有相同关联的 toplevel 调用此方法将引发 in_use 错误。"
+          }
+        },
+        "restore_toplevel": {
+          "description": {
+            "summary": "恢复表面状态",
+            "text": "通知合成器与传递的名称关联的 toplevel 应恢复其窗口管理状态。\n\n使用已被会话管理且具有相同关联的 toplevel 调用此方法将引发 in_use 错误。\n\n此请求必须在关联的 wl_surface 的第一次提交之前调用，否则将引发 already_mapped 错误。\n\n作为初始 configure 序列的一部分，如果 toplevel 成功恢复，将发出 xx_toplevel_session_v1.restored 事件。有关详细信息，请参见 xx_toplevel_session_v1.restored 事件。"
+          }
+        }
+      },
+      "events": {
+        "created": {
+          "description": {
+            "summary": "新创建的会话 id",
+            "text": "在获取新会话对象后的某个时间最多发出一次。这意味着未恢复先前状态，并且创建了新会话。传递的 id 可用于恢复先前的会话。"
+          }
+        },
+        "restored": {
+          "description": {
+            "summary": "会话已恢复",
+            "text": "在获取新会话对象后的某个时间最多发出一次。这意味着先前的状态至少已部分恢复。相同的 id 可再次用于恢复先前的会话。"
+          }
+        },
+        "replaced": {
+          "description": {
+            "summary": "会话已被替换",
+            "text": "如果会话被其他客户端接管，则最多发出一次。发生这种情况时，会话及其所有 toplevel 会话对象变为惰性，应被销毁。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_restore": {
+              "summary": "初始 toplevel 提交后无法执行恢复"
+            },
+            "name_in_use": {
+              "summary": "toplevel 名称已被使用"
+            },
+            "already_mapped": {
+              "summary": "恢复时 toplevel 已映射"
+            }
+          }
+        }
+      }
+    },
+    "xx_toplevel_session_v1": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁对象",
+            "text": "销毁对象。这对关联 toplevel 的窗口管理没有影响。"
+          }
+        },
+        "remove": {
+          "description": {
+            "summary": "从会话中移除表面",
+            "text": "从会话中移除指定表面，并使任何对应的 xx_toplevel_session_v1 对象变为惰性。合成器应从其内部存储中删除相应会话中与 toplevel 相关的任何数据。"
+          }
+        }
+      },
+      "events": {
+        "restored": {
+          "description": {
+            "summary": "toplevel 的会话已恢复",
+            "text": "\"restored\" 事件在 toplevel 的第一次 xdg_toplevel.configure 之前发出。它只会在 xx_session_v1.restore_toplevel 之后以及初始空表面状态已应用后发出，它表示表面的会话正在通过此 configure 事件恢复。"
+          }
+        }
+      }
+    }
+  }
+}

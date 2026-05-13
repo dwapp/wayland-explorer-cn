@@ -1,0 +1,95 @@
+{
+  "description": {
+    "summary": "切换各种无障碍功能",
+    "text": "此协议提供了在 COSMIC 桌面环境中为 shell 组件切换各种无障碍功能的方法。"
+  },
+  "interfaces": {
+    "cosmic_a11y_manager_v1": {
+      "description": {
+        "summary": "无障碍全局管理器",
+        "text": "用于切换无障碍功能的管理器。"
+      },
+      "requests": {
+        "set_magnifier": {
+          "description": {
+            "summary": "设置屏幕放大器的开关状态",
+            "text": "设置屏幕放大器的状态。\n\n客户端不应假设任何请求的更改已实际生效，应等待下一个 magnifier 事件后再更新其 UI。"
+          }
+        },
+        "set_screen_filter": {
+          "description": {
+            "summary": "设置屏幕滤镜",
+            "text": "设置屏幕过滤的参数。\n\n如果滤镜设置为 unknown，合成器不得更改当前滤镜的状态。\n这是为了允许客户端更新反转状态，即使它们不知道当前活动的滤镜。\n\n客户端不应假设任何请求的更改已实际生效，应等待下一个 screen_filter 事件后再更新其 UI。\n\n如果绑定了版本 3 或更高版本，发送此请求将引发 \"deprecated\" 协议错误。\n请改用 set_screen_filter2。"
+          }
+        },
+        "set_screen_filter2": {
+          "description": {
+            "summary": "设置屏幕滤镜",
+            "text": "设置屏幕过滤的参数。\n\n如果滤镜设置为 unknown，合成器不得更改当前设置的滤镜。\n这是为了允许客户端更新反转状态或切换屏幕滤镜，即使它们不知道当前选择的滤镜。\n\n客户端不应假设任何请求的更改已实际生效，应等待下一个 screen_filter 事件后再更新其 UI。\n\n如果 \"filter\" 设置为 \"disabled\"，将引发 \"deprecated\" 协议错误。"
+          }
+        }
+      },
+      "events": {
+        "magnifier": {
+          "description": {
+            "summary": "屏幕放大器的状态",
+            "text": "屏幕放大器的状态。\n\n合成器在绑定协议时以及状态发生变化时将发出此事件。"
+          }
+        },
+        "screen_filter": {
+          "description": {
+            "summary": "屏幕过滤的状态",
+            "text": "屏幕过滤使用的参数。\n\n合成器在绑定协议时以及状态发生变化时将发出此事件。\n\n如果使用的屏幕滤镜不为协议所知或绑定版本未知，filter 将被设置为 unknown。\n\n从版本 3 开始，此事件将不再发出，请使用 screen_filter2。"
+          }
+        },
+        "screen_filter2": {
+          "description": {
+            "summary": "屏幕过滤的状态",
+            "text": "屏幕过滤使用的参数。\n\n合成器在绑定协议时以及状态发生变化时将发出此事件。\n\n如果使用的屏幕滤镜不为协议所知或绑定版本未知，filter 将被设置为 unknown。\n\n合成器绝不能将 \"disabled\" 作为 \"filter\" 参数发送。"
+          }
+        }
+      },
+      "enums": {
+        "active_state": {
+          "entries": {
+            "disabled": {
+              "summary": "功能已禁用"
+            },
+            "enabled": {
+              "summary": "功能已启用"
+            }
+          }
+        },
+        "filter": {
+          "entries": {
+            "disabled": {
+              "summary": "未设置屏幕滤镜"
+            },
+            "unknown": {
+              "summary": "自定义或未知的屏幕滤镜"
+            },
+            "greyscale": {
+              "summary": "灰度颜色"
+            },
+            "daltonize_protanopia": {
+              "summary": "红色盲矫正"
+            },
+            "daltonize_deuteranopia": {
+              "summary": "绿色盲矫正"
+            },
+            "daltonize_tritanopia": {
+              "summary": "蓝色盲矫正"
+            }
+          }
+        },
+        "error": {
+          "entries": {
+            "deprecated": {
+              "summary": "使用了已弃用的请求或值"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "interfaces": {
+    "org_kde_kwin_idle": {
+      "description": {
+        "summary": "用户空闲时间管理器",
+        "text": "此接口允许监控给定 seat 上的用户空闲时间。该接口允许注册计时器，当在给定时间间隔内未检测到 seat 上的用户活动时触发。当用户活动恢复时会发出通知。\n\n这对于希望在用户未与系统交互时执行操作的应用程序非常有用，例如聊天应用程序将用户设置为离开状态、电源管理功能降低屏幕亮度等。"
+      },
+      "requests": {
+        "get_idle_timeout": {
+          "description": {
+            "summary": "创建空闲超时对象"
+          }
+        }
+      }
+    },
+    "org_kde_kwin_idle_timeout": {
+      "requests": {
+        "release": {
+          "description": {
+            "summary": "释放超时对象"
+          }
+        },
+        "simulate_user_activity": {
+          "description": {
+            "summary": "模拟此超时对象的用户活动，行为与 seat 上的真实用户活动相同"
+          }
+        }
+      },
+      "events": {
+        "idle": {
+          "description": {
+            "summary": "当在请求的空闲时间间隔内没有任何用户活动时触发"
+          }
+        },
+        "resumed": {
+          "description": {
+            "summary": "当空闲事件后首次检测到用户活动时触发"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "interfaces": {
+    "org_kde_kwin_fake_input": {
+      "description": {
+        "summary": "伪输入管理器",
+        "text": "此接口允许其他进程提供伪造的输入事件。\n其目的一方面是提供类似 X11 中 XTest 的测试功能，\n另一方面是支持如 KDE Connect 的鼠标触控板接口等用例。\n\n合成器不应信任从此接口接收到的输入。\n客户端不应期望合成器会遵守来自此接口的请求。\n\n警告！此文件中描述的协议是桌面环境的内部实现细节。\n普通客户端不得使用此协议。\n可能会在不增加扩展主版本号的情况下引入不向后兼容的更改。"
+      },
+      "requests": {
+        "authenticate": {
+          "description": {
+            "summary": "告知客户端使用此接口的原因",
+            "text": "客户端应使用此请求告知合成器其使用此接口的原因。\n合成器可能会利用该信息决定是否授予请求。\n该信息也可能会传递给用户，由用户决定是否允许应用程序访问此高权限接口。"
+          }
+        },
+        "touch_down": {
+          "description": {
+            "summary": "触摸按下事件",
+            "text": "客户端应使用此请求在指定坐标发送触摸按下事件。"
+          }
+        },
+        "touch_motion": {
+          "description": {
+            "summary": "触摸移动事件",
+            "text": "客户端应使用此请求将触摸移动到指定位置。"
+          }
+        },
+        "touch_up": {
+          "description": {
+            "summary": "触摸抬起事件",
+            "text": "客户端应使用此请求发送触摸抬起事件。"
+          }
+        },
+        "touch_cancel": {
+          "description": {
+            "summary": "触摸取消事件",
+            "text": "客户端应使用此请求取消当前的触摸事件。"
+          }
+        },
+        "touch_frame": {
+          "description": {
+            "summary": "触摸帧事件",
+            "text": "客户端应使用此请求发送触摸帧事件。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁伪输入设备"
+          }
+        }
+      }
+    }
+  }
+}

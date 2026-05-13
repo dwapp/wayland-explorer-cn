@@ -1,0 +1,150 @@
+{
+    "interfaces": {
+        "org_kde_kwin_outputdevice": {
+            "description": {
+                "summary": "输出配置表示",
+                "text": "outputdevice 描述了合成器可用的显示设备。outputdevice 类似于 wl_output，但侧重于输出配置管理。\n\n客户端可以查询所有全局 outputdevice 对象以列出所有可用的显示设备，包括当前可能未被合成器表示为 wl_output 的设备。\n\n客户端通过 outputconfiguration 接口向服务器发送配置更改，服务器将配置更改应用于硬件并相应地向 outputdevice 发出更改信号。\n\n此对象在启动时作为全局对象发布，用于每个可用的显示设备，或在稍后可用时发布（例如通过物理连接器热插拔）。"
+            },
+            "events": {
+                "geometry": {
+                    "description": {
+                        "summary": "输出的几何属性",
+                        "text": "geometry 事件描述输出的几何属性。在绑定到输出对象时以及任何属性更改时发送此事件。"
+                    }
+                },
+                "mode": {
+                    "description": {
+                        "summary": "公布可用的输出模式和当前模式",
+                        "text": "mode 事件描述输出的可用模式。\n\n当客户端绑定到 outputdevice 对象时，服务器为 outputdevice 可以操作的每个可用模式发送一次此事件。\n\n初始绑定时始终至少发送一个事件，该事件表示当前模式。\n\n之后，如果输出更改其模式，事件将再次发送，此事件表示现在变为当前的模式。换句话说，当前模式始终由最新发送的带有 current 标志的事件表示。\n\n模式的大小以输出设备的物理硬件单位给出。这不一定与全局合成器空间中的输出大小相同。例如，输出可能被缩放（如 org_kde_kwin_outputdevice.scale 中所述）或被变换（如 org_kde_kwin_outputdevice.transform 中所述）。\n\nid 可用于在 org_kde_kwin_outputconfiguration 对象上调用 set_mode 时引用模式。"
+                    }
+                },
+                "done": {
+                    "description": {
+                        "summary": "已发送关于输出的所有信息",
+                        "text": "在绑定到输出对象时发送所有其他属性之后以及在任何其他输出属性更改应用之后发送此事件。这允许将输出属性的更改视为原子的，即使多个事件连续宣布它们。"
+                    }
+                },
+                "scale": {
+                    "description": {
+                        "summary": "输出缩放属性",
+                        "text": "此事件包含 geometry 事件中没有的缩放几何信息。可以在绑定输出对象之后或如果输出缩放稍后更改时发送。如果未发送，客户端应假设缩放为 1。\n\n大于 1 的缩放意味着合成器在渲染时将自动按此量缩放表面缓冲区。这用于高分辨率显示器，其中以原始分辨率渲染的应用程序会太小而无法阅读。\n\n缩放感知客户端应跟踪表面的当前输出，如果它在缩放的输出上，应使用 wl_surface.set_buffer_scale 设置输出的缩放。这样合成器可以避免缩放表面，客户端可以提供更高细节的图像。"
+                    }
+                },
+                "edid": {
+                    "description": {
+                        "summary": "公布输出的 EDID 数据",
+                        "text": "edid 事件封装了 outputdevice 的 EDID 数据。\n\n在绑定到输出对象时发送此事件。EDID 数据可能为空，在这种情况下仍会发送此事件。如果 EDID 信息为空，可以回退到 outputdevice 的 name 等属性。"
+                    }
+                },
+                "enabled": {
+                    "description": {
+                        "summary": "输出已启用或已禁用",
+                        "text": "enabled 事件通知此输出当前是否已启用并被服务器用于显示内容。在绑定到输出对象时以及在输出稍后通过变为启用或禁用而更改状态时发送此事件。"
+                    }
+                },
+                "uuid": {
+                    "description": {
+                        "summary": "此 outputdevice 的唯一标识",
+                        "text": "uuid 可用于标识输出。它完全由服务器控制。服务器应确保 uuid 在重启期间保持持久。空 uuid 被视为无效。"
+                    }
+                },
+                "scalef": {
+                    "description": {
+                        "summary": "输出缩放属性",
+                        "text": "此事件包含 geometry 事件中没有的缩放几何信息。可以在绑定输出对象之后或如果输出缩放稍后更改时发送。如果未发送，客户端应假设缩放为 1。\n\n大于 1 的缩放意味着合成器在渲染时将自动按此量缩放表面缓冲区。这用于高分辨率显示器，其中以原始分辨率渲染的应用程序会太小而无法阅读。\n\n缩放感知客户端应跟踪表面的当前输出，如果它在缩放的输出上，应使用 wl_surface.set_buffer_scale 设置输出的缩放。这样合成器可以避免缩放表面，客户端可以提供更高细节的图像。\n\nwl_output 将保持输出缩放为整数。除配置窗口管理器外的每种情况下，你都想使用它。"
+                    }
+                },
+                "colorcurves": {
+                    "description": {
+                        "summary": "输出颜色曲线",
+                        "text": "描述输出的颜色强度配置文件。通常用于 gamma/颜色校正。\n\n数组包含输出的所有颜色坡道值。例如在 8 位屏幕上有 256 个值。\n\n数组元素是无符号 16 位整数。"
+                    }
+                },
+                "serial_number": {
+                    "description": {
+                        "summary": "序列号",
+                        "text": "显示器的序列 ID，在启动时在第一个 done 事件之前发送。"
+                    }
+                },
+                "eisa_id": {
+                    "description": {
+                        "summary": "EISA ID",
+                        "text": "显示器的 EISA ID，在启动时在第一个 done 事件之前发送。"
+                    }
+                },
+                "capabilities": {
+                    "description": {
+                        "summary": "能力标志",
+                        "text": "此设备具有的能力，在启动时在第一个 done 事件之前发送。"
+                    }
+                },
+                "overscan": {
+                    "description": {
+                        "summary": "过扫描",
+                        "text": "显示器的过扫描值（百分比），在启动时在第一个 done 事件之前发送。"
+                    }
+                },
+                "vrr_policy": {
+                    "description": {
+                        "summary": "可变刷新率策略",
+                        "text": "合成器在使用可变刷新率方面将采用的策略。"
+                    }
+                }
+            },
+            "enums": {
+                "subpixel": {
+                    "description": {
+                        "summary": "子像素几何信息",
+                        "text": "此枚举描述输出上的物理像素如何排列。"
+                    }
+                },
+                "transform": {
+                    "description": {
+                        "summary": "从帧缓冲到输出的变换",
+                        "text": "这描述了合成器将应用于表面的变换，以补偿输出设备的旋转或镜像。\n\n翻转值对应于围绕垂直轴的初始翻转，然后是旋转。\n\n其目的主要是允许客户端相应地渲染并告知合成器，以便对于全屏表面，合成器仍然可以直接扫描出客户端表面。"
+                    }
+                },
+                "mode": {
+                    "description": {
+                        "summary": "模式信息",
+                        "text": "这些标志描述输出模式的属性。它们用于 mode 事件的 flags 位字段中。"
+                    },
+                    "entries": {
+                        "current": {
+                            "summary": "表示这是当前模式"
+                        },
+                        "preferred": {
+                            "summary": "表示这是首选模式"
+                        }
+                    }
+                },
+                "enablement": {
+                    "description": {
+                        "summary": "描述启用状态",
+                        "text": "描述设备是否已启用，即设备是否被合成器用于显示内容。这将布尔值包装在 int 中以避免布尔值陷阱。"
+                    }
+                },
+                "capability": {
+                    "description": {
+                        "summary": "描述 outputdevice 的能力",
+                        "text": "描述此设备具有的能力。"
+                    },
+                    "entries": {
+                        "overscan": {
+                            "summary": "此 outputdevice 是否可以使用过扫描"
+                        },
+                        "vrr": {
+                            "summary": "此 outputdevice 是否支持可变刷新率"
+                        }
+                    }
+                },
+                "vrr_policy": {
+                    "description": {
+                        "summary": "描述 vrr 策略",
+                        "text": "描述合成器何时可以使用可变刷新率。"
+                    }
+                }
+            }
+        }
+    }
+}

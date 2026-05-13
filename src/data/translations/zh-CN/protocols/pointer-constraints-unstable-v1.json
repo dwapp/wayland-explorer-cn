@@ -1,0 +1,143 @@
+{
+  "description": {
+    "summary": "约束指针移动的协议",
+    "text": "此协议指定了一组用于对指针运动添加约束的接口。可能的约束包括将指针运动限制在给定区域内，或将其锁定在当前位置。\n\n为了约束指针，客户端必须首先绑定全局接口 \"wp_pointer_constraints\"，如果合成器支持指针约束，该接口将通过注册表暴露。使用绑定的全局对象，客户端可以发出与所需约束类型对应的请求。详见 wp_pointer_constraints。\n\n警告！此文件中描述的协议是实验性的，可能会引入不兼容的变更。兼容的变更可能会随相应的接口版本递增一起添加。不兼容的变更通过递增协议和接口名称中的版本号并重置接口版本来完成。一旦协议被声明为稳定，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。"
+  },
+  "interfaces": {
+    "zwp_pointer_constraints_v1": {
+      "description": {
+        "summary": "约束指针的移动",
+        "text": "暴露指针约束功能的全局接口。它暴露两个请求：lock_pointer 用于将指针锁定在其位置，confine_pointer 用于将指针限制在某个区域内。\n\nlock_pointer 和 confine_pointer 请求分别创建 wp_locked_pointer 和 wp_confined_pointer 对象，客户端可以使用这些对象与锁进行交互。\n\n对于任何表面，在同一 seat 的所有 wl_pointer 对象上只能有一个锁定或约束处于活动状态。如果在同一表面上请求锁定或约束时，同一 seat 的任何 wl_pointer 对象上已有另一个锁定或约束处于活动状态或已请求，将引发 'already_constrained' 错误。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁指针约束管理器对象",
+            "text": "客户端用于通知服务器它将不再使用此指针约束对象。"
+          }
+        },
+        "lock_pointer": {
+          "description": {
+            "summary": "将指针锁定到某个位置",
+            "text": "lock_pointer 请求允许客户端请求禁用虚拟指针（即光标）的移动，从而有效地将指针锁定在某个位置。此请求可能不会立即生效；将来当合成器认为特定于实现的约束已满足时，指针锁定将被激活，合成器将发送 locked 事件。\n\n协议不保证约束会被满足，也不要求合成器在约束永远无法满足时发送错误。因此，有可能请求一个永远不会激活的锁定。\n\n在请求锁定时，传入的指针的 seat 的任何 wl_pointer 对象上不得有其他任何类型的指针约束处于请求或活动状态。如果有，将引发错误。详见通用指针锁定文档。\n\n此请求传入的区域与表面的输入区域的交集用于确定指针必须位于何处才能激活锁定。是否需要移动指针或要求某种用户交互才能激活锁定取决于合成器。如果区域为 null，则使用表面输入区域。\n\n表面可以在锁定未激活的情况下接收指针焦点。\n\n此请求创建一个新的 wp_locked_pointer 对象，用于与锁定交互以及接收其状态更新。详见 wp_locked_pointer 的描述。\n\n注意，当指针被锁定时，相应 seat 的 wl_pointer 对象不会发出任何 wl_pointer.motion 事件，但相对运动事件仍将通过同一 seat 的 wp_relative_pointer 对象发出。wl_pointer.axis 和 wl_pointer.button 事件不受影响。"
+          }
+        },
+        "confine_pointer": {
+          "description": {
+            "summary": "将指针限制在某个区域内",
+            "text": "confine_pointer 请求允许客户端请求将指针光标限制在给定区域内。此请求可能不会立即生效；将来当合成器认为特定于实现的约束已满足时，指针约束将被激活，合成器将发送 confined 事件。\n\n此请求传入的区域与表面的输入区域的交集用于确定指针必须位于何处才能激活约束。是否需要移动指针或要求某种用户交互才能激活约束取决于合成器。如果区域为 null，则使用表面输入区域。\n\n此请求将创建一个新的 wp_confined_pointer 对象，用于与约束交互以及接收其状态更新。详见 wp_confined_pointer 的描述。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "summary": "wp_pointer_constraints 错误值",
+            "text": "这些错误可以响应 wp_pointer_constraints 请求而发出。"
+          },
+          "entries": {
+            "already_constrained": {
+              "summary": "该表面已请求了指针约束"
+            }
+          }
+        },
+        "lifetime": {
+          "description": {
+            "summary": "约束生命周期",
+            "text": "这些值代表不同的生命周期语义。它们作为参数传递给工厂请求，以指定应如何管理约束的生命周期。"
+          },
+          "entries": {
+            "oneshot": {
+              "summary": "指针约束一旦停用即失效",
+              "description": {
+                "summary": "指针约束一旦停用即失效",
+                "text": "一次性指针约束在停用后不会重新激活。详见相应的停用事件（wp_locked_pointer.unlocked 和 wp_confined_pointer.unconfined）。"
+              }
+            },
+            "persistent": {
+              "summary": "指针约束可以重新激活",
+              "description": {
+                "summary": "指针约束可以重新激活",
+                "text": "持久性指针约束在停用后可以重新激活。详见相应的停用事件（wp_locked_pointer.unlocked 和 wp_confined_pointer.unconfined）。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "zwp_locked_pointer_v1": {
+      "description": {
+        "summary": "接收相对指针运动事件",
+        "text": "wp_locked_pointer 接口代表锁定指针的状态。\n\n当此对象的锁定处于活动状态时，关联 seat 的 wl_pointer 对象不会发出任何 wl_pointer.motion 事件。\n\n当锁定被激活时，此对象将发送 'locked' 事件。每当锁定被激活时，保证被锁定的表面已经接收到指针焦点，并且指针将在传递给创建此对象的请求的区域内。\n\n要解锁指针，请发送 destroy 请求。这也将销毁 wp_locked_pointer 对象。\n\n如果合成器决定解锁指针，将发送 unlocked 事件。详见 wp_locked_pointer.unlock。\n\n解锁时，合成器可能会将光标位置移动到设置的光标位置提示。如果这样做，不会导致通过 wp_relative_pointer 发出任何相对运动事件。\n\n如果请求锁定的表面被销毁且锁定尚未激活，则 wp_locked_pointer 对象现已失效，必须被销毁。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁锁定指针对象",
+            "text": "销毁锁定指针对象。如果适用，合成器将解锁指针。"
+          }
+        },
+        "set_cursor_position_hint": {
+          "description": {
+            "summary": "设置指针光标位置提示",
+            "text": "设置相对于表面左上角的光标位置提示。\n\n如果客户端正在绘制自己的光标，它应将位置提示更新为其自身光标的位置。合成器可以使用此信息在解锁时移动指针，以避免指针跳动。\n\n光标位置提示是双缓冲状态，参见 wl_surface.commit。"
+          }
+        },
+        "set_region": {
+          "description": {
+            "summary": "设置新的锁定区域",
+            "text": "设置用于锁定指针的新区域。\n\n新的锁定区域是双缓冲的，参见 wl_surface.commit。\n\n有关锁定区域的详细信息，请参阅 wp_locked_pointer。"
+          }
+        }
+      },
+      "events": {
+        "locked": {
+          "description": {
+            "summary": "锁定激活事件",
+            "text": "通知 seat 的指针锁定已被激活。"
+          }
+        },
+        "unlocked": {
+          "description": {
+            "summary": "锁定停用事件",
+            "text": "通知 seat 的指针锁定不再活动。如果这是一次性指针锁定（参见 wp_pointer_constraints.lifetime），此对象现已失效，应被销毁。如果是持久性指针锁定（参见 wp_pointer_constraints.lifetime），此指针锁定将来可能会重新激活。"
+          }
+        }
+      }
+    },
+    "zwp_confined_pointer_v1": {
+      "description": {
+        "summary": "受限指针对象",
+        "text": "wp_confined_pointer 接口代表受限指针的状态。\n\n当约束被激活时，此对象将发送 'confined' 事件。每当约束被激活时，保证指针被约束到的表面已经接收到指针焦点，并且指针将在传递给创建此对象的请求的区域内。是否需要某些用户交互以及指针是否会在区域外时移动到区域内取决于合成器。\n\n要取消约束指针，请发送 destroy 请求。这也将销毁 wp_confined_pointer 对象。\n\n如果合成器决定取消约束指针，将发送 unconfined 事件。此时 wp_confined_pointer 对象已失效，应被销毁。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁受限指针对象",
+            "text": "销毁受限指针对象。如果适用，合成器将取消约束指针。"
+          }
+        },
+        "set_region": {
+          "description": {
+            "summary": "设置新的约束区域",
+            "text": "设置用于约束指针的新区域。\n\n新的约束区域是双缓冲的，参见 wl_surface.commit。\n\n如果在应用新约束区域时约束处于活动状态，并且指针最终位于新应用区域之外，指针可能会被移动到新约束区域内的位置。如果发生移动，将发出 wl_pointer.motion 事件，但不会发出 wp_relative_pointer.relative_motion 事件。\n\n合成器也可以选择不使用新区域，而是取消约束指针。\n\n有关约束区域的详细信息，请参阅 wp_confined_pointer。"
+          }
+        }
+      },
+      "events": {
+        "confined": {
+          "description": {
+            "summary": "指针已被约束",
+            "text": "通知 seat 的指针约束已被激活。"
+          }
+        },
+        "unconfined": {
+          "description": {
+            "summary": "指针已取消约束",
+            "text": "通知 seat 的指针约束不再活动。如果这是一次性指针约束（参见 wp_pointer_constraints.lifetime），此对象现已失效，应被销毁。如果是持久性指针约束（参见 wp_pointer_constraints.lifetime），此指针约束将来可能会重新激活。"
+          }
+        }
+      }
+    }
+  }
+}

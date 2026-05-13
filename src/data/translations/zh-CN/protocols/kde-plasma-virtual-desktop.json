@@ -1,0 +1,92 @@
+{
+  "interfaces": {
+    "org_kde_plasma_virtual_desktop_management": {
+      "requests": {
+        "get_virtual_desktop": {
+          "description": {
+            "summary": "获取指定桌面的 org_kde_plasma_virtual_desktop 接口",
+            "text": "给定特定虚拟桌面的 id，获取仅表示具有该 id 的桌面的相应 org_kde_plasma_virtual_desktop。\n\n警告！此文件中描述的协议是桌面环境的实现细节。普通客户端不得使用此协议。可能会添加向后不兼容的更改，而无需增加扩展的主版本号。"
+          }
+        },
+        "request_create_virtual_desktop": {
+          "description": {
+            "summary": "请求在指定位置创建新桌面",
+            "text": "请求服务器创建一个新的虚拟桌面，并将其放置在指定位置。如果位置为零或更小，它将被放置在开头；如果位置等于或大于总数，它将被放置在末尾。"
+          }
+        },
+        "request_remove_virtual_desktop": {
+          "description": {
+            "summary": "请求删除由 id 标识的桌面",
+            "text": "请求服务器删除一个虚拟桌面，服务器可以同意或拒绝该请求。"
+          }
+        }
+      },
+      "events": {
+        "desktop_created": {
+          "description": {
+            "summary": "新桌面创建时触发"
+          }
+        },
+        "desktop_removed": {
+          "description": {
+            "summary": "桌面被移除时触发"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "已发送所有桌面信息",
+            "text": "在绑定到桌面管理器全局对象后发送所有其他属性后，以及在 org_kde_plasma_virtual_desktop_management 和 org_kde_plasma_virtual_desktop 属性的所有更改发送后，发送此事件。\n\n这允许将 org_kde_plasma_virtual_desktop_management 和 org_kde_plasma_virtual_desktop 属性的更改视为原子操作，即使它们通过多个事件发生。"
+          }
+        }
+      }
+    },
+    "org_kde_plasma_virtual_desktop": {
+      "requests": {
+        "request_activate": {
+          "description": {
+            "summary": "请求激活此桌面",
+            "text": "请求服务器将此桌面的状态设置为活动状态：服务器可以同意或拒绝该请求。这将成为系统的新\"当前\"虚拟桌面。"
+          }
+        }
+      },
+      "events": {
+        "desktop_id": {
+          "description": {
+            "summary": "桌面获得了 id",
+            "text": "id 的格式由 compositor 实现决定。桌面 id 唯一标识一个虚拟桌面，并保证永远不会存在两个具有相同 id 的桌面。字符串 id 的格式取决于服务器实现。"
+          }
+        },
+        "activated": {
+          "description": {
+            "summary": "桌面已被激活",
+            "text": "该桌面将成为系统的新\"当前\"桌面。服务器可以支持一次只有一个虚拟桌面处于活动状态，或其他组合，例如每个屏幕一个虚拟桌面处于活动状态。\n与此虚拟桌面关联的窗口将被显示。"
+          }
+        },
+        "deactivated": {
+          "description": {
+            "summary": "此桌面不再处于活动状态",
+            "text": "仅与此桌面关联的窗口将被隐藏。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "已发送所有桌面信息",
+            "text": "在绑定到桌面对象后发送所有其他属性后，以及在此之后完成的任何其他属性更改后，发送此事件。这允许将 org_kde_plasma_virtual_desktop 属性的更改视为原子操作，即使它们通过多个事件发生。"
+          }
+        },
+        "removed": {
+          "description": {
+            "summary": "此桌面已被移除",
+            "text": "此虚拟桌面刚刚被服务器移除：所有窗口将失去与此桌面的关联。"
+          }
+        },
+        "position": {
+          "description": {
+            "summary": "虚拟桌面位置",
+            "text": "虚拟桌面在桌面列表中的位置。虚拟桌面位置在 [0, N - 1] 范围内，其中 N 是虚拟桌面的数量。"
+          }
+        }
+      }
+    }
+  }
+}
