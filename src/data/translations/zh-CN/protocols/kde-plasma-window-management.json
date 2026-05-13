@@ -1,0 +1,398 @@
+{
+  "interfaces": {
+    "org_kde_plasma_window_management": {
+      "description": {
+        "type": "description",
+        "text": "此接口用于管理应用程序窗口。\n它提供了显示和隐藏桌面的请求，并在每次窗口创建时发出事件，以便客户端可以使用它来管理窗口。\n\n一次只有一个客户端可以绑定此接口。\n\n警告！此文件中描述的协议是桌面环境的实现细节。普通客户端不得使用此协议。可能会添加不向后兼容的更改，而无需递增扩展的主版本号。",
+        "summary": "应用程序窗口管理"
+      },
+      "requests": {
+        "show_desktop": {
+          "description": {
+            "type": "description",
+            "text": "通知合成器显示/隐藏桌面。",
+            "summary": "显示/隐藏桌面"
+          }
+        },
+        "get_window": {
+          "description": {
+            "type": "description",
+            "text": "已弃用：请使用 get_window_by_uuid",
+            "summary": "已弃用"
+          }
+        },
+        "get_stacking_order": {
+          "description": {
+            "type": "description",
+            "summary": "获取堆叠顺序"
+          }
+        }
+      },
+      "events": {
+        "show_desktop_changed": {
+          "description": {
+            "type": "description",
+            "text": "当显示桌面模式发生变化时会发送此事件。例如进入或离开该模式时。\n\n绑定接口时会发送当前状态。",
+            "summary": "通知客户端显示桌面模式的进入/离开"
+          }
+        },
+        "window": {
+          "description": {
+            "type": "description",
+            "text": "此事件会在窗口映射后立即发送。",
+            "summary": "通知客户端窗口已被映射"
+          }
+        },
+        "stacking_order_changed": {
+          "description": {
+            "type": "description",
+            "text": "当堆叠顺序发生变化时以及绑定时会发送此事件。\n\n从版本 17 起此事件已弃用，将不再发送。",
+            "summary": "通知客户端堆叠顺序已变化"
+          }
+        },
+        "stacking_order_uuid_changed": {
+          "description": {
+            "type": "description",
+            "text": "当堆叠顺序发生变化时以及绑定时会发送此事件。\n\n从版本 17 起此事件已弃用，将不再发送。",
+            "summary": "通知客户端堆叠顺序已变化"
+          }
+        },
+        "window_with_uuid": {
+          "description": {
+            "type": "description",
+            "text": "此事件会在窗口映射后立即发送。",
+            "summary": "通知客户端窗口已被映射"
+          }
+        },
+        "stacking_order_changed_2": {
+          "description": {
+            "type": "description",
+            "text": "当堆叠顺序发生变化时会发送此事件。",
+            "summary": "通知客户端堆叠顺序已变化"
+          }
+        }
+      },
+      "enums": {
+        "state": {
+          "entries": {}
+        },
+        "show_desktop": {
+          "entries": {}
+        }
+      }
+    },
+    "org_kde_plasma_window": {
+      "description": {
+        "type": "description",
+        "text": "管理和控制应用程序窗口。\n\n一次只有一个客户端可以绑定此接口。",
+        "summary": "用于控制应用程序窗口的接口"
+      },
+      "requests": {
+        "set_state": {
+          "description": {
+            "type": "description",
+            "text": "设置窗口状态。\n\nstate 参数的值由 org_kde_plasma_window_management.state 描述，可以在位域中组合使用。flags 位域描述哪些标志需要被设置，state 位域描述已设置标志的值。",
+            "summary": "设置窗口状态"
+          }
+        },
+        "set_virtual_desktop": {
+          "description": {
+            "type": "description",
+            "text": "已弃用：请使用 enter_virtual_desktop\n将窗口映射到不同的虚拟桌面。\n\n要使窗口在所有虚拟桌面上显示，请调用 org_kde_plasma_window.set_state 请求并在位域中指定 on_all_desktops 状态。",
+            "summary": "将窗口映射到虚拟桌面"
+          }
+        },
+        "set_minimized_geometry": {
+          "description": {
+            "type": "description",
+            "text": "设置此窗口的任务栏条目的几何形状。该几何形状是相对于特定面板的。",
+            "summary": "设置任务栏条目的几何形状"
+          }
+        },
+        "unset_minimized_geometry": {
+          "description": {
+            "type": "description",
+            "text": "移除特定面板的任务几何信息。",
+            "summary": "设置任务栏条目的几何形状"
+          }
+        },
+        "close": {
+          "description": {
+            "type": "description",
+            "text": "关闭此窗口。",
+            "summary": "关闭窗口"
+          }
+        },
+        "request_move": {
+          "description": {
+            "type": "description",
+            "text": "请求对此窗口进行交互式移动。",
+            "summary": "请求移动"
+          }
+        },
+        "request_resize": {
+          "description": {
+            "type": "description",
+            "text": "请求对此窗口进行交互式调整大小。",
+            "summary": "请求调整大小"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "移除绑定到此 org_kde_plasma_window 的资源。",
+            "summary": "移除 org_kde_plasma_window 的资源"
+          }
+        },
+        "get_icon": {
+          "description": {
+            "type": "description",
+            "text": "合成器会将窗口图标写入提供的文件描述符中。数据是通过 QDataStream 序列化的 QIcon。",
+            "summary": "请求获取窗口图标"
+          }
+        },
+        "request_enter_virtual_desktop": {
+          "description": {
+            "type": "description",
+            "text": "使窗口进入一个虚拟桌面。窗口可以进入多个虚拟桌面。如果 id 为空或无效，则不执行任何操作。",
+            "summary": "将窗口映射到虚拟桌面"
+          }
+        },
+        "request_enter_new_virtual_desktop": {
+          "description": {
+            "type": "description",
+            "text": "RFC：是否可以通过空 id 调用 request_enter_virtual_desktop 来实现？\n使窗口进入一个新的虚拟桌面。如果服务器同意请求，它将创建一个新的虚拟桌面并将窗口分配给它。",
+            "summary": "将窗口映射到虚拟桌面"
+          }
+        },
+        "request_leave_virtual_desktop": {
+          "description": {
+            "type": "description",
+            "text": "使窗口退出一个虚拟桌面。如果窗口退出所有桌面，则视为在所有桌面上。",
+            "summary": "从虚拟桌面移除窗口"
+          }
+        },
+        "request_enter_activity": {
+          "description": {
+            "type": "description",
+            "text": "使窗口进入一个活动。窗口可以进入多个活动。如果 id 为空或无效，则不执行任何操作。",
+            "summary": "将窗口映射到活动"
+          }
+        },
+        "request_leave_activity": {
+          "description": {
+            "type": "description",
+            "text": "使窗口退出一个活动。如果窗口退出所有活动，则视为在所有活动上。",
+            "summary": "从活动移除窗口"
+          }
+        },
+        "send_to_output": {
+          "description": {
+            "type": "description",
+            "text": "请求将此窗口显示在指定的输出上。",
+            "summary": "将窗口发送到指定输出"
+          }
+        }
+      },
+      "events": {
+        "title_changed": {
+          "description": {
+            "type": "description",
+            "text": "窗口标题发生变化时会立即发送此事件。",
+            "summary": "窗口标题已变化"
+          }
+        },
+        "app_id_changed": {
+          "description": {
+            "type": "description",
+            "text": "应用程序标识符发生变化时会立即发送此事件。",
+            "summary": "应用程序标识符已变化"
+          }
+        },
+        "state_changed": {
+          "description": {
+            "type": "description",
+            "text": "窗口状态发生变化时会立即发送此事件。\n\nstate 参数的值由 org_kde_plasma_window_management.state 描述。",
+            "summary": "窗口状态已变化"
+          }
+        },
+        "virtual_desktop_changed": {
+          "description": {
+            "type": "description",
+            "text": "已弃用：请改用 virtual_desktop_entered 和 virtual_desktop_left\n当窗口被移动到另一个虚拟桌面时会发送此事件。\n\n如果窗口在所有虚拟桌面上变为可见，则不会发送此事件。",
+            "summary": "窗口已被移动到另一个工作区"
+          }
+        },
+        "themed_icon_name_changed": {
+          "description": {
+            "type": "description",
+            "text": "当主题图标名称发生变化时会发送此事件。可能为 null。",
+            "summary": "窗口的图标名称已变化"
+          }
+        },
+        "unmapped": {
+          "description": {
+            "type": "description",
+            "text": "此事件会在窗口关闭且其 surface 被取消映射后立即发送。",
+            "summary": "窗口的 surface 已被取消映射"
+          }
+        },
+        "initial_state": {
+          "description": {
+            "type": "description",
+            "text": "所有初始状态发送给客户端后会立即发送此事件。如果 Plasma 窗口已经被取消映射，unmapped 事件将在 initial_state 事件之前发送。",
+            "summary": "所有初始已知状态已提交"
+          }
+        },
+        "parent_window": {
+          "description": {
+            "type": "description",
+            "text": "当此 org_kde_plasma_window 的父窗口发生变化时会发送此事件。传入的父窗口是另一个 org_kde_plasma_window，此 org_kde_plasma_window 是父窗口的临时窗口。如果 parent 参数为 null，则此 org_kde_plasma_window 没有父窗口。",
+            "summary": "父窗口已变化"
+          }
+        },
+        "geometry": {
+          "description": {
+            "type": "description",
+            "text": "当此 org_kde_plasma_window 的窗口几何形状发生变化时会发送此事件。坐标使用窗口系统的绝对坐标。",
+            "summary": "此窗口在绝对坐标中的几何形状"
+          }
+        },
+        "icon_changed": {
+          "description": {
+            "type": "description",
+            "text": "当窗口图标发生变化但没有主题图标名称时会发送此事件。常见例子是具有基于像素图图标的 Xwayland 窗口。\n\n客户端可以使用 get_icon 请求图标。",
+            "summary": "窗口的图标已变化"
+          }
+        },
+        "pid_changed": {
+          "description": {
+            "type": "description",
+            "text": "当合成器设置了此窗口所属的进程 ID 时会发送此事件。应在 initial_state 发送之前设置一次。",
+            "summary": "拥有窗口的应用程序的进程 ID 已变化"
+          }
+        },
+        "virtual_desktop_entered": {
+          "description": {
+            "type": "description",
+            "text": "当窗口进入新的虚拟桌面时会发送此事件。窗口可以在多个桌面上，也可以不在任何桌面上：此时视为在所有桌面上。",
+            "summary": "窗口已进入新的虚拟桌面"
+          }
+        },
+        "virtual_desktop_left": {
+          "description": {
+            "type": "description",
+            "text": "当窗口离开一个虚拟桌面时会发送此事件。如果窗口离开所有桌面，可视为在所有桌面上。如果窗口被手动添加到所有桌面，服务器必须为窗口之前所在的每个桌面发送 virtual_desktop_left，才能真正视为在所有桌面上。",
+            "summary": "窗口已离开一个虚拟桌面"
+          }
+        },
+        "application_menu": {
+          "description": {
+            "type": "description",
+            "text": "当窗口的应用程序菜单发生变化后会发送此事件。",
+            "summary": "通知客户端当前应用程序菜单已变化"
+          }
+        },
+        "activity_entered": {
+          "description": {
+            "type": "description",
+            "text": "当窗口进入一个活动时会发送此事件。窗口可以在多个活动上，也可以不在任何活动上：此时视为在所有活动上。",
+            "summary": "窗口已进入一个活动"
+          }
+        },
+        "activity_left": {
+          "description": {
+            "type": "description",
+            "text": "当窗口离开一个活动时会发送此事件。如果窗口离开所有活动，将视为在所有活动上。如果窗口被手动添加到所有活动，服务器必须为窗口之前所在的每个活动发送 activity_left，才能真正视为在所有活动上。",
+            "summary": "窗口已离开一个活动"
+          }
+        },
+        "resource_name_changed": {
+          "description": {
+            "type": "description",
+            "text": "当窗口的 X11 资源名称发生变化时会发送此事件。仅对 XWayland 窗口设置。",
+            "summary": "X11 资源名称已变化"
+          }
+        },
+        "client_geometry": {
+          "description": {
+            "type": "description",
+            "text": "当此 org_kde_plasma_window 的窗口几何形状发生变化时会发送此事件。坐标使用窗口系统的绝对坐标。",
+            "summary": "此窗口在绝对坐标中的客户端几何形状（不含装饰等）"
+          }
+        }
+      }
+    },
+    "org_kde_plasma_activation_feedback": {
+      "description": {
+        "type": "description",
+        "text": "激活管理器接口提供了一种在应用程序即将被激活时获取通知的方式。",
+        "summary": "激活反馈"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁激活管理器对象。由此管理器对象引入的激活对象不受影响。",
+            "summary": "销毁激活管理器对象"
+          }
+        }
+      },
+      "events": {
+        "activation": {
+          "description": {
+            "type": "description",
+            "text": "当应用程序被设置为激活时会发出此事件。它提供了一个 org_kde_plasma_activation 实例，该实例将告诉我们 app_id 和激活的程度。",
+            "summary": "通知应用程序正在启动"
+          }
+        }
+      }
+    },
+    "org_kde_plasma_activation": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "通知合成器 org_kde_plasma_activation 对象将不再使用。",
+            "summary": "销毁 org_kde_plasma_activation 对象"
+          }
+        }
+      },
+      "events": {
+        "app_id": {
+          "description": {
+            "type": "description",
+            "summary": "提供 app_id"
+          }
+        },
+        "finished": {
+          "description": {
+            "type": "description",
+            "summary": "通知激活已完成，无论是通过激活还是因为被无效化"
+          }
+        }
+      }
+    },
+    "org_kde_plasma_stacking_order": {
+      "description": {
+        "type": "description",
+        "text": "当此对象被创建时，合成器会按堆叠顺序为每个窗口发送一个 window 事件，然后发送 done 事件并销毁此对象。",
+        "summary": "用于发送堆叠顺序的辅助对象"
+      },
+      "events": {
+        "window": {
+          "description": {
+            "type": "description",
+            "summary": "堆叠顺序列表中的一个窗口"
+          }
+        },
+        "done": {
+          "description": {
+            "type": "description",
+            "summary": "标记列表结束"
+          }
+        }
+      }
+    }
+  }
+}

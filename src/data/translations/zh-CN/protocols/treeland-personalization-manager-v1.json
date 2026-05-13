@@ -1,0 +1,557 @@
+{
+  "interfaces": {
+    "treeland_personalization_manager_v1": {
+      "description": {
+        "type": "description",
+        "text": "此接口允许客户端自定义显示效果。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会在相应的接口版本更新中添加向后兼容的更改。向后不兼容的更改只能通过创建新的扩展主版本来完成。",
+        "summary": "个性化管理器"
+      },
+      "requests": {
+        "get_window_context": {
+          "description": {
+            "type": "description",
+            "text": "根据上下文设置窗口背景和阴影",
+            "summary": "获取个性化窗口上下文"
+          }
+        },
+        "get_wallpaper_context": {
+          "description": {
+            "type": "description",
+            "text": "自定义用户壁纸",
+            "summary": "自定义壁纸上下文"
+          }
+        },
+        "get_cursor_context": {
+          "description": {
+            "type": "description",
+            "text": "自定义用户光标",
+            "summary": "自定义光标上下文"
+          }
+        },
+        "get_font_context": {
+          "description": {
+            "type": "description",
+            "text": "自定义 treeland 和窗口全局字体上下文",
+            "summary": "自定义 treeland 和窗口全局字体上下文"
+          }
+        },
+        "get_appearance_context": {
+          "description": {
+            "type": "description",
+            "text": "自定义用户 treeland 窗口外观全局设置",
+            "summary": "自定义 treeland 窗口全局设置上下文"
+          }
+        }
+      }
+    },
+    "treeland_personalization_wallpaper_context_v1": {
+      "description": {
+        "type": "description",
+        "text": "此接口允许客户端个性化壁纸。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会在相应的接口版本更新中添加向后兼容的更改。向后不兼容的更改只能通过创建新的扩展主版本来完成。",
+        "summary": "客户端自定义壁纸上下文"
+      },
+      "requests": {
+        "set_fd": {
+          "description": {
+            "type": "description",
+            "summary": "设置当前用户的壁纸文件描述符"
+          }
+        },
+        "set_identifier": {
+          "description": {
+            "type": "description",
+            "summary": "应用程序窗口的标识符"
+          }
+        },
+        "set_output": {
+          "description": {
+            "type": "description",
+            "summary": "配置 xdg desktop portal 选项"
+          }
+        },
+        "set_on": {
+          "description": {
+            "type": "description",
+            "summary": "配置 xdg desktop portal 选项"
+          }
+        },
+        "set_isdark": {
+          "description": {
+            "type": "description",
+            "summary": "设置当前壁纸是否为暗色"
+          }
+        },
+        "commit": {
+          "description": {
+            "type": "description",
+            "summary": "提交配置"
+          }
+        },
+        "get_metadata": {
+          "description": {
+            "type": "description",
+            "text": "获取当前用户的壁纸",
+            "summary": "获取用户保存的元数据"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁上下文对象。",
+            "summary": "销毁上下文对象"
+          }
+        }
+      },
+      "events": {
+        "metadata": {
+          "description": {
+            "type": "description",
+            "text": "获取用户壁纸后发送此信号。",
+            "summary": "获取元数据事件"
+          }
+        }
+      },
+      "enums": {
+        "options": {
+          "description": {
+            "type": "description",
+            "summary": "xdg desktop portal 支持的键"
+          },
+          "entries": {
+            "preview": {
+              "summary": "是否显示图片预览"
+            },
+            "background": {
+              "summary": "配置屏幕背景"
+            },
+            "lockscreen": {
+              "summary": "配置锁屏壁纸"
+            }
+          }
+        }
+      }
+    },
+    "treeland_personalization_cursor_context_v1": {
+      "description": {
+        "type": "description",
+        "text": "此接口允许客户端个性化光标。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会在相应的接口版本更新中添加向后兼容的更改。向后不兼容的更改只能通过创建新的扩展主版本来完成。",
+        "summary": "客户端自定义光标上下文"
+      },
+      "requests": {
+        "set_theme": {
+          "description": {
+            "type": "description",
+            "summary": "设置系统光标主题"
+          }
+        },
+        "get_theme": {
+          "description": {
+            "type": "description",
+            "summary": "获取系统光标主题"
+          }
+        },
+        "set_size": {
+          "description": {
+            "type": "description",
+            "summary": "设置系统光标大小"
+          }
+        },
+        "get_size": {
+          "description": {
+            "type": "description",
+            "summary": "获取系统光标大小"
+          }
+        },
+        "commit": {
+          "description": {
+            "type": "description",
+            "text": "如果仅有一个提交未通过验证，该提交将失败",
+            "summary": "提交配置"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁上下文对象。",
+            "summary": "销毁上下文对象"
+          }
+        }
+      },
+      "events": {
+        "verfity": {
+          "description": {
+            "type": "description",
+            "text": "提交光标配置后发送此信号。",
+            "summary": "验证事件"
+          }
+        },
+        "theme": {
+          "description": {
+            "type": "description",
+            "text": "系统光标主题更改后发送此信号。",
+            "summary": "光标主题变更事件"
+          }
+        },
+        "size": {
+          "description": {
+            "type": "description",
+            "text": "系统光标大小更改后发送此信号。",
+            "summary": "光标大小变更事件"
+          }
+        }
+      }
+    },
+    "treeland_personalization_window_context_v1": {
+      "description": {
+        "type": "description",
+        "text": "此接口允许客户端个性化窗口。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会在相应的接口版本更新中添加向后兼容的更改。向后不兼容的更改只能通过创建新的扩展主版本来完成。",
+        "summary": "客户端自定义窗口上下文"
+      },
+      "requests": {
+        "set_blend_mode": {
+          "description": {
+            "type": "description",
+            "text": "设置窗口背景混合模式",
+            "summary": "设置窗口背景混合模式"
+          }
+        },
+        "set_round_corner_radius": {
+          "description": {
+            "type": "description",
+            "text": "此请求设置窗口圆角半径，调用此请求表示用户希望自行管理窗口圆角半径。如果未调用，窗口圆角半径将由合成器决定。",
+            "summary": "设置窗口圆角半径"
+          }
+        },
+        "set_shadow": {
+          "description": {
+            "type": "description",
+            "text": "设置窗口阴影的半径、偏移和颜色，调用此请求表示客户端希望自行管理窗口阴影。如果未调用，窗口阴影将由合成器决定。",
+            "summary": "设置窗口阴影"
+          }
+        },
+        "set_border": {
+          "description": {
+            "type": "description",
+            "text": "设置窗口边框宽度和颜色",
+            "summary": "设置窗口边框"
+          }
+        },
+        "set_titlebar": {
+          "description": {
+            "type": "description",
+            "text": "设置是否启用系统标题栏",
+            "summary": "设置是否启用系统标题栏"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁上下文对象。",
+            "summary": "销毁上下文对象"
+          }
+        }
+      },
+      "enums": {
+        "blend_mode": {
+          "description": {
+            "type": "description",
+            "text": "窗口混合模式定义合成器如何将窗口表面合成到其他表面之上。",
+            "summary": "窗口混合模式"
+          },
+          "entries": {
+            "transparent": {
+              "summary": "普通混合模式，仅使用 alpha 通道将窗口合成到背景之上"
+            },
+            "wallpaper": {
+              "summary": "将窗口合成到壁纸之上"
+            },
+            "blur": {
+              "summary": "模糊窗口背景的内容"
+            }
+          }
+        },
+        "enable_mode": {
+          "description": {
+            "type": "description",
+            "text": "设置窗口启用模式",
+            "summary": "窗口启用模式"
+          },
+          "entries": {
+            "enable": {
+              "summary": "强制启用标题栏"
+            },
+            "disable": {
+              "summary": "强制禁用标题栏"
+            }
+          }
+        }
+      }
+    },
+    "treeland_personalization_font_context_v1": {
+      "description": {
+        "type": "description",
+        "text": "此接口允许设置 treeland 窗口全局字体设置。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会在相应的接口版本更新中添加向后兼容的更改。向后不兼容的更改只能通过创建新的扩展主版本来完成。",
+        "summary": "treeland 窗口全局字体设置"
+      },
+      "requests": {
+        "set_font_size": {
+          "description": {
+            "type": "description",
+            "text": "设置系统字体大小",
+            "summary": "设置系统字体大小"
+          }
+        },
+        "get_font_size": {
+          "description": {
+            "type": "description",
+            "text": "获取系统字体大小",
+            "summary": "获取系统字体大小"
+          }
+        },
+        "set_font": {
+          "description": {
+            "type": "description",
+            "text": "设置系统字体",
+            "summary": "设置系统字体"
+          }
+        },
+        "get_font": {
+          "description": {
+            "type": "description",
+            "text": "获取系统字体",
+            "summary": "获取系统字体"
+          }
+        },
+        "set_monospace_font": {
+          "description": {
+            "type": "description",
+            "text": "设置系统等宽字体",
+            "summary": "设置系统等宽字体"
+          }
+        },
+        "get_monospace_font": {
+          "description": {
+            "type": "description",
+            "text": "获取系统等宽字体",
+            "summary": "获取系统等宽字体"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁上下文对象。",
+            "summary": "销毁上下文对象"
+          }
+        }
+      },
+      "events": {
+        "font": {
+          "description": {
+            "type": "description",
+            "text": "设置系统字体后发送此信号。",
+            "summary": "字体事件"
+          }
+        },
+        "monospace_font": {
+          "description": {
+            "type": "description",
+            "text": "设置系统等宽字体后发送此信号。",
+            "summary": "等宽字体事件"
+          }
+        },
+        "font_size": {
+          "description": {
+            "type": "description",
+            "text": "设置系统字体大小后发送此信号。",
+            "summary": "字体大小事件"
+          }
+        }
+      }
+    },
+    "treeland_personalization_appearance_context_v1": {
+      "description": {
+        "type": "description",
+        "text": "此接口允许设置 treeland 窗口全局外观设置。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会在相应的接口版本更新中添加向后兼容的更改。向后不兼容的更改只能通过创建新的扩展主版本来完成。",
+        "summary": "treeland 窗口全局外观设置"
+      },
+      "requests": {
+        "set_round_corner_radius": {
+          "description": {
+            "type": "description",
+            "text": "设置窗口圆角半径",
+            "summary": "设置窗口圆角半径"
+          }
+        },
+        "get_round_corner_radius": {
+          "description": {
+            "type": "description",
+            "text": "获取窗口圆角半径",
+            "summary": "获取窗口圆角半径"
+          }
+        },
+        "set_icon_theme": {
+          "description": {
+            "type": "description",
+            "text": "设置系统图标主题",
+            "summary": "设置系统图标主题"
+          }
+        },
+        "get_icon_theme": {
+          "description": {
+            "type": "description",
+            "text": "获取系统图标主题",
+            "summary": "获取系统图标主题"
+          }
+        },
+        "set_active_color": {
+          "description": {
+            "type": "description",
+            "text": "设置系统活跃颜色",
+            "summary": "设置系统活跃颜色"
+          }
+        },
+        "get_active_color": {
+          "description": {
+            "type": "description",
+            "text": "获取系统活跃颜色",
+            "summary": "获取系统活跃颜色"
+          }
+        },
+        "set_window_opacity": {
+          "description": {
+            "type": "description",
+            "text": "设置窗口不透明度",
+            "summary": "设置窗口不透明度"
+          }
+        },
+        "get_window_opacity": {
+          "description": {
+            "type": "description",
+            "text": "获取窗口不透明度",
+            "summary": "获取窗口不透明度"
+          }
+        },
+        "set_window_theme_type": {
+          "description": {
+            "type": "description",
+            "text": "设置窗口主题",
+            "summary": "设置窗口主题类型"
+          }
+        },
+        "get_window_theme_type": {
+          "description": {
+            "type": "description",
+            "text": "获取窗口主题类型",
+            "summary": "获取窗口主题类型"
+          }
+        },
+        "set_window_titlebar_height": {
+          "description": {
+            "type": "description",
+            "text": "设置窗口标题栏高度",
+            "summary": "设置窗口标题栏高度"
+          }
+        },
+        "get_window_titlebar_height": {
+          "description": {
+            "type": "description",
+            "text": "获取窗口标题栏高度",
+            "summary": "获取窗口标题栏高度"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁上下文对象。",
+            "summary": "销毁上下文对象"
+          }
+        }
+      },
+      "events": {
+        "round_corner_radius": {
+          "description": {
+            "type": "description",
+            "text": "设置圆角半径后发送此信号。",
+            "summary": "圆角半径事件"
+          }
+        },
+        "icon_theme": {
+          "description": {
+            "type": "description",
+            "text": "设置系统图标主题后发送此信号。",
+            "summary": "图标主题事件"
+          }
+        },
+        "active_color": {
+          "description": {
+            "type": "description",
+            "text": "设置系统活跃颜色后发送此信号。",
+            "summary": "活跃颜色事件"
+          }
+        },
+        "window_opacity": {
+          "description": {
+            "type": "description",
+            "text": "设置系统活跃颜色后发送此信号。",
+            "summary": "窗口不透明度事件"
+          }
+        },
+        "window_theme_type": {
+          "description": {
+            "type": "description",
+            "text": "设置系统主题后发送此信号。",
+            "summary": "窗口主题事件"
+          }
+        },
+        "window_titlebar_height": {
+          "description": {
+            "type": "description",
+            "text": "设置窗口标题栏高度后发送此信号。",
+            "summary": "窗口标题栏高度事件"
+          }
+        }
+      },
+      "enums": {
+        "theme_type": {
+          "description": {
+            "type": "description",
+            "summary": "窗口主题类型"
+          },
+          "entries": {
+            "auto": {
+              "summary": "窗口自动主题"
+            },
+            "light": {
+              "summary": "窗口浅色主题"
+            },
+            "dark": {
+              "summary": "窗口深色主题"
+            }
+          }
+        },
+        "error": {
+          "entries": {
+            "invalid_round_corner_radius": {
+              "summary": "错误的圆角半径"
+            },
+            "invalid_icon_theme": {
+              "summary": "错误的图标主题"
+            },
+            "invalid_active_color": {
+              "summary": "错误的活跃颜色"
+            },
+            "invalid_window_opacity": {
+              "summary": "错误的窗口不透明度"
+            },
+            "invalid_window_theme_type": {
+              "summary": "错误的主题类型"
+            },
+            "invalid_window_titlebar_height": {
+              "summary": "错误的窗口标题栏高度"
+            }
+          }
+        }
+      }
+    }
+  }
+}

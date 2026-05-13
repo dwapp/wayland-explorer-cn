@@ -1,0 +1,1786 @@
+{
+  "interfaces": {
+    "tizen_surface": {
+      "description": {
+        "type": "description",
+        "text": "tizen_surface 为给定的 surface 提供 Tizen 平台特有的功能。",
+        "summary": "Tizen 平台特有的 surface"
+      },
+      "requests": {
+        "get_tizen_resource": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 surface 创建一个 tizen_resource 接口。",
+            "summary": "获取一个 tizen_resource 对象"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁此 tizen_surface 对象。",
+            "summary": "销毁 tizen_surface"
+          }
+        }
+      }
+    },
+    "tizen_resource": {
+      "description": {
+        "type": "description",
+        "text": "此 tizen_resource 提供一个全局资源 ID。它是由 display server 提供的唯一标识符。",
+        "summary": "全局资源 ID"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁此 tizen_resource 对象。",
+            "summary": "销毁 tizen_resource"
+          }
+        }
+      },
+      "events": {
+        "resource_id": {
+          "description": {
+            "type": "description",
+            "text": "resource_id 事件在 display server 创建 tizen_resource 对象后立即发送。该 ID 是由 display server 生成的唯一标识符。",
+            "summary": "一个全局资源 ID"
+          }
+        }
+      }
+    },
+    "tizen_policy": {
+      "description": {
+        "type": "description",
+        "text": "tizen_policy 为 Tizen 平台上的窗口管理提供 Tizen 平台特有的请求和事件。\n\n[TODO] 解释 display server 中的窗口层。需要解释窗口层以理解 tizen_policy 接口中的请求和事件。",
+        "summary": "Tizen 平台特有的窗口管理策略"
+      },
+      "requests": {
+        "get_visibility": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 surface 创建一个可见性接口。",
+            "summary": "获取一个可见性对象"
+          }
+        },
+        "get_position": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 surface 创建一个位置接口。\n[TODO]: 需要解释与 zxdg_positioner_v6 的关系",
+            "summary": "获取一个位置对象"
+          }
+        },
+        "activate": {
+          "description": {
+            "type": "description",
+            "text": "激活给定的 surface。当客户端希望将窗口提升到窗口层中窗口栈的顶部，并希望从 display server 获取键盘焦点时，会发送此请求。但 display server 并不总是在请求的 surface 上设置焦点，这取决于 display server 的焦点策略。客户端仅通过此请求表达获取键盘焦点的意愿。",
+            "summary": "激活 surface"
+          }
+        },
+        "activate_below_by_res_id": {
+          "description": {
+            "type": "description",
+            "text": "激活与给定 res_id 关联的 surface，并将其定位在与 below_res_id 关联的 surface 下方。当客户端希望使用属于不同进程的全局资源 ID 来更改窗口栈顺序时，可以使用此请求。但当与 below_res_id 关联的 surface 是与 res_id 关联的 surface 的父级时，此请求不起作用。",
+            "summary": "激活 res_id 并定位在 below_res_id 下方"
+          }
+        },
+        "raise": {
+          "description": {
+            "type": "description",
+            "text": "此请求将给定的 surface 提升到窗口层中窗口栈的顶部。客户端可以通过 tizen_policy 接口的 set_type 请求为给定的 surface 设置 window_type 来决定窗口层。该 surface 将位于窗口层的顶部。",
+            "summary": "提升 surface"
+          }
+        },
+        "lower": {
+          "description": {
+            "type": "description",
+            "text": "此请求将给定的 surface 降低到窗口层中窗口栈的底部。该 surface 将位于窗口层的底部。",
+            "summary": "降低 surface"
+          }
+        },
+        "lower_by_res_id": {
+          "description": {
+            "type": "description",
+            "text": "此请求将与给定 res_id 关联的 surface 降低到窗口层中窗口栈的底部。该 surface 将位于窗口层的底部。",
+            "summary": "降低 res_id"
+          }
+        },
+        "set_focus_skip": {
+          "description": {
+            "type": "description",
+            "text": "此请求使给定的 surface 无法成为焦点 surface。display server 不得将焦点授予该 surface。",
+            "summary": "使 surface 无法获得焦点"
+          }
+        },
+        "unset_focus_skip": {
+          "description": {
+            "type": "description",
+            "text": "此请求使给定的 surface 能够成为焦点 surface。",
+            "summary": "使 surface 能够获得焦点"
+          }
+        },
+        "set_role": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 surface 设置角色。客户端可以设置 Tizen 平台特有的 surface 角色，但不包括 xdg_surface 接口的角色，如 xdg_toplevel、xdg_popup 等。",
+            "summary": "设置 surface 的角色"
+          }
+        },
+        "set_type": {
+          "description": {
+            "type": "description",
+            "text": "设置给定 surface 的类型。display server 使用窗口类型来决定窗口管理策略，包括焦点管理、可见性管理、栈管理等。",
+            "summary": "设置 surface 的类型"
+          }
+        },
+        "set_conformant": {
+          "description": {
+            "type": "description",
+            "text": "设置 conformant surface。conformant surface 可以接收事件，通过该事件 display server 通知由 conformant_part（即另一个客户端中的 surface）覆盖的区域。",
+            "summary": "设置 conformant（适配）surface"
+          }
+        },
+        "unset_conformant": {
+          "description": {
+            "type": "description",
+            "text": "取消设置 conformant surface。",
+            "summary": "取消设置 conformant（适配）surface"
+          }
+        },
+        "get_conformant": {
+          "description": {
+            "type": "description",
+            "text": "查询给定的 surface 是否为 conformant surface。display server 通过 conformant 事件发送结果。",
+            "summary": "检查 conformant surface"
+          }
+        },
+        "set_notification_level": {
+          "description": {
+            "type": "description",
+            "text": "此请求设置通知层中的级别。display server 根据给定的级别决定通知层中的 z 轴顺序。",
+            "summary": "设置通知中的级别"
+          }
+        },
+        "set_transient_for": {
+          "description": {
+            "type": "description",
+            "text": "此请求为与 parent_id 关联的 surface 设置 transient 父级。与给定 child_id 关联的 surface 成为与 parent_id 关联的 surface 的 transient 子级。",
+            "summary": "为 parent_id 设置 transient 父级"
+          }
+        },
+        "unset_transient_for": {
+          "description": {
+            "type": "description",
+            "text": "此请求取消与 child_id 关联的 surface 上的 transient 父级关系。",
+            "summary": "取消 transient 父子关系"
+          }
+        },
+        "set_window_screen_mode": {
+          "description": {
+            "type": "description",
+            "text": "客户端设置屏幕模式，只要给定的 surface 显示在屏幕上，屏幕就会保持该模式。",
+            "summary": "为 surface 设置屏幕模式"
+          }
+        },
+        "place_subsurface_below_parent": {
+          "description": {
+            "type": "description",
+            "text": "此请求将子 surface 的 surface 放置在其父 surface 的下方。",
+            "summary": "将子 surface 放置在父 surface 下方"
+          }
+        },
+        "set_subsurface_stand_alone": {
+          "description": {
+            "type": "description",
+            "text": "此请求使与给定子 surface 关联的 surface 不再遵循由父 surface 触发的窗口管理策略。与给定子 surface 关联的 surface 的窗口策略不受其父 surface 的影响。",
+            "summary": "使子 surface 进入独立模式"
+          }
+        },
+        "get_subsurface": {
+          "description": {
+            "type": "description",
+            "text": "通过全局资源 parent_id 获取给定 surface 的子 surface。",
+            "summary": "通过 parent_id 获取 surface 的子 surface"
+          }
+        },
+        "set_opaque_state": {
+          "description": {
+            "type": "description",
+            "text": "为给定 surface 设置不透明状态。display server 使此 surface 不透明，即使附加到该 surface 的缓冲区颜色深度为 32 位。",
+            "summary": "为 surface 设置不透明状态"
+          }
+        },
+        "iconify": {
+          "description": {
+            "type": "description",
+            "text": "为给定 surface 设置最小化状态。最小化状态是一种窗口状态，此时 surface 不显示在屏幕上。",
+            "summary": "为 surface 设置最小化状态"
+          }
+        },
+        "uniconify": {
+          "description": {
+            "type": "description",
+            "text": "为给定 surface 设置取消最小化状态。取消最小化状态是一种窗口状态，此时最小化的 surface 重新显示在屏幕上。",
+            "summary": "为 surface 设置取消最小化状态"
+          }
+        },
+        "add_aux_hint": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 surface 添加辅助提示信息。当 display server 已经拥有客户端发送此请求时使用的相同 ID 时，名称和值会被更改。",
+            "summary": "为 surface 添加辅助提示信息"
+          }
+        },
+        "change_aux_hint": {
+          "description": {
+            "type": "description",
+            "text": "更改 surface 拥有的辅助提示 ID 的值。",
+            "summary": "更改 surface 的辅助提示值"
+          }
+        },
+        "del_aux_hint": {
+          "description": {
+            "type": "description",
+            "text": "删除与给定 surface 拥有的提示 ID 关联的辅助提示信息。",
+            "summary": "删除辅助提示信息"
+          }
+        },
+        "get_supported_aux_hints": {
+          "description": {
+            "type": "description",
+            "text": "获取给定 surface 支持的辅助提示 ID。display server 发送 supported_aux_hints 事件作为此请求的回复。",
+            "summary": "获取辅助提示"
+          }
+        },
+        "set_background_state": {
+          "description": {
+            "type": "description",
+            "text": "将与给定 PID 关联的所有 surface 设置为后台状态。这些 surface 被设置为隐藏状态，即使客户端发送显示请求和激活请求，也无法在屏幕上显示。",
+            "summary": "设置后台状态"
+          }
+        },
+        "unset_background_state": {
+          "description": {
+            "type": "description",
+            "text": "将与给定 PID 关联的所有 surface 取消后台状态。这些 surface 可以根据客户端的请求进行显示和激活。",
+            "summary": "取消后台状态"
+          }
+        },
+        "set_floating_mode": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 surface 设置浮动模式。设置为浮动模式的 surface 可以作为浮动窗口，并可以定位在其他顶层窗口之上。",
+            "summary": "设置浮动模式"
+          }
+        },
+        "unset_floating_mode": {
+          "description": {
+            "type": "description",
+            "text": "取消给定 surface 的浮动模式。surface 的几何形状不会改变，其 z 轴顺序与顶层窗口相同。",
+            "summary": "取消浮动模式"
+          }
+        },
+        "set_stack_mode": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 surface 设置栈模式。surface 可以通过栈模式在同一层中更改 z 轴顺序。",
+            "summary": "设置栈模式"
+          }
+        },
+        "activate_above_by_res_id": {
+          "description": {
+            "type": "description",
+            "text": "激活与给定 res_id（全局资源 ID）关联的 surface，并将其定位在与 above_res_id 关联的 surface 之上。",
+            "summary": "激活并定位在上方资源 ID 之上"
+          }
+        },
+        "get_subsurface_watcher": {
+          "description": {
+            "type": "description",
+            "text": "获取与给定 surface 关联的子 surface 监视器。客户端可以获取与该 surface 关联的子 surface 的信息。",
+            "summary": "获取子 surface 监视器"
+          }
+        },
+        "set_parent": {
+          "description": {
+            "type": "description",
+            "text": "设置父子关系。子 surface 位于父 surface 之上。",
+            "summary": "设置父级"
+          }
+        },
+        "ack_conformant_region": {
+          "description": {
+            "type": "description",
+            "text": "客户端可以刷新其 surface 以应用来自 tizen_policy@conformant_region 事件的新 conformant 区域。客户端必须在此请求完成更新后进行确认。",
+            "summary": "确认 tizen_policy@conformant_region"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁此 tizen_policy 对象。",
+            "summary": "销毁 tizen_policy"
+          }
+        },
+        "has_video": {
+          "description": {
+            "type": "description",
+            "text": "客户端向 display server 发送信息，表明其拥有 tizen_video_object。",
+            "summary": "检查 tizen_video_object"
+          }
+        },
+        "set_appid": {
+          "description": {
+            "type": "description",
+            "text": "设置与给定 PID 关联的应用程序 ID。",
+            "summary": "设置应用程序 ID"
+          }
+        },
+        "show": {
+          "description": {
+            "type": "description",
+            "text": "通知显示给定的 surface。此请求表示客户端将向给定的 surface 附加缓冲区。当客户端发送此请求时，display server 不执行任何操作。",
+            "summary": "通知显示 surface"
+          }
+        },
+        "hide": {
+          "description": {
+            "type": "description",
+            "text": "通知隐藏给定的 surface。此请求表示客户端将向给定的 surface 附加空缓冲区。当客户端发送此请求时，display server 不执行任何操作。",
+            "summary": "通知隐藏 surface"
+          }
+        },
+        "set_transient_for_below": {
+          "description": {
+            "type": "description",
+            "text": "建立父子关系。子级始终放置在父级下方。",
+            "summary": "设置 transient_for 并放置在 transient_for 父级下方"
+          }
+        },
+        "set_parent_with_below": {
+          "description": {
+            "type": "description",
+            "text": "建立父子关系。子级始终放置在父级下方。为子窗口设置空父级将移除该子级的任何父子关系。",
+            "summary": "设置父级并放置在父级下方"
+          }
+        },
+        "set_maximize_direction": {
+          "description": {
+            "type": "description",
+            "text": "设置 surface 的最大化方向。",
+            "summary": "设置最大化方向"
+          }
+        },
+        "set_pin_mode": {
+          "description": {
+            "type": "description",
+            "text": "设置 surface 的固定模式。",
+            "summary": "设置固定模式"
+          }
+        },
+        "unset_pin_mode": {
+          "description": {
+            "type": "description",
+            "text": "取消 surface 的固定模式。",
+            "summary": "取消固定模式"
+          }
+        },
+        "set_layout": {
+          "description": {
+            "type": "description",
+            "text": "使用传入的坐标设置 surface 的布局。",
+            "summary": "设置 surface 的布局"
+          }
+        },
+        "set_modal": {
+          "description": {
+            "type": "description",
+            "text": "设置 surface 的模态状态。",
+            "summary": "设置模态状态"
+          }
+        },
+        "unset_modal": {
+          "description": {
+            "type": "description",
+            "text": "取消 surface 的模态状态。",
+            "summary": "取消模态状态"
+          }
+        }
+      },
+      "events": {
+        "conformant": {
+          "description": {
+            "type": "description",
+            "text": "当客户端发送 get_conformant 请求时通知客户端。",
+            "summary": "conformant 事件"
+          }
+        },
+        "conformant_area": {
+          "description": {
+            "type": "description",
+            "text": "当 conformant 区域由另一个 surface 作为 conformant_part 计算时通知客户端。此事件不保证 conformant surface 和 conformant part 的 surface 之间的完美组合。",
+            "summary": "conformant 区域事件"
+          }
+        },
+        "notification_done": {
+          "description": {
+            "type": "description",
+            "text": "当 surface 位于通过 set_notification_level 请求请求的 z 轴顺序位置时通知客户端。",
+            "summary": "set_notification 请求的完成事件"
+          }
+        },
+        "transient_for_done": {
+          "description": {
+            "type": "description",
+            "text": "当与 child_id 关联的 surface 设置或取消 transient 父级时通知客户端。",
+            "summary": "set/unset transient_for 的完成事件"
+          }
+        },
+        "window_screen_mode_done": {
+          "description": {
+            "type": "description",
+            "text": "当客户端请求的 screen_mode 在 display server 中激活时通知客户端。",
+            "summary": "set_window_screen_mode 请求的完成事件"
+          }
+        },
+        "iconify_state_changed": {
+          "description": {
+            "type": "description",
+            "text": "当 surface 的最小化状态发生变化时通知客户端。最小化状态不仅在客户端请求最小化和取消最小化时改变，也会在 display server 决定最小化状态时改变。",
+            "summary": "最小化状态变更事件"
+          }
+        },
+        "supported_aux_hints": {
+          "description": {
+            "type": "description",
+            "text": "当 display server 收到 get_supported_aux_hints 请求时通知客户端。display server 发送该 surface 支持的辅助提示 ID 数组。",
+            "summary": "get_supported_aux_hints 请求的回复事件"
+          }
+        },
+        "allowed_aux_hint": {
+          "description": {
+            "type": "description",
+            "text": "当给定 surface 的辅助提示被添加和更改时通知客户端。",
+            "summary": "允许的辅助提示事件"
+          }
+        },
+        "aux_message": {
+          "description": {
+            "type": "description",
+            "text": "当 display server 发送辅助消息时通知客户端。当 display server 需要向客户端通知附加信息时，可以使用此事件。",
+            "summary": "辅助消息事件"
+          }
+        },
+        "conformant_region": {
+          "description": {
+            "type": "description",
+            "text": "服务器可以使用此事件通知 conformant 区域（面积）。如果客户端收到此事件，应使用 tizen_policy@ack_conformant_region 请求进行确认。",
+            "summary": "通知 conformant 区域（面积）的几何值"
+          }
+        },
+        "interactive_move_done": {
+          "description": {
+            "type": "description",
+            "text": "当 display server 完成交互式移动窗口时发送此事件。窗口更改后的几何信息会一起发送。",
+            "summary": "交互式移动完成"
+          }
+        },
+        "interactive_resize_done": {
+          "description": {
+            "type": "description",
+            "text": "当 display server 完成交互式调整窗口大小时发送此事件。窗口更改后的几何信息会一起发送。",
+            "summary": "交互式调整大小完成"
+          }
+        }
+      },
+      "enums": {
+        "win_type": {
+          "description": {
+            "type": "description",
+            "text": "客户端可以通过 set_type 请求使用 win_type 值设置窗口类型。该值赋予 surface 窗口状态、窗口层中窗口栈的 z 轴顺序以及 display server 中的其他类型。\n\n以下是按 z 轴顺序降序排列的窗口类型值。依次为：notification、dnd、dock、splash、fullscreen、toplevel 或 maximized、desktop。\nmenu、dnd、notification、utility、dialog、dock、splash 和 desktop 是 netwm 规范中定义的窗口类型。\nhttps://specifications.freedesktop.org/wm-spec/wm-spec-1.4.html#idm46148902270160",
+            "summary": "surface 的窗口类型"
+          },
+          "entries": {
+            "none": {
+              "summary": "无"
+            },
+            "toplevel": {
+              "summary": "顶层"
+            },
+            "fullscreen": {
+              "summary": "全屏状态"
+            },
+            "maximized": {
+              "summary": "最大化状态"
+            },
+            "transient": {
+              "summary": "transient 关系状态"
+            },
+            "menu": {
+              "summary": "菜单"
+            },
+            "dnd": {
+              "summary": "拖放"
+            },
+            "custom": {
+              "summary": "自定义"
+            },
+            "notification": {
+              "summary": "通知"
+            },
+            "utility": {
+              "summary": "工具"
+            },
+            "dialog": {
+              "summary": "对话框"
+            },
+            "dock": {
+              "summary": "停靠栏"
+            },
+            "splash": {
+              "summary": "启动画面"
+            },
+            "desktop": {
+              "summary": "桌面"
+            }
+          }
+        },
+        "conformant_part": {
+          "description": {
+            "type": "description",
+            "text": "此值表示 Tizen 平台上的 surface 名称。",
+            "summary": "conformant part 的名称"
+          },
+          "entries": {
+            "indicator": {
+              "summary": "指示器 surface"
+            },
+            "keyboard": {
+              "summary": "键盘 surface"
+            },
+            "clipboard": {
+              "summary": "剪贴板 surface"
+            }
+          }
+        },
+        "error_state": {
+          "description": {
+            "type": "description",
+            "text": "描述错误状态。",
+            "summary": "错误状态"
+          },
+          "entries": {
+            "none": {
+              "summary": "成功"
+            },
+            "permission_denied": {
+              "summary": "权限被拒绝"
+            }
+          }
+        },
+        "level": {
+          "description": {
+            "type": "description",
+            "text": "这是通知类型的级别。此级别代表 display server 中通知层的 z 轴顺序。none、1、2、3、default、medium、high 和 top 按 z 轴顺序升序排列。数值越小表示 z 轴顺序越低。",
+            "summary": "通知级别"
+          },
+          "entries": {
+            "1": {
+              "summary": "底部默认 z 轴顺序"
+            },
+            "2": {
+              "summary": "底部中等 z 轴顺序"
+            },
+            "3": {
+              "summary": "底部高 z 轴顺序"
+            },
+            "none": {
+              "summary": "底部最低 z 轴顺序"
+            },
+            "default": {
+              "summary": "默认 z 轴顺序"
+            },
+            "medium": {
+              "summary": "中等 z 轴顺序"
+            },
+            "high": {
+              "summary": "高 z 轴顺序"
+            },
+            "top": {
+              "summary": "顶部 z 轴顺序"
+            }
+          }
+        },
+        "mode": {
+          "description": {
+            "type": "description",
+            "text": "此值表示屏幕的运行方式。",
+            "summary": "屏幕模式"
+          },
+          "entries": {
+            "default": {
+              "summary": "默认屏幕模式"
+            },
+            "always_on": {
+              "summary": "保持屏幕常亮"
+            }
+          }
+        },
+        "stack_mode": {
+          "description": {
+            "type": "description",
+            "text": "set_stack_mode 请求使用此模式值。",
+            "summary": "相对栈顺序的模式"
+          },
+          "entries": {}
+        },
+        "maximize_direction": {
+          "description": {
+            "type": "description",
+            "text": "这些值由 set_maximize_direction 作为参数使用。",
+            "summary": "方向值"
+          },
+          "entries": {
+            "none": {
+              "summary": "无，等同于取消最大化"
+            },
+            "all": {
+              "summary": "全屏大小"
+            },
+            "left": {
+              "summary": "屏幕左侧"
+            },
+            "right": {
+              "summary": "屏幕右侧"
+            },
+            "top": {
+              "summary": "屏幕顶部"
+            },
+            "bottom": {
+              "summary": "屏幕底部"
+            }
+          }
+        }
+      }
+    },
+    "tizen_visibility": {
+      "description": {
+        "type": "description",
+        "text": "客户端希望了解 surface 的可见性信息。",
+        "summary": "Tizen 平台特有的可见性"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁此 tizen_visibility 对象。",
+            "summary": "销毁 tizen_visibility"
+          }
+        }
+      },
+      "events": {
+        "notify": {
+          "description": {
+            "type": "description",
+            "text": "当 surface 的可见性发生变化时通知客户端。",
+            "summary": "通知可见性状态"
+          }
+        },
+        "changed": {
+          "description": {
+            "type": "description",
+            "text": "当 surface 的可见性发生变化并带有额外值时通知客户端。",
+            "summary": "通知变更的可见性类型"
+          }
+        }
+      },
+      "enums": {
+        "visibility": {
+          "description": {
+            "type": "description",
+            "text": "这些是可见性类型，用于说明与 tizen_visibility 资源关联的 surface 在屏幕上的显示状态。",
+            "summary": "可见性类型"
+          },
+          "entries": {
+            "unobscured": {
+              "summary": "完全显示在屏幕上"
+            },
+            "partially_obscured": {
+              "summary": "部分显示在屏幕上"
+            },
+            "fully_obscured": {
+              "summary": "不显示在屏幕上"
+            },
+            "pre_unobscured": {
+              "summary": "准备变为完全可见"
+            }
+          }
+        }
+      }
+    },
+    "tizen_position": {
+      "description": {
+        "type": "description",
+        "text": "客户端可以设置 surface 的位置信息。",
+        "summary": "Tizen 平台特有的位置"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁此 tizen_position 对象。",
+            "summary": "销毁 tizen_position"
+          }
+        },
+        "set": {
+          "description": {
+            "type": "description",
+            "text": "设置位置。",
+            "summary": "设置位置"
+          }
+        }
+      },
+      "events": {
+        "changed": {
+          "description": {
+            "type": "description",
+            "text": "当位置发生变化时通知客户端。",
+            "summary": "位置变更事件"
+          }
+        }
+      }
+    },
+    "tizen_move_resize": {
+      "requests": {},
+      "events": {
+        "geometry_done": {
+          "description": {
+            "type": "description",
+            "summary": "通知 set_geometry 请求的结果"
+          }
+        }
+      },
+      "enums": {
+        "error_state": {
+          "entries": {}
+        }
+      }
+    },
+    "tizen_gesture": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_gesture。",
+            "summary": "销毁 tizen_gesture"
+          }
+        }
+      },
+      "events": {},
+      "enums": {
+        "error": {
+          "entries": {}
+        },
+        "type": {
+          "entries": {}
+        },
+        "mode": {
+          "entries": {}
+        },
+        "edge": {
+          "entries": {}
+        },
+        "edge_size": {
+          "entries": {}
+        }
+      }
+    },
+    "tizen_keyrouter": {
+      "description": {
+        "type": "description",
+        "text": "传统上，键盘和附加了某些按键的设备上的所有按键默认发送到焦点 surface。目前可以为键盘和设备上的每个按键设置单独的焦点。因此，通过为 surface 设置按键捕获，当该 surface 拥有某个按键的捕获时，其所有者将收到该按键事件。",
+        "summary": "为每个按键设置单独焦点的接口"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_keyrouter。",
+            "summary": "销毁 tizen_keyrouter"
+          }
+        }
+      },
+      "events": {},
+      "enums": {
+        "error": {
+          "entries": {
+            "none": {
+              "summary": "无错误"
+            },
+            "invalid_surface": {
+              "summary": "给定的 surface 无效"
+            },
+            "invalid_key": {
+              "summary": "给定的按键无效"
+            },
+            "invalid_mode": {
+              "summary": "给定的模式无效"
+            },
+            "grabbed_already": {
+              "summary": "该按键已被捕获"
+            },
+            "no_permission": {
+              "summary": "wl 客户端没有捕获按键的权限"
+            },
+            "no_system_resources": {
+              "summary": "系统资源不足"
+            },
+            "invalid_array": {
+              "summary": "给定的数组包含无效的配对或数据类型"
+            }
+          }
+        },
+        "mode": {
+          "description": {
+            "type": "description",
+            "text": "此值用于设置按键捕获的模式。合成器将根据此模式和 surface 在 surface 栈中的顺序来确定目标客户端 surface。",
+            "summary": "按键捕获模式"
+          },
+          "entries": {
+            "none": {
+              "summary": "无"
+            },
+            "shared": {
+              "summary": "当焦点客户端 surface 获取按键时，与其他客户端 surface 共享按键捕获的模式"
+            },
+            "topmost": {
+              "summary": "当客户端 surface 位于最顶层时获取按键捕获的模式"
+            },
+            "overridable_exclusive": {
+              "summary": "无论 surface 栈中的顺序如何，独占且可覆盖地获取按键捕获的模式"
+            },
+            "exclusive": {
+              "summary": "无论 surface 栈中的顺序如何，独占地获取按键捕获的模式"
+            },
+            "registered": {
+              "summary": "仅当请求 surface 位于注册该按键的 surface 顶部时才获取按键捕获的模式"
+            }
+          }
+        },
+        "config_mode": {
+          "description": {
+            "type": "description",
+            "text": "此值用于为窗口设置模式。合成器将根据此模式和 surface 在 surface 栈中的顺序来确定目标客户端 surface。",
+            "summary": "设置按键传递特定属性的模式"
+          },
+          "entries": {
+            "none": {
+              "summary": "无"
+            },
+            "invisible_set": {
+              "summary": "设置窗口以将事件发送到栈中下方不可见窗口的模式"
+            },
+            "invisible_get": {
+              "summary": "当任何顶层窗口已设置 register_set 时，设置窗口以获取不可见状态事件的模式"
+            },
+            "num_key_focus": {
+              "summary": "为焦点窗口注册数字键的模式"
+            },
+            "picture_off": {
+              "summary": "为特定按键设置关闭画面的模式"
+            }
+          }
+        }
+      }
+    },
+    "tizen_screenshooter": {
+      "description": {
+        "type": "description",
+        "text": "客户端可以从此接口获取 screenmirror 对象。",
+        "summary": "tizen-screenshooter 接口"
+      },
+      "requests": {
+        "get_screenmirror": {
+          "description": {
+            "type": "description",
+            "text": "在使用 screenmirror 之前，客户端应从 display server 获取 screenmirror 对象。",
+            "summary": "创建 screenmirror 对象"
+          }
+        },
+        "set_oneshot_auto_rotation": {
+          "description": {
+            "type": "description",
+            "text": "客户端可以设置单次截图的自动旋转值。",
+            "summary": "设置截图自动旋转值"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_screenshooter。",
+            "summary": "销毁 tizen_screenshooter"
+          }
+        }
+      },
+      "events": {
+        "format": {
+          "description": {
+            "type": "description",
+            "text": "tbm 格式代码与 tbm_surface.h 中的 #define 匹配。合成器实际支持的格式将通过 format 事件报告。",
+            "summary": "screenshooter 支持的格式"
+          }
+        },
+        "screenshooter_notify": {
+          "description": {
+            "type": "description",
+            "text": "客户端可以获取 screenshooter 的通知。",
+            "summary": "发送 screenshooter 通知"
+          }
+        }
+      }
+    },
+    "tizen_screenmirror": {
+      "description": {
+        "type": "description",
+        "text": "客户端可以使用此接口获取屏幕的流图像。启动前，先排队所有缓冲区。然后启动 screenmirror。启动后，当在缓冲区上绘制捕获的图像完成后，将发生出队事件。您可能需要将出队的缓冲区重新排队以从 display server 获取新图像。",
+        "summary": "screenmirror 接口"
+      },
+      "requests": {
+        "queue": {
+          "description": {
+            "type": "description",
+            "summary": "排队缓冲区"
+          }
+        },
+        "dequeue": {
+          "description": {
+            "type": "description",
+            "text": "当用户希望从服务器取回缓冲区时，可以从 display server 出队缓冲区。",
+            "summary": "出队缓冲区"
+          }
+        },
+        "set_auto_rotation": {
+          "description": {
+            "type": "description",
+            "text": "客户端可以为 screenmirror 设置自动旋转值。",
+            "summary": "设置 screenmirror 自动旋转值"
+          }
+        }
+      },
+      "events": {
+        "dequeued": {
+          "description": {
+            "type": "description",
+            "text": "当在缓冲区上绘制捕获的图像完成时发生。",
+            "summary": "出队事件"
+          }
+        },
+        "content": {
+          "description": {
+            "type": "description",
+            "text": "当捕获图像的内容发生变化时发生（普通或视频）。",
+            "summary": "内容变更事件"
+          }
+        },
+        "stop": {
+          "description": {
+            "type": "description",
+            "text": "当 screenmirror 最终停止时发生。",
+            "summary": "停止事件"
+          }
+        }
+      },
+      "enums": {
+        "content": {
+          "entries": {}
+        },
+        "stretch": {
+          "entries": {}
+        }
+      }
+    },
+    "tizen_video": {
+      "description": {
+        "type": "description",
+        "text": "客户端可以从此接口获取合成器能够处理的视频信息。",
+        "summary": "tizen-video 接口"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_video。",
+            "summary": "销毁 tizen_video"
+          }
+        }
+      },
+      "events": {
+        "format": {
+          "description": {
+            "type": "description",
+            "text": "tbm 格式代码与 tbm_surface.h 中的 #define 匹配。合成器实际支持的格式将通过 format 事件报告。",
+            "summary": "视频支持的格式"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {}
+        }
+      }
+    },
+    "tizen_video_object": {
+      "requests": {
+        "follow_topmost_visibility": {
+          "description": {
+            "type": "description",
+            "text": "如果 tizen_video_object.follow_topmost_visibility 应用于 video_object，将基于最顶层可见性进行视频静音控制。",
+            "summary": "跟随最顶层 surface 的静音控制变更"
+          }
+        },
+        "unfollow_topmost_visibility": {
+          "description": {
+            "type": "description",
+            "text": "如果 tizen_video_object.unfollow_topmost_visibility 应用于 video_object，将不基于最顶层可见性进行视频静音控制。",
+            "summary": "取消跟随最顶层 surface 的静音控制变更"
+          }
+        },
+        "allowed_attribute": {
+          "description": {
+            "type": "description",
+            "text": "如果 tizen_video_object.allowed_attribute 应用于 video_object，set_attribute 请求将直接传递到 tdm 后端。",
+            "summary": "允许的属性"
+          }
+        },
+        "disallowed_attribute": {
+          "description": {
+            "type": "description",
+            "text": "如果 tizen_video_object.disallowed_attribute 应用于 video_object，当最顶层显示时将调用 tdm_attribute。",
+            "summary": "不允许的属性"
+          }
+        }
+      },
+      "events": {}
+    },
+    "tizen_subsurface_watcher": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_subsurface_watcher。",
+            "summary": "销毁 tizen_subsurface_watcher"
+          }
+        }
+      },
+      "events": {},
+      "enums": {
+        "msg": {
+          "entries": {}
+        }
+      }
+    },
+    "tizen_viewport": {
+      "description": {
+        "type": "description",
+        "text": "这是 wl_viewport 的替代且便捷的解决方案，用于在屏幕上呈现 surface。\n\n以下五个功能可以被此接口替代。将此接口应用于 surface 后，以下功能将被忽略：\n- wl_surface.set_buffer_transform\n- wl_surface.set_buffer_scale\n- wl_subsurface.set_position\n- wl_viewport.set_source\n- wl_viewport.set_destination\n\nwl_viewport.set_source 非常复杂，特别是当 wl_surface 的缓冲区通过 wl_surface.set_buffer_transform 进行变换时。当父级调整大小时，如果我们也想更改子 surface 的几何形状，需要在客户端每次调整父级大小时调用 wl_subsurface.set_position 和 wl_viewport.set_destination。这使得父 surface 和子 surface 在屏幕上的同步变得困难。\n\ntizen_viewport 允许客户端在父 surface 中为子 surface 设置相对几何形状。每当父 surface 调整大小时，子 surface 的几何形状将由合成器自动计算、移动和调整大小。tizen_viewport 在子 surface 的父级坐标中指定。\n\n如果 tizen_viewport 应用于 shell surface（toplevel），则与 x、y 位置相关的 tizen_viewport 和 tizen_destination_mode 接口的所有值将被忽略。\n\n以下 3 个功能不考虑父 surface 的变换：\n- tizen_viewport.set_source\n- tizen_viewport.set_destination\n- tizen_viewport.set_destination_ratio\n\n此外，如果调用 tizen_destination_mode.follow_parent_transform，tizen_viewport 在将目标模式应用于子 surface 时将考虑父 surface 的变换。如果 tizen_destination_mode.follow_parent_transform 应用于 shell surface，它将被忽略。\n\n目标将被父 surface 裁剪。\n\n更改将在调用 wl_surface.commit 时生效。",
+        "summary": "surface 的视口"
+      },
+      "requests": {
+        "set_transform": {
+          "description": {
+            "type": "description",
+            "text": "transform 参数的可接受值是根据输出变换的 wl_output.transform 值。\n\ntizen_viewport.set_transform 仅应用于自身。基本上它不影响其子 surface 的变换。也就是说，如果设置了 90 度变换，而其子 surface 仍然具有 0 度变换，则其子 surface 不会被旋转。\n\n如果需要根据父 surface 旋转子 surface，tizen_destination_mode.follow_parent_transform 将使其成为可能。",
+            "summary": "设置 surface 的变换"
+          }
+        },
+        "set_source": {
+          "description": {
+            "type": "description",
+            "text": "当父级调整大小时，源矩形不会改变。如果需要更改，应使用新值调用 tizen_viewport.set_source。",
+            "summary": "设置 wl_buffer 的源矩形"
+          }
+        },
+        "set_destination": {
+          "description": {
+            "type": "description",
+            "text": "当父级调整大小时，目标几何形状不会改变。如果需要更改，应使用新值调用 tizen_viewport.set_destination。\n\n如果 tizen_viewport 应用于 shell surface（toplevel），tizen_viewport.set_destination 的 x、y 值将被忽略。",
+            "summary": "设置 surface 的目标几何形状"
+          }
+        },
+        "set_destination_ratio": {
+          "description": {
+            "type": "description",
+            "text": "当父级调整大小时，子 surface 的目标矩形将自动更改。这允许使用 0.0 到 1.0 之间的实数。参见 wl_fixed_from_double 和 wl_fixed_to_double。\n\n如果 tizen_viewport 应用于 shell surface（toplevel），tizen_viewport.set_destination_ratio 的 x、y 值将被忽略。",
+            "summary": "在父 surface 中设置目标矩形的比例"
+          }
+        },
+        "query_parent_size": {
+          "description": {
+            "type": "description",
+            "text": "客户端可以请求 display server 发送 tizen_viewport 对象的父 surface 的大小。一旦客户端请求，每当父 surface 的大小发生变化时，\"parent_size\" 事件将被发送。",
+            "summary": "在父 surface 中设置目标矩形的比例"
+          }
+        },
+        "follow_parent_transform": {
+          "description": {
+            "type": "description",
+            "text": "子 surface 的实际变换是（父级的变换 + 子 surface 的变换）。当父级旋转时，子 surface 将自动旋转。\n\n如果 tizen_viewport.follow_parent_transform 应用于 shell surface（toplevel），它将被忽略。",
+            "summary": "跟随父 surface 的变换变更"
+          }
+        }
+      },
+      "events": {}
+    },
+    "tizen_destination_mode": {
+      "description": {
+        "type": "description",
+        "text": "当父级调整大小时，目标矩形将自动更改。当调用 tizen_destination_mode.set 时，tizen_viewport.set_destination 和 tizen_viewport.set_destination_ratio 的值将被忽略。\n\nsurface 的目标由模式、比例、缩放、偏移和对齐值决定。比例、缩放、偏移和对齐将按顺序应用。\n\n更改将在调用 wl_surface.commit 时生效。",
+        "summary": "surface 的目标模式"
+      },
+      "requests": {
+        "follow_parent_transform": {
+          "description": {
+            "type": "description",
+            "text": "子 surface 的实际变换是（父级的变换 + 子 surface 的变换）。也就是说，当父级旋转时，子 surface 将自动旋转。\n\n如果 tizen_destination_mode.follow_parent_transform 应用于 shell surface（toplevel），它将被忽略。",
+            "summary": "跟随父 surface 的变换变更"
+          }
+        },
+        "set_ratio": {
+          "description": {
+            "type": "description",
+            "text": "这允许使用实数。参见 wl_fixed_from_double 和 wl_fixed_to_double。",
+            "summary": "设置子 surface 目标矩形的比例"
+          }
+        },
+        "set_scale": {
+          "description": {
+            "type": "description",
+            "text": "这允许使用实数。参见 wl_fixed_from_double 和 wl_fixed_to_double。",
+            "summary": "设置子 surface 目标矩形的缩放"
+          }
+        },
+        "set_align": {
+          "description": {
+            "type": "description",
+            "text": "这允许使用 0.0 到 1.0 之间的实数。参见 wl_fixed_from_double 和 wl_fixed_to_double。",
+            "summary": "设置子 surface 目标矩形的对齐"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_type": {
+              "summary": "无效类型"
+            }
+          }
+        },
+        "type": {
+          "entries": {}
+        }
+      }
+    },
+    "tizen_embedded_compositor": {
+      "description": {
+        "type": "description",
+        "text": "全局对象。Wayland 有 3 种类型的合成器，嵌入式合成器是其中之一。但 Tizen 应用程序被 smack 沙箱化，因此应用程序不允许通过套接字与其他应用程序通信。所以系统或会话合成器创建套接字并发送给嵌入式合成器。",
+        "summary": "全局嵌入式合成器对象"
+      },
+      "requests": {
+        "get_socket": {
+          "description": {
+            "type": "description",
+            "text": "get_socket 请求要求服务器创建套接字并触发 socket 事件。",
+            "summary": "创建新套接字"
+          }
+        }
+      },
+      "events": {
+        "socket": {
+          "description": {
+            "type": "description",
+            "text": "在 get_socket 请求后立即发送。",
+            "summary": "套接字文件描述符"
+          }
+        }
+      }
+    },
+    "tizen_input_device_manager": {
+      "description": {
+        "type": "description",
+        "text": "Tizen 输入设备管理器是一个全局接口。此对象具有设备添加/移除事件，用于向客户端提供 Tizen 输入设备对象。这允许客户端获取设备信息。\n\n请确保在绑定 wl_seat 接口之后绑定此接口。\nTizen 输入设备管理器接口仅会为属于客户端绑定的 wl_seat 对象的设备提供设备添加/移除事件。因此，合成器只需要为当前客户端的 seat 创建/发送设备添加/移除事件。",
+        "summary": "全局输入设备管理器对象"
+      },
+      "requests": {
+        "block_events": {
+          "description": {
+            "type": "description",
+            "text": "此请求允许客户端请求为其目的阻止一个或多个事件。通过在请求中指定 class 作为参数，属于该 class 的事件将在给定持续时间内被阻止。请注意，如果出现任何错误，将发送错误事件。",
+            "summary": "请求阻止发送事件"
+          }
+        },
+        "unblock_events": {
+          "description": {
+            "type": "description",
+            "text": "此请求允许客户端请求释放客户端的现有阻止。请注意，如果客户端没有现有阻止，则不会发送错误事件。",
+            "summary": "请求取消阻止发送事件"
+          }
+        },
+        "init_generator": {
+          "description": {
+            "type": "description",
+            "summary": "初始化输入生成器系统"
+          }
+        },
+        "deinit_generator": {
+          "description": {
+            "type": "description",
+            "summary": "反初始化输入生成器系统"
+          }
+        },
+        "generate_key": {
+          "description": {
+            "type": "description",
+            "summary": "使用特定或默认设备生成按键事件"
+          }
+        },
+        "generate_pointer": {
+          "description": {
+            "type": "description",
+            "summary": "使用特定或默认设备生成指针事件"
+          }
+        },
+        "generate_touch": {
+          "description": {
+            "type": "description",
+            "summary": "使用特定或默认设备生成触摸事件"
+          }
+        },
+        "pointer_warp": {
+          "description": {
+            "type": "description",
+            "summary": "将指针移动到相对于给定 surface 的位置"
+          }
+        },
+        "init_generator_with_name": {
+          "description": {
+            "type": "description",
+            "summary": "使用名称初始化输入生成器系统"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_input_device_manager。",
+            "summary": "销毁 tizen_input_device_manager"
+          }
+        },
+        "generate_axis": {
+          "description": {
+            "type": "description",
+            "text": "当服务器收到此请求时，服务器选择直接生成事件或仅保存值。指针轴（如滚轮/水平滚轮）独立于指针事件传递给客户端，但触摸轴传递给普通触摸事件（begin/update/end）。因此服务器在生成触摸请求之前仅保存触摸轴，并发送包含已保存触摸轴值的触摸事件。",
+            "summary": "使用特定或默认设备生成指针/触摸轴事件"
+          }
+        },
+        "set_touch_count": {
+          "description": {
+            "type": "description",
+            "text": "此请求仅更改系统的触摸数量。因此此请求不会更改已连接触摸设备的最大数量。这将影响用户使用输入生成器创建的设备。输入生成器创建仅支持默认触摸数量的触摸设备。但如果用户在创建输入生成器设备之前设置触摸数量，用户可以创建具有所需触摸数量的触摸设备。但某些系统有自己的最大触摸数量。在这种情况下，此请求返回 not_allowed 错误。",
+            "summary": "设置触摸的最大插槽数"
+          }
+        },
+        "init_generator_with_sync": {
+          "description": {
+            "type": "description",
+            "summary": "使用名称同步初始化输入生成器系统"
+          }
+        },
+        "keyboard_grab": {
+          "description": {
+            "type": "description",
+            "summary": "如果设备是特定子类则捕获键盘事件"
+          }
+        },
+        "keyboard_ungrab": {
+          "description": {
+            "type": "description",
+            "summary": "取消捕获键盘事件"
+          }
+        },
+        "grab_relative_motion": {
+          "description": {
+            "type": "description",
+            "summary": "捕获相对运动"
+          }
+        },
+        "ungrab_relative_motion": {
+          "description": {
+            "type": "description",
+            "summary": "取消捕获相对运动"
+          }
+        }
+      },
+      "events": {
+        "device_add": {
+          "description": {
+            "type": "description",
+            "text": "当物理/逻辑设备添加到给定 seat 时，将发送设备添加/移除通知。请注意，Tizen 输入设备对象可以分配给一个 wl_seat，也可以随时分配给另一个 wl_seat。每当 Tizen 输入设备对象的关系发生变化时，将从当前 wl_seat 对象生成设备移除事件，并从另一个 wl_seat 对象生成设备添加事件。",
+            "summary": "设备添加事件"
+          }
+        },
+        "device_remove": {
+          "description": {
+            "type": "description",
+            "text": "当物理/逻辑设备从给定 seat 移除时，将发送设备添加/移除通知。请注意，Tizen 输入设备对象可以分配给一个 wl_seat，也可以随时分配给另一个 wl_seat。每当 Tizen 输入设备对象的关系发生变化时，将从当前 wl_seat 对象生成设备移除事件，并从另一个 wl_seat 对象生成设备添加事件。",
+            "summary": "设备移除事件"
+          }
+        },
+        "error": {
+          "description": {
+            "type": "description",
+            "summary": "错误事件"
+          }
+        },
+        "block_expired": {
+          "description": {
+            "type": "description",
+            "text": "如果现有阻止的持续时间到期，将发送此事件。请注意，如果客户端没有阻止，则不会发送阻止到期事件。",
+            "summary": "阻止到期事件"
+          }
+        },
+        "max_touch_count": {
+          "description": {
+            "type": "description",
+            "text": "每个触摸设备都有其支持的触摸数量。因此服务器控制系统中的最大触摸数量以有效维护资源。有时服务器使用预定义的配置选项控制最大触摸数量。有时服务器确保触摸设备支持的最大触摸数量。如果服务器不使用配置选项，当新的触摸设备连接时，最大触摸数量可能会更新。因此，当第一个触摸设备被添加或最大触摸数量发生变化时，此事件可以发送给客户端。",
+            "summary": "通知触摸设备的最大插槽数已更新"
+          }
+        },
+        "event_boundary": {
+          "description": {
+            "type": "description",
+            "summary": "指示哪个边界与 relative_motion 事件关联的事件"
+          }
+        }
+      },
+      "enums": {
+        "clas": {
+          "description": {
+            "type": "description",
+            "summary": "设备类别"
+          },
+          "entries": {
+            "none": {
+              "summary": "无类别"
+            },
+            "mouse": {
+              "summary": "鼠标类别"
+            },
+            "keyboard": {
+              "summary": "键盘类别"
+            },
+            "touchscreen": {
+              "summary": "触摸屏类别"
+            }
+          }
+        },
+        "error": {
+          "entries": {
+            "none": {
+              "summary": "无错误"
+            },
+            "no_permission": {
+              "summary": "无权限"
+            },
+            "invalid_class": {
+              "summary": "无效类别"
+            },
+            "blocked_already": {
+              "summary": "已被其他客户端阻止"
+            },
+            "no_system_resources": {
+              "summary": "系统资源不足（如内存不足）"
+            },
+            "invalid_parameter": {
+              "summary": "参数无效"
+            },
+            "invalid_surface": {
+              "summary": "给定的 surface 不可见或指针不在给定的 surface 上"
+            },
+            "no_pointer_available": {
+              "summary": "没有可用的指针进行移动"
+            },
+            "not_allowed": {
+              "summary": "此系统不允许此请求"
+            }
+          }
+        },
+        "pointer_event_type": {
+          "entries": {}
+        },
+        "axis_type": {
+          "entries": {
+            "none": {
+              "summary": "无轴类型"
+            },
+            "wheel": {
+              "summary": "指针垂直滚轮轴"
+            },
+            "hwheel": {
+              "summary": "指针水平滚轮轴"
+            },
+            "radius_x": {
+              "summary": "事件区域的 x 轴触摸半径（如用手指或触笔触摸的区域）"
+            },
+            "radius_y": {
+              "summary": "事件区域的 y 轴触摸半径（如用手指或触笔触摸的区域）"
+            },
+            "pressure": {
+              "summary": "事件区域的触摸压力（如用手指或触笔触摸的区域）"
+            },
+            "angle": {
+              "summary": "事件区域的触摸角度（如用手指或触笔触摸的区域）"
+            },
+            "palm": {
+              "summary": "事件区域的触摸手掌（如用手指或触笔触摸的区域）"
+            }
+          }
+        },
+        "subclas": {
+          "description": {
+            "type": "description",
+            "summary": "设备子类"
+          },
+          "entries": {
+            "none": {
+              "summary": "无子类"
+            },
+            "remocon": {
+              "summary": "遥控器子类"
+            },
+            "virtual_keyboard": {
+              "summary": "虚拟键盘子类"
+            }
+          }
+        },
+        "boundary": {
+          "entries": {}
+        }
+      }
+    },
+    "tizen_input_device": {
+      "description": {
+        "type": "description",
+        "text": "tizen_input_device 接口表示与物理/逻辑输入设备关联的一个或多个输入设备。此接口提供设备特定的信息/事件，允许客户端识别事件的源设备或获取设备的额外轴/属性。请注意，tizen_input_device 对象可以用于物理输入设备，也可以用于一组输入设备，例如一组鼠标设备。",
+        "summary": "Tizen 输入设备对象"
+      },
+      "requests": {
+        "select_axes": {
+          "description": {
+            "type": "description",
+            "summary": "请求选择 tizen_input_device 对象支持的轴中的一部分"
+          }
+        },
+        "release": {
+          "description": {
+            "type": "description",
+            "summary": "释放 tizen_input_device 对象"
+          }
+        }
+      },
+      "events": {
+        "device_info": {
+          "description": {
+            "type": "description",
+            "summary": "包含设备信息的事件"
+          }
+        },
+        "event_device": {
+          "description": {
+            "type": "description",
+            "summary": "指示与 wl_pointer/keyboard/touch 事件关联的源设备的事件"
+          }
+        },
+        "axis": {
+          "description": {
+            "type": "description",
+            "summary": "轴变更事件"
+          }
+        }
+      },
+      "enums": {
+        "clas": {
+          "description": {
+            "type": "description",
+            "summary": "设备类别"
+          },
+          "entries": {
+            "none": {
+              "summary": "无类别"
+            },
+            "keyboard": {
+              "summary": "键盘类别"
+            },
+            "mouse": {
+              "summary": "鼠标类别"
+            },
+            "touchscreen": {
+              "summary": "触摸屏类别"
+            }
+          }
+        },
+        "subclas": {
+          "description": {
+            "type": "description",
+            "summary": "设备子类"
+          },
+          "entries": {
+            "none": {
+              "summary": "无子类"
+            }
+          }
+        },
+        "axis_type": {
+          "description": {
+            "type": "description",
+            "summary": "设备可支持的轴类型枚举"
+          },
+          "entries": {
+            "none": {
+              "summary": "事件区域的 x 轴半径（如用手指或触笔触摸的区域）"
+            },
+            "radius_x": {
+              "summary": "事件区域的 x 轴半径（如用手指或触笔触摸的区域）"
+            },
+            "radius_y": {
+              "summary": "事件区域的 y 轴半径（如用手指或触笔触摸的区域）"
+            },
+            "pressure": {
+              "summary": "事件区域的压力（如用手指或触笔触摸的区域）"
+            },
+            "angle": {
+              "summary": "事件区域的角度（如用手指或触笔触摸的区域）"
+            },
+            "detent": {
+              "summary": "棘轮值（如旋转设备的移动距离）"
+            }
+          }
+        }
+      }
+    },
+    "tizen_launchscreen": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_launchscreen。",
+            "summary": "销毁 tizen_launchscreen"
+          }
+        }
+      }
+    },
+    "tizen_launch_image": {
+      "requests": {},
+      "enums": {
+        "file_type": {
+          "entries": {
+            "img": {
+              "summary": "启动画面图像文件路径"
+            },
+            "edj": {
+              "summary": "启动画面 edj 文件路径"
+            }
+          }
+        },
+        "indicator": {
+          "entries": {
+            "off": {
+              "summary": "启动画面隐藏指示器"
+            },
+            "on": {
+              "summary": "启动画面显示指示器"
+            }
+          }
+        },
+        "rotation": {
+          "entries": {
+            "0": {
+              "summary": "旋转角度 0 度"
+            },
+            "90": {
+              "summary": "旋转角度 90 度"
+            },
+            "180": {
+              "summary": "旋转角度 180 度"
+            },
+            "270": {
+              "summary": "旋转角度 270 度"
+            }
+          }
+        }
+      }
+    },
+    "tizen_effect": {
+      "requests": {},
+      "events": {},
+      "enums": {
+        "type": {
+          "entries": {
+            "none": {
+              "summary": "无"
+            },
+            "show": {
+              "summary": "窗口显示效果"
+            },
+            "hide": {
+              "summary": "窗口隐藏效果"
+            },
+            "restack": {
+              "summary": "窗口重排效果"
+            }
+          }
+        }
+      }
+    },
+    "tizen_display_policy": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_display_policy。",
+            "summary": "销毁 tizen_display_policy"
+          }
+        }
+      },
+      "events": {},
+      "enums": {
+        "error_state": {
+          "entries": {}
+        }
+      }
+    },
+    "tizen_indicator": {
+      "requests": {},
+      "events": {},
+      "enums": {
+        "state": {
+          "entries": {
+            "unknown": {
+              "summary": "未知"
+            },
+            "off": {
+              "summary": "无法显示指示器"
+            },
+            "on": {
+              "summary": "可以显示指示器"
+            }
+          }
+        },
+        "opacity_mode": {
+          "entries": {
+            "unknown": {
+              "summary": "未知"
+            },
+            "opaque": {
+              "summary": "不透明模式"
+            },
+            "translucent": {
+              "summary": "半透明模式"
+            },
+            "transparent": {
+              "summary": "完全透明模式"
+            },
+            "bg_transparent": {
+              "summary": "仅背景透明模式"
+            }
+          }
+        },
+        "visible_type": {
+          "entries": {
+            "hidden": {
+              "summary": "隐藏类型指示器"
+            },
+            "shown": {
+              "summary": "显示类型指示器"
+            }
+          }
+        }
+      }
+    },
+    "tizen_clipboard": {
+      "description": {
+        "type": "description",
+        "text": "此接口为其他客户端提供有关剪贴板的一些请求和事件。",
+        "summary": "剪贴板请求和事件的接口"
+      },
+      "requests": {
+        "show": {
+          "description": {
+            "type": "description",
+            "summary": "请求显示剪贴板"
+          }
+        },
+        "hide": {
+          "description": {
+            "type": "description",
+            "summary": "请求隐藏剪贴板"
+          }
+        },
+        "set_data_only": {
+          "description": {
+            "type": "description",
+            "text": "Wayland 客户端可以通知该客户端处于仅数据模式。仅数据模式意味着此 Wayland 客户端没有任何 wl_surface，但希望使用 wl_data_device 进行某些数据操作。",
+            "summary": "请求为此 wl_client 设置仅数据模式"
+          }
+        }
+      },
+      "events": {
+        "data_selected": {
+          "description": {
+            "type": "description",
+            "summary": "宣布数据已被剪贴板选中"
+          }
+        },
+        "allowed_data_only": {
+          "description": {
+            "type": "description",
+            "summary": "通知是否允许设置仅数据模式的事件"
+          }
+        }
+      }
+    },
+    "tizen_screen_rotation": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_screen_rotation。",
+            "summary": "销毁 tizen_screen_rotation"
+          }
+        }
+      },
+      "events": {}
+    },
+    "tizen_renderer": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_renderer。",
+            "summary": "销毁 tizen_renderer"
+          }
+        }
+      }
+    },
+    "tizen_renderer_surface": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 tizen_renderer_surface。",
+            "summary": "销毁 tizen_renderer_surface"
+          }
+        }
+      },
+      "events": {}
+    }
+  }
+}

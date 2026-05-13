@@ -1,0 +1,842 @@
+{
+  "description": {
+    "type": "description",
+    "text": "此协议允许单个\"窗口管理器\"客户端决定合成器的窗口管理策略。状态是全局双缓冲的，允许涉及多个窗口的帧完美状态变更。\n\n本文档中的关键词\"必须\"、\"不得\"、\"要求\"、\"应当\"、\"不应\"、\n\"建议\"、\"不宜\"、\"推荐\"、\"可以\"和\"可选\"应按照 IETF RFC 2119 中的描述进行解释。",
+    "summary": "帧完美窗口管理"
+  },
+  "interfaces": {
+    "river_window_manager_v1": {
+      "description": {
+        "type": "description",
+        "text": "此全局接口应仅向窗口管理器进程通告。同一时间只能有一个窗口管理客户端处于活动状态。如有必要，合成器应使用 unavailable 事件来强制执行此限制。\n\n此协议管理的状态分为两个互不相交的类别：\n\n窗口管理状态影响服务器与各个窗口客户端（例如 xdg_toplevel）之间的通信。窗口管理状态包括窗口尺寸、全屏状态、键盘焦点、键盘绑定等。\n\n渲染状态仅影响合成器的渲染输出，不影响服务器与各个窗口客户端之间的通信。渲染状态包括窗口的位置和渲染顺序、shell surface、装饰表面、边框等。\n\n窗口管理状态只能由窗口管理器作为 manage 序列的一部分进行修改。manage 序列以 manage_start 事件开始，以 manage_finish 请求结束。在 manage 序列之外修改窗口管理状态属于协议错误。\n\nmanage 序列之后总是跟随至少一个 render 序列。render 序列以 render_start 事件开始，以 render_finish 请求结束。\n\n渲染状态可以在 manage 序列或 render 序列期间由窗口管理器修改。无论渲染状态何时被修改，它都会在下一个 render_finish 请求时被应用。在 manage 或 render 序列之外修改渲染状态属于协议错误。\n\n服务器将在状态发生变化需要与窗口管理器通信时，尽快发送新状态和 manage_start 事件来启动 manage 序列。\n\n如果窗口管理器客户端需要确保因合成器未感知的状态变更而启动 manage 序列，可以发送 manage_dirty 请求。\n\n服务器将在渲染状态发生变化需要与窗口管理器通信时，尽快发送新状态和 render_start 事件来启动 render 序列。服务器可以选择在同一个 manage 序列之后发送多个 render 序列，但在实际应用中不太可能需要这样做。\n\n此协议中概述的双序列设计是必要的，因为渲染状态和窗口管理状态是独立变化的。渲染状态的变化频率远高于窗口管理状态（大约每帧一次），而窗口管理状态仅在用户交互、客户端响应大小调整或类似事件时发生变化。",
+        "summary": "窗口管理器全局接口"
+      },
+      "requests": {
+        "stop": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端不再希望接收此对象上的事件。\n\nWayland 协议是异步的，这意味着在 stop 请求被处理之前，服务器可能会继续发送事件。客户端必须等待 river_window_manager_v1.finished 事件后才能销毁此对象。",
+            "summary": "停止发送事件"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "此请求应在收到 finished 事件后调用，以完成对象的销毁。\n\n如果客户端希望销毁此对象，应发送 river_window_manager_v1.stop 请求并等待 river_window_manager_v1.finished 事件。收到 finished 事件后，即可安全销毁此对象以及通过此接口创建的任何其他对象。",
+            "summary": "销毁 river_window_manager_v1 对象"
+          }
+        },
+        "manage_finish": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端已完成当前 manage 序列中所有希望包含的窗口管理状态变更，服务器应原子性地将这些状态变更发送到窗口并继续 manage 序列。\n\n发送此请求后，在收到下一个 manage_start 事件之前，客户端再进行窗口管理状态的变更将属于协议错误。\n\n有关 manage/render 序列循环的完整概述，请参见 river_window_manager_v1 接口的描述。",
+            "summary": "完成 manage 序列"
+          }
+        },
+        "manage_dirty": {
+          "description": {
+            "type": "description",
+            "text": "此请求确保启动 manage 序列并由服务器发送 manage_start 事件。如果在进行中的 manage 序列期间发出此请求，新的 manage 序列将在当前序列完成后立即启动。\n\n客户端可能因合成器未感知的内部状态变更（例如 dbus 事件）而需要使用此请求，该变更可能影响窗口管理或渲染状态。",
+            "summary": "确保 manage 序列被启动"
+          }
+        },
+        "render_finish": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端已完成当前序列中所有希望包含的渲染状态变更，服务器应原子性地应用并向用户显示这些状态变更。\n\n发送此请求后，在收到下一个 manage_start 或 render_start 事件（以先到者为准）之前，客户端再进行渲染状态的变更将属于协议错误。\n\n有关 manage/render 序列循环的完整概述，请参见 river_window_manager_v1 接口的描述。",
+            "summary": "完成 render 序列"
+          }
+        },
+        "get_shell_surface": {
+          "description": {
+            "type": "description",
+            "text": "为窗口管理器 UI 创建新的 shell surface，并为该 surface 分配 river_shell_surface_v1 角色。\n\n提供已有角色或已附加/提交 buffer 的 wl_surface 属于协议错误。",
+            "summary": "分配 river_shell_surface_v1 surface 角色"
+          }
+        }
+      },
+      "events": {
+        "unavailable": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示窗口管理对客户端不可用，可能是因为另一个窗口管理客户端已在运行。导致发送此事件的具体情况由合成器策略决定。\n\n如果发送此事件，它保证是服务器发送的第一个也是唯一的事件。\n\n服务器将不会在此对象上发送更多事件。客户端应销毁此对象以及通过此接口创建的所有对象。",
+            "summary": "窗口管理不可用"
+          }
+        },
+        "finished": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示服务器将不会在此对象上发送更多事件。客户端应销毁该对象。详见 river_window_manager_v1.destroy。",
+            "summary": "服务器已完成窗口管理器"
+          }
+        },
+        "manage_start": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示服务器已发送自上一个 manage 序列以来所有状态变更的事件。\n\n响应此事件，客户端应按需发出修改窗口管理状态的请求。然后，客户端必须发出 manage_finish 请求。\n\n有关 manage/render 序列循环的完整概述，请参见 river_window_manager_v1 接口的描述。",
+            "summary": "开始 manage 序列"
+          }
+        },
+        "render_start": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示服务器已发送所有必要的 river_node_v1.position 和 river_window_v1.dimensions 事件。\n\n响应此事件，客户端应按需发出修改渲染状态的请求。然后，客户端必须发出 render_finish 请求。\n\n有关 manage/render 序列循环的完整概述，请参见 river_window_manager_v1 接口的描述。",
+            "summary": "开始 render 序列"
+          }
+        },
+        "session_locked": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示会话已被锁定。\n\n窗口管理器可能希望限制锁定期间可用的按键绑定或以其他方式使用此信息。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "会话已被锁定"
+          }
+        },
+        "session_unlocked": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示会话已解锁。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "会话已解锁"
+          }
+        },
+        "window": {
+          "description": {
+            "type": "description",
+            "text": "新窗口已创建。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "新窗口"
+          }
+        },
+        "output": {
+          "description": {
+            "type": "description",
+            "text": "新的逻辑输出已创建，可能是因为插入了新的物理显示器或配置发生了变更。\n\n在服务器发送所有其他新状态后，此事件之后将跟随 river_output_v1.position 和 dimensions 事件以及一个 manage_start 事件。",
+            "summary": "新输出"
+          }
+        },
+        "seat": {
+          "description": {
+            "type": "description",
+            "text": "新 seat 已创建。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "新 seat"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "sequence_order": {
+              "summary": "请求违反了 manage/render 序列顺序"
+            },
+            "role": {
+              "summary": "给定的 wl_surface 已有角色"
+            },
+            "unresponsive": {
+              "summary": "窗口管理器无响应"
+            }
+          }
+        }
+      }
+    },
+    "river_window_v1": {
+      "description": {
+        "type": "description",
+        "text": "表示一个逻辑窗口。例如，一个窗口可能对应一个 xdg_toplevel 或 Xwayland 窗口。\n\n新创建的窗口不会被显示，直到窗口管理器在 manage 序列中通过 propose_dimensions 请求提议窗口尺寸，服务器在 render 序列中以 dimensions 事件回复，并且该 render 序列完成。",
+        "summary": "逻辑窗口"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端将不再使用此窗口对象，可以安全销毁。\n\n此请求应在收到 river_window_v1.closed 事件或 river_window_manager_v1.finished 事件后发出，以完成窗口的销毁。",
+            "summary": "销毁窗口对象"
+          }
+        },
+        "close": {
+          "description": {
+            "type": "description",
+            "text": "请求关闭窗口。窗口可能会忽略此请求或仅在延迟一段时间后关闭，例如弹出对话框询问用户是否保存工作等。\n\n如果/当窗口被关闭时，服务器将发送 river_window_v1.closed 事件。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "请求关闭窗口"
+          }
+        },
+        "get_node": {
+          "description": {
+            "type": "description",
+            "text": "获取渲染列表中对应此窗口的节点。\n\n对单个窗口多次发出此请求属于协议错误。",
+            "summary": "获取窗口的渲染列表节点"
+          }
+        },
+        "propose_dimensions": {
+          "description": {
+            "type": "description",
+            "text": "此请求在合成器的逻辑坐标空间中为窗口提议尺寸。\n\n宽度和高度必须大于或等于零。如果宽度或高度为零，窗口将被允许自行决定尺寸。\n\n窗口可能不会采用提议的确切尺寸。窗口实际采用的尺寸将在后续的 river_window_v1.dimensions 事件中发送。例如，终端模拟器可能只允许单元格大小倍数的尺寸。\n\n当发出 propose_dimensions 请求时，服务器必须尽快发送 dimensions 事件作为响应。如果窗口响应第一次提议的尺寸时间过长，可能无法在下一个 render 序列中发送 dimensions 事件。在这种情况下，服务器将在未来的 render 序列中发送 dimensions 事件。在收到第一个 dimensions 事件且 render 序列完成之前，窗口不会被显示。\n\n注意，river_window_v1 的尺寸指的是窗口内容的尺寸，不受边框或装饰表面的影响。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "提议窗口尺寸"
+          }
+        },
+        "hide": {
+          "description": {
+            "type": "description",
+            "text": "请求隐藏窗口。如果窗口已隐藏则无效果。同时隐藏所有窗口边框和装饰。\n\n新创建的窗口被视为已显示，除非通过 hide 请求明确隐藏。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "请求隐藏窗口"
+          }
+        },
+        "show": {
+          "description": {
+            "type": "description",
+            "text": "请求显示窗口。如果窗口未隐藏则无效果。不保证窗口可见，因为它可能被放置在其上方的其他窗口完全遮挡。\n\n新创建的窗口被视为已显示，除非通过 hide 请求明确隐藏。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "请求显示窗口"
+          }
+        },
+        "use_csd": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端使用客户端装饰（CSD），自行绘制标题栏、边框等。\n\n如果从未发出此请求或 use_ssd 请求，这是默认行为。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "通知客户端使用 CSD"
+          }
+        },
+        "use_ssd": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端使用服务端装饰（SSD），不绘制任何客户端装饰。\n\n如果客户端仅支持客户端装饰，此请求将无效，参见 decoration_hint 事件。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "通知客户端使用 SSD"
+          }
+        },
+        "set_borders": {
+          "description": {
+            "type": "description",
+            "text": "此请求在窗口的指定边缘上由合成器绘制边框来装饰窗口。边框绘制在窗口内容之上。\n\n角部仅在相邻边缘的边框之间绘制。例如，如果左边缘有边框而上边缘没有，左边缘绘制的边框不会在窗口上边缘之上垂直延伸。\n\n窗口全屏时不绘制边框。\n\n颜色由四个 32 位 RGBA 值定义。除非在另一个协议扩展中指定，否则 RGBA 值使用预乘 alpha。\n\n将边缘设置为 none 或宽度设置为 0 将禁用边框。设置负宽度属于协议错误。\n\n此请求完全覆盖所有先前的 set_borders 请求。只有最近的 set_borders 请求才有效。\n\n注意，river_window_v1 的位置/尺寸指的是窗口内容的位置/尺寸，不受边框或装饰表面的影响。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "设置窗口边框"
+          }
+        },
+        "set_tiled": {
+          "description": {
+            "type": "description",
+            "text": "通知窗口它是平铺布局的一部分，并在指定边缘与平铺布局中的其他元素相邻。\n\n窗口应使用此信息来更改其客户端装饰的样式，避免在平铺边缘的窗口尺寸之外绘制阴影等。\n\n将 edges 参数设置为 none 通知窗口它不是平铺布局的一部分。如果从未发出此请求，窗口将被告知它不是平铺布局的一部分。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "设置窗口平铺状态"
+          }
+        },
+        "get_decoration_above": {
+          "description": {
+            "type": "description",
+            "text": "创建装饰表面并为其分配 river_decoration_v1 角色。创建的装饰在渲染顺序中放置在窗口之上，参见 river_decoration_v1 的描述。\n\n提供已有角色或已附加/提交 buffer 的 wl_surface 属于协议错误。",
+            "summary": "在窗口之上创建装饰表面"
+          }
+        },
+        "get_decoration_below": {
+          "description": {
+            "type": "description",
+            "text": "创建装饰表面并为其分配 river_decoration_v1 角色。创建的装饰在渲染顺序中放置在窗口之下，参见 river_decoration_v1 的描述。\n\n提供已有角色或已附加/提交 buffer 的 wl_surface 属于协议错误。",
+            "summary": "在窗口之下创建装饰表面"
+          }
+        },
+        "inform_resize_start": {
+          "description": {
+            "type": "description",
+            "text": "通知窗口它正在被调整大小。窗口管理器应使用此请求通知交互式调整大小的目标窗口。\n\n窗口管理器在窗口调整大小期间仍负责处理窗口的位置和尺寸。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "通知窗口正在被调整大小"
+          }
+        },
+        "inform_resize_end": {
+          "description": {
+            "type": "description",
+            "text": "通知窗口它不再被调整大小。窗口管理器应使用此请求通知交互式调整大小的目标窗口，交互式调整大小已结束。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "通知窗口不再被调整大小"
+          }
+        },
+        "set_capabilities": {
+          "description": {
+            "type": "description",
+            "text": "此请求通知窗口管理器支持的功能。如果窗口管理器例如忽略窗口的最大化请求，则不应告知窗口它支持最大化功能。\n\n窗口可能会使用此信息来仅在窗口管理器支持最大化功能时显示最大化按钮。\n\n窗口管理器客户端应使用此请求为所有新窗口设置功能。如果从未发出此请求，合成器将通知窗口支持所有功能。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "通知窗口支持的功能"
+          }
+        },
+        "inform_maximized": {
+          "description": {
+            "type": "description",
+            "text": "通知窗口它已被最大化。窗口可能会使用此信息来调整其客户端窗口装饰的样式。\n\n窗口管理器在窗口最大化期间仍负责处理窗口的位置和尺寸。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "通知窗口已被最大化"
+          }
+        },
+        "inform_unmaximized": {
+          "description": {
+            "type": "description",
+            "text": "通知窗口它已被取消最大化。窗口可能会使用此信息来调整其客户端窗口装饰的样式。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "通知窗口已被取消最大化"
+          }
+        },
+        "inform_fullscreen": {
+          "description": {
+            "type": "description",
+            "text": "通知窗口它已全屏。窗口可能会使用此信息来调整其客户端窗口装饰的样式。\n\n此请求不影响窗口的大小/位置或使其成为唯一渲染的窗口，参见 river_window_v1.fullscreen 和 exit_fullscreen 请求。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "通知窗口已全屏"
+          }
+        },
+        "inform_not_fullscreen": {
+          "description": {
+            "type": "description",
+            "text": "通知窗口它未全屏。窗口可能会使用此信息来调整其客户端窗口装饰的样式。\n\n此请求不影响窗口的大小/位置或使其成为唯一渲染的窗口，参见 river_window_v1.fullscreen 和 exit_fullscreen 请求。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "通知窗口未全屏"
+          }
+        },
+        "fullscreen": {
+          "description": {
+            "type": "description",
+            "text": "使窗口在指定输出上全屏。如果多个窗口同时在同一输出上全屏，只有渲染顺序中\"顶部\"的窗口会被显示。\n\n所有在顶部全屏窗口之上渲染顺序中的 river_shell_surface_v1 对象将继续被渲染。\n\n窗口全屏时，合成器将处理窗口的位置和尺寸。set_position 和 propose_dimensions 请求不会影响全屏窗口的当前位置和尺寸。\n\n窗口全屏时，合成器将窗口内容、装饰表面和边框裁剪到指定输出的尺寸。窗口全屏时，set_clip_box 和 set_content_clip_box 的效果被忽略。\n\n如果窗口当前全屏的输出被移除，窗口状态将被修改，如同在与 river_output_v1.removed 事件相同的 manage 序列中发出了 exit_fullscreen 请求。\n\n此请求不会通知窗口它已全屏，参见 river_window_v1.inform_fullscreen 和 inform_not_fullscreen 请求。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "使窗口全屏"
+          }
+        },
+        "exit_fullscreen": {
+          "description": {
+            "type": "description",
+            "text": "使窗口退出全屏。\n\n在此请求发出后，位置和尺寸是未定义的，直到窗口管理器在 manage 序列中发出 propose_dimensions 和 set_position 请求并完成。\n\n窗口管理器应在与 exit_fullscreen 请求相同的 manage 序列中发出 propose_dimensions 和 set_position 请求以实现帧完美。\n\n此请求不会通知窗口它已全屏，参见 river_window_v1.inform_fullscreen 和 inform_not_fullscreen 请求。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "使窗口退出全屏"
+          }
+        },
+        "set_clip_box": {
+          "description": {
+            "type": "description",
+            "text": "将窗口（包括边框和装饰表面）裁剪到由 x、y、width 和 height 参数指定的区域。区域的 x/y 位置相对于窗口的左上角。\n\nwidth 和 height 参数必须大于或等于 0。\n\n将裁剪区域的宽度或高度设置为 0 将禁用裁剪。\n\n窗口全屏时裁剪区域被忽略。\n\nset_clip_box 和 set_content_clip_box 可以同时启用。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将窗口裁剪到指定区域"
+          }
+        },
+        "set_content_clip_box": {
+          "description": {
+            "type": "description",
+            "text": "将窗口内容（不包括边框和装饰表面）裁剪到由 x、y、width 和 height 参数指定的区域。区域的 x/y 位置相对于窗口的左上角。\n\n启用内容裁剪时，合成器绘制的边框（见 set_borders）放置在窗口内容（由 dimensions 事件定义）与内容裁剪区域的交集周围。\n\nwidth 和 height 参数必须大于或等于 0。\n\n将区域的宽度或高度设置为 0 将禁用内容裁剪。\n\n窗口全屏时内容裁剪区域被忽略。\n\nset_clip_box 和 set_content_clip_box 可以同时启用。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将窗口内容裁剪到指定区域"
+          }
+        }
+      },
+      "events": {
+        "closed": {
+          "description": {
+            "type": "description",
+            "text": "窗口已被服务器关闭，可能是因为 xdg_toplevel.close 请求或类似原因。\n\n服务器将不会在此对象上发送更多事件，并忽略此事件发送后除 river_window_v1.destroy 之外的任何请求。客户端应使用 river_window_v1.destroy 请求销毁此对象以释放资源。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口已被关闭"
+          }
+        },
+        "dimensions_hint": {
+          "description": {
+            "type": "description",
+            "text": "此事件通知窗口管理器窗口首选的最小/最大尺寸。这些偏好是提示性的，窗口管理器可以自由提议超出这些范围的尺寸。\n\n所有最小/最大宽度/值必须严格大于或等于 0。值为 0 表示窗口对该值没有偏好。\n\nmin_width/min_height 必须严格小于或等于 max_width/max_height。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口首选的最小/最大尺寸"
+          }
+        },
+        "dimensions": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示窗口在合成器逻辑坐标空间中的尺寸。宽度和高度必须严格大于零。\n\n注意，river_window_v1 的尺寸指的是窗口内容的尺寸，不受边框或装饰表面的影响。\n\n此事件作为 render 序列的一部分在 render_start 事件之前发送。\n\n它可能是由于之前 manage 序列中的 propose_dimensions 请求或窗口自行决定更改尺寸而发送的。",
+            "summary": "窗口尺寸"
+          }
+        },
+        "app_id": {
+          "description": {
+            "type": "description",
+            "text": "窗口设置了应用程序 ID。\n\n如果窗口从未设置应用程序 ID 或清除了应用程序 ID，app_id 参数将为 null。（Xwayland 窗口可能会这样做，但 xdg-toplevel 不会。）\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口设置了应用程序 ID"
+          }
+        },
+        "title": {
+          "description": {
+            "type": "description",
+            "text": "窗口设置了标题。\n\n如果窗口从未设置标题或清除了标题，title 参数将为 null。（Xwayland 窗口可能会这样做，但 xdg-toplevel 不会。）\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口设置了标题"
+          }
+        },
+        "parent": {
+          "description": {
+            "type": "description",
+            "text": "窗口设置了父窗口。如果从未收到此事件或 parent 参数为 null，则该窗口没有父窗口。\n\n设置了父窗口的 surface 可能是父窗口的对话框、文件选择器等。\n\n子窗口通常应直接渲染在其父窗口之上。\n\n合成器必须保证窗口树中没有循环：父窗口不得是其子窗口的后代。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口设置了父窗口"
+          }
+        },
+        "decoration_hint": {
+          "description": {
+            "type": "description",
+            "text": "来自窗口的关于支持和首选的客户端/服务端装饰选项的信息。\n\n如果窗口更改其偏好，此事件可能在窗口生命周期内多次发送。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "支持/首选的装饰样式"
+          }
+        },
+        "pointer_move_requested": {
+          "description": {
+            "type": "description",
+            "text": "此事件通知窗口管理器窗口已请求使用指针进行交互式移动。seat 参数指示用于移动的 seat。\n\n例如，xdg-shell 协议允许窗口请求启动交互式移动，可能是在拖动客户端渲染的标题栏时。\n\n窗口管理器可以使用 river_seat_v1.op_start_pointer 请求来交互式移动窗口，或完全忽略此事件。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口请求交互式指针移动"
+          }
+        },
+        "pointer_resize_requested": {
+          "description": {
+            "type": "description",
+            "text": "此事件通知窗口管理器窗口已请求使用指针进行交互式调整大小。seat 参数指示用于调整大小的 seat。\n\nedges 参数指示窗口请求从哪些边缘调整大小。edges 参数永远不会是 none，也永远不会同时设置上下或左右边缘。\n\n例如，xdg-shell 协议允许窗口请求启动交互式调整大小，可能是在拖动客户端渲染的装饰角落时。\n\n窗口管理器可以使用 river_seat_v1.op_start_pointer 请求来交互式调整窗口大小，或完全忽略此事件。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口请求交互式指针调整大小"
+          }
+        },
+        "show_window_menu_requested": {
+          "description": {
+            "type": "description",
+            "text": "例如，xdg-shell 协议允许窗口请求显示窗口菜单，例如当用户右键单击客户端窗口装饰时。\n\n窗口菜单可能包含最大化或最小化窗口的选项。\n\n窗口管理器可以自由忽略此请求，并在选择显示菜单时决定窗口菜单包含的内容。\n\nx 和 y 参数指示窗口请求显示窗口菜单的位置。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口请求显示窗口菜单"
+          }
+        },
+        "maximize_requested": {
+          "description": {
+            "type": "description",
+            "text": "例如，xdg-shell 协议允许窗口请求被最大化。\n\n窗口管理器可以使用 river_window_v1.inform_maximize 来满足此请求，或忽略它。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口请求被最大化"
+          }
+        },
+        "unmaximize_requested": {
+          "description": {
+            "type": "description",
+            "text": "例如，xdg-shell 协议允许窗口请求被取消最大化。\n\n窗口管理器可以使用 river_window_v1.inform_unmaximized 来满足此请求，或忽略它。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口请求被取消最大化"
+          }
+        },
+        "fullscreen_requested": {
+          "description": {
+            "type": "description",
+            "text": "例如，xdg-shell 协议允许窗口请求全屏，并允许它们提供输出偏好。\n\n窗口管理器可以使用 river_window_v1.fullscreen 来满足此请求，或忽略它。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口请求全屏"
+          }
+        },
+        "exit_fullscreen_requested": {
+          "description": {
+            "type": "description",
+            "text": "例如，xdg-shell 协议允许窗口请求退出全屏。\n\n窗口管理器可以使用 river_window_v1.exit_fullscreen 来满足此请求，或忽略它。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口请求退出全屏"
+          }
+        },
+        "minimize_requested": {
+          "description": {
+            "type": "description",
+            "text": "例如，xdg-shell 协议允许窗口请求被最小化。\n\n窗口管理器可以自由忽略此请求、隐藏窗口或执行任何其他选择的操作。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口请求被最小化"
+          }
+        },
+        "unreliable_pid": {
+          "description": {
+            "type": "description",
+            "text": "此事件提供创建窗口的进程的不可靠 PID。由于 PID 重用，获取此信息本质上是有竞争条件的。因此，此 PID 不得用于任何安全敏感的用途。\n\n另请注意，单个进程可能创建多个窗口，因此 PID 到窗口不一定是一对一映射。多个窗口可能具有相同的 PID。\n\n此事件在 river_window_v1 创建时发送一次，之后不再发送。",
+            "summary": "窗口创建者的不可靠 PID"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "node_exists": {
+              "summary": "窗口已有节点对象"
+            },
+            "invalid_dimensions": {
+              "summary": "提议的尺寸超出范围"
+            },
+            "invalid_border": {
+              "summary": "set_borders 的参数无效"
+            },
+            "invalid_clip_box": {
+              "summary": "set_clip_box 的参数无效"
+            }
+          }
+        },
+        "decoration_hint": {
+          "entries": {
+            "only_supports_csd": {
+              "summary": "仅支持客户端装饰"
+            },
+            "prefers_csd": {
+              "summary": "首选客户端装饰，同时支持 CSD 和 SSD"
+            },
+            "prefers_ssd": {
+              "summary": "首选服务端装饰，同时支持 CSD 和 SSD"
+            },
+            "no_preference": {
+              "summary": "无偏好，同时支持 CSD 和 SSD"
+            }
+          }
+        },
+        "edges": {
+          "entries": {}
+        },
+        "capabilities": {
+          "entries": {}
+        }
+      }
+    },
+    "river_decoration_v1": {
+      "description": {
+        "type": "description",
+        "text": "带有装饰的窗口的渲染顺序如下：\n\n1. 使用 get_decoration_below 创建的装饰在最底部\n2. 窗口内容\n3. 使用 river_window_v1.set_borders 配置的边框\n4. 使用 get_decoration_above 创建的装饰在最顶部\n\n窗口上方/下方装饰表面的相对顺序由此协议未定义，由合成器决定。",
+        "summary": "窗口装饰"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端将不再使用此装饰对象，可以安全销毁。",
+            "summary": "销毁装饰对象"
+          }
+        },
+        "set_offset": {
+          "description": {
+            "type": "description",
+            "text": "此请求设置装饰表面相对于窗口左上角的偏移量。\n\n如果从未发送此请求，x 和 y 偏移量由此协议未定义，由合成器决定。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "设置相对于窗口左上角的偏移量"
+          }
+        },
+        "sync_next_commit": {
+          "description": {
+            "type": "description",
+            "text": "将装饰表面上下一个 wl_surface.commit 请求的应用与下一个 river_window_manager_v1.render_finish 请求原子性应用的其余状态同步。\n\n客户端必须在此请求之后、render_finish 请求之前对装饰表面发出 wl_surface.commit 请求，否则属于协议错误。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将下一个提交与其他渲染状态同步"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "no_commit": {
+              "summary": "在窗口管理器提交之前未能提交 surface"
+            }
+          }
+        }
+      }
+    },
+    "river_shell_surface_v1": {
+      "description": {
+        "type": "description",
+        "text": "窗口管理器可以使用 shell surface 来显示状态栏、背景图像、桌面通知、启动器、桌面菜单或任何其他需要的内容。",
+        "summary": "窗口管理器 UI 的 surface"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端将不再使用此 shell surface 对象，可以安全销毁。",
+            "summary": "销毁 shell surface 对象"
+          }
+        },
+        "get_node": {
+          "description": {
+            "type": "description",
+            "text": "获取渲染列表中对应此 shell surface 的节点。\n\n对单个 shell surface 多次发出此请求属于协议错误。",
+            "summary": "获取 shell surface 的渲染列表节点"
+          }
+        },
+        "sync_next_commit": {
+          "description": {
+            "type": "description",
+            "text": "将 shell surface 上下一个 wl_surface.commit 请求的应用与下一个 river_window_manager_v1.render_finish 请求原子性应用的其余渲染状态同步。\n\n客户端必须在此请求之后、render_finish 请求之前对 shell surface 发出 wl_surface.commit 请求，否则属于协议错误。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将下一个 surface 提交与窗口管理器提交同步"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "node_exists": {
+              "summary": "shell surface 已有节点对象"
+            },
+            "no_commit": {
+              "summary": "在窗口管理器提交之前未能提交 surface"
+            }
+          }
+        }
+      }
+    },
+    "river_node_v1": {
+      "description": {
+        "type": "description",
+        "text": "渲染列表是一个节点列表，决定了合成器的渲染顺序。节点可以对应窗口或 shell surface。节点的相对顺序可以通过 place_above 和 place_below 请求来更改，从而改变渲染顺序。\n\n节点在渲染列表中的初始位置是未定义的，窗口管理器客户端必须使用 place_above 或 place_below 请求来保证特定的渲染顺序。",
+        "summary": "渲染列表中的节点"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端将不再使用此节点对象，可以安全销毁。",
+            "summary": "销毁装饰对象"
+          }
+        },
+        "set_position": {
+          "description": {
+            "type": "description",
+            "text": "在合成器的逻辑坐标空间中设置节点的绝对位置。x 和 y 坐标可以是正数或负数。\n\n注意，river_window_v1 的位置指的是窗口内容的位置，不受边框或装饰表面的影响。\n\n如果从未发送此请求，节点的位置由此协议未定义，由合成器决定。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "设置节点的绝对位置"
+          }
+        },
+        "place_top": {
+          "description": {
+            "type": "description",
+            "text": "此请求将节点放置在合成器渲染列表中所有其他节点之上。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将节点放置在所有其他节点之上"
+          }
+        },
+        "place_bottom": {
+          "description": {
+            "type": "description",
+            "text": "此请求将节点放置在合成器渲染列表中所有其他节点之下。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将节点放置在所有其他节点之下"
+          }
+        },
+        "place_above": {
+          "description": {
+            "type": "description",
+            "text": "此请求将节点直接放置在合成器渲染列表中另一个节点之上。\n\n尝试将节点放置在自身之上没有效果。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将节点放置在另一个节点之上"
+          }
+        },
+        "place_below": {
+          "description": {
+            "type": "description",
+            "text": "此请求将节点直接放置在合成器渲染列表中另一个节点之下。\n\n尝试将节点放置在自身之下没有效果。\n\n此请求修改渲染状态，只能作为 render 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将节点放置在另一个节点之下"
+          }
+        }
+      }
+    },
+    "river_output_v1": {
+      "description": {
+        "type": "description",
+        "text": "合成器逻辑坐标空间中的一个区域，应被视为单个输出用于窗口管理目的。此区域可能对应单个物理输出，或在镜像或平铺显示器的情况下对应多个物理输出，具体取决于硬件和合成器配置。",
+        "summary": "逻辑输出"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端将不再使用此输出对象，可以安全销毁。\n\n此请求应在收到 river_output_v1.removed 事件后发出，以完成输出的销毁。",
+            "summary": "销毁输出对象"
+          }
+        }
+      },
+      "events": {
+        "removed": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示逻辑输出在概念上不再是窗口管理空间的一部分。\n\n服务器将不会在此对象上发送更多事件，并忽略此事件发送后除 river_output_v1.destroy 之外的任何请求。客户端应使用 river_output_v1.destroy 请求销毁此对象以释放资源。\n\n此事件可能因为相应的物理输出被物理拔出或某些输出配置发生变化而发送。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "输出已被移除"
+          }
+        },
+        "wl_output": {
+          "description": {
+            "type": "description",
+            "text": "对应 river_output_v1 的 wl_output 对象。参数是通过 wl_registry.global 通告的 wl_output 的全局名称。\n\n保证在发送此事件之前，相应的 wl_output 已被通告。\n\n此事件恰好发送一次。与 river_output_v1 关联的 wl_output 不能更改。保证 wl_output 和 river_output_v1 对象之间存在一对一映射。\n\n相应 wl_output 的 global_remove 事件可能在 river_output_v1.remove 事件之前发送。这是因为 river_output_v1 状态变更与 river 窗口管理的 manage 序列同步，而全局变更则不是。\n\n理由：窗口管理器可能需要 wl_output 接口提供的信息，例如 name/description。它也可能需要 wl_output 对象来启动屏幕截图等。",
+            "summary": "对应的 wl_output"
+          }
+        },
+        "position": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示输出在合成器逻辑坐标空间中的位置。x 和 y 坐标可以是正数或负数。\n\n此事件在 river_output_v1 创建时发送一次，并在位置变更时再次发送。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。\n\n服务器必须保证在收到相应的 manage_start 事件时，position 和 dimensions 事件不会导致多个逻辑输出的区域重叠。",
+            "summary": "输出位置"
+          }
+        },
+        "dimensions": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示输出在合成器逻辑坐标空间中的尺寸。宽度和高度将始终严格大于零。\n\n此事件在 river_output_v1 创建时发送一次，并在尺寸变更时再次发送。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。\n\n服务器必须保证在收到相应的 manage_start 事件时，position 和 dimensions 事件不会导致多个逻辑输出的区域重叠。",
+            "summary": "输出尺寸"
+          }
+        }
+      }
+    },
+    "river_seat_v1": {
+      "description": {
+        "type": "description",
+        "text": "此对象代表单个用户的输入设备集合。它允许窗口管理器将键盘输入路由到窗口、获取指针输入的高级信息、定义键盘和指针绑定等。\n\nTODO：\n- 触摸输入\n- 数位板输入",
+        "summary": "窗口管理 seat"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端将不再使用此 seat 对象，可以安全销毁。\n\n此请求应在收到 river_seat_v1.removed 事件后发出，以完成 seat 的销毁。",
+            "summary": "销毁 seat 对象"
+          }
+        },
+        "focus_window": {
+          "description": {
+            "type": "description",
+            "text": "请求合成器将键盘输入发送到指定窗口。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将键盘焦点给予窗口"
+          }
+        },
+        "focus_shell_surface": {
+          "description": {
+            "type": "description",
+            "text": "请求合成器将键盘输入发送到指定 shell surface。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将键盘焦点给予 shell_surface"
+          }
+        },
+        "clear_focus": {
+          "description": {
+            "type": "description",
+            "text": "请求合成器不向任何客户端发送键盘输入。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "清除键盘焦点"
+          }
+        },
+        "op_start_pointer": {
+          "description": {
+            "type": "description",
+            "text": "启动交互式指针操作。操作期间，将根据指针输入发送 op_delta 事件。\n\n当所有指针按钮释放时，发送 op_release 事件。\n\n指针操作持续到在 manage 序列期间发出 op_end 请求且该 manage 序列完成。\n\n窗口管理器可以使用此操作来实现窗口的交互式移动/调整大小，通过设置窗口位置和根据 op_delta 事件提议尺寸。\n\n如果已有操作正在进行，此请求将被忽略。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "启动交互式指针操作"
+          }
+        },
+        "op_end": {
+          "description": {
+            "type": "description",
+            "text": "结束交互式操作。\n\n如果没有操作正在进行，此请求将被忽略。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "结束交互式操作"
+          }
+        },
+        "get_pointer_binding": {
+          "description": {
+            "type": "description",
+            "text": "根据指针按钮、修饰键和其他可配置属性定义指针绑定。\n\nbutton 参数是 linux/input-event-codes.h 头文件中定义的 Linux 输入事件代码（例如 BTN_RIGHT）。\n\n新的指针绑定在初始配置完成且在 manage 序列期间发出 enable 请求之前不会启用。",
+            "summary": "定义新的指针绑定"
+          }
+        },
+        "set_xcursor_theme": {
+          "description": {
+            "type": "description",
+            "text": "为 seat 设置 XCursor 主题。此主题用于合成器渲染的光标，但不一定用于客户端渲染的光标。\n\n注意：窗口管理器可能还希望为其启动的程序设置 XCURSOR_THEME 和 XCURSOR_SIZE 环境变量。",
+            "summary": "为 seat 设置 xcursor 主题"
+          }
+        },
+        "pointer_warp": {
+          "description": {
+            "type": "description",
+            "text": "将指针传送到合成器逻辑坐标空间中的指定位置。\n\n如果指定位置超出所有输出的范围，指针将被传送到最近的输出内的点。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "将指针传送到指定位置"
+          }
+        }
+      },
+      "events": {
+        "removed": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示 seat 不再使用，应被销毁。\n\n服务器将不会在此对象上发送更多事件，并忽略此事件发送后除 river_seat_v1.destroy 之外的任何请求。客户端应使用 river_seat_v1.destroy 请求销毁此对象以释放资源。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "seat 已被移除"
+          }
+        },
+        "wl_seat": {
+          "description": {
+            "type": "description",
+            "text": "对应 river_seat_v1 的 wl_seat 对象。参数是通过 wl_registry.global 通告的 wl_seat 的全局名称。\n\n保证在发送此事件之前，相应的 wl_seat 已被通告。\n\n此事件恰好发送一次。与 river_seat_v1 关联的 wl_seat 不能更改。保证 wl_seat 和 river_seat_v1 对象之间存在一对一映射。\n\n相应 wl_seat 的 global_remove 事件可能在 river_seat_v1.remove 事件之前发送。这是因为 river_seat_v1 状态变更与 river 窗口管理的 manage 序列同步，而全局变更则不是。\n\n理由：窗口管理器可能希望基于其 shell surface 接收的正常输入事件来触发窗口管理状态变更。",
+            "summary": "对应的 wl_seat"
+          }
+        },
+        "pointer_enter": {
+          "description": {
+            "type": "description",
+            "text": "seat 的指针进入了指定窗口的区域。\n\n窗口的区域定义为包括窗口尺寸定义的区域、使用 river_window_v1.set_borders 配置的边框以及装饰表面的输入区域。特别是，它不包括属于窗口但延伸到窗口尺寸之外的 surface 的输入区域。\n\nseat 的指针一次只能进入一个窗口。当指针在窗口之间移动时，旧窗口的 pointer_leave 事件必须在新窗口的 pointer_enter 事件之前发送。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "指针进入了窗口"
+          }
+        },
+        "pointer_leave": {
+          "description": {
+            "type": "description",
+            "text": "seat 的指针离开了最近发送 pointer_enter 的窗口。详见 pointer_enter。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "指针离开了已进入的窗口"
+          }
+        },
+        "window_interaction": {
+          "description": {
+            "type": "description",
+            "text": "窗口已被交互，不仅仅是指针经过。此事件可能因指针按钮按下或触摸/数位板工具与窗口的交互而发送。\n\n此事件与 pointer_enter 和 pointer_leave 事件的发送关系没有保证，因为交互可能使用触摸或数位板工具输入。\n\n理由：此事件为窗口管理器提供必要信息，以决定何时发送键盘焦点、提升已有键盘焦点的窗口等。采用策略优于机制的方法，而不是向窗口管理器暴露所有指针、触摸和数位板事件。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "窗口已被交互"
+          }
+        },
+        "shell_surface_interaction": {
+          "description": {
+            "type": "description",
+            "text": "shell surface 已被交互，不仅仅是指针经过。此事件可能因指针按钮按下或触摸/数位板工具与 shell_surface 的交互而发送。\n\n此事件与 pointer_enter 和 pointer_leave 事件的发送关系没有保证，因为交互可能使用触摸或数位板工具输入。\n\n理由：虽然 shell surface 确实直接接收所有 wl_pointer、wl_touch 等输入事件，但这些事件不一定触发 manage 序列，因此不允许窗口管理器以无竞争的方式更新焦点或执行其他操作来响应输入。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "shell surface 已被交互"
+          }
+        },
+        "op_delta": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示自操作开始以来指针/触摸点等位置的总变化量。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "自操作开始以来的总累积运动"
+          }
+        },
+        "op_release": {
+          "description": {
+            "type": "description",
+            "text": "驱动当前交互操作的输入已被释放。例如，对于指针操作，所有指针按钮都已释放。\n\n根据操作类型，op_delta 事件可能继续发送，直到通过 op_end 请求结束操作。\n\n此事件在交互操作期间最多发送一次。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。",
+            "summary": "操作输入已被释放"
+          }
+        },
+        "pointer_position": {
+          "description": {
+            "type": "description",
+            "text": "指针在合成器逻辑坐标空间中的当前位置。\n\n此状态是特殊的，仅指针位置的变化不得导致合成器启动 manage 序列。\n\n假设 seat 有指针，此事件必须在每个 manage 序列中发送，除非自上次发送此事件以来 x/y 位置没有变化。",
+            "summary": "指针的当前位置"
+          }
+        }
+      },
+      "enums": {
+        "modifiers": {
+          "description": {
+            "type": "description",
+            "text": "此枚举用于描述触发按键绑定或指针绑定时必须按下的键盘修饰键。\n\n注意，river 和 wlroots 在内部使用值 2 和 16 表示 capslock 和 numlock。然而，将锁定修饰键用于绑定没有意义，因此这些值不包含在此枚举中。",
+            "summary": "一组键盘修饰键"
+          },
+          "entries": {
+            "mod1": {
+              "summary": "通常称为 alt"
+            },
+            "mod4": {
+              "summary": "通常称为 super 或 logo"
+            }
+          }
+        }
+      }
+    },
+    "river_pointer_binding_v1": {
+      "description": {
+        "type": "description",
+        "text": "此对象允许窗口管理器配置指针绑定，并在绑定被触发时接收事件。\n\n新的指针绑定在 manage 序列期间发出 enable 请求之前不会启用。\n\n通常，所有指针按钮事件都由合成器发送到具有指针焦点的 surface。触发指针绑定的指针按钮事件不会发送到具有指针焦点的 surface。\n\n如果多个指针绑定将由合成器端的单个物理指针事件触发，则由合成器策略决定哪个指针绑定将接收按下/释放事件，或者所有匹配的指针绑定是否都接收按下/释放事件。",
+        "summary": "配置指针绑定，接收触发事件"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端将不再使用此指针绑定对象，可以安全销毁。",
+            "summary": "销毁指针绑定对象"
+          }
+        },
+        "enable": {
+          "description": {
+            "type": "description",
+            "text": "此请求应在所有初始配置完成且窗口管理器希望指针绑定能够被触发后发出。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "启用指针绑定"
+          }
+        },
+        "disable": {
+          "description": {
+            "type": "description",
+            "text": "此请求可用于临时禁用指针绑定。可以稍后通过 enable 请求重新启用。\n\n此请求修改窗口管理状态，只能作为 manage 序列的一部分发出，参见 river_window_manager_v1 描述。",
+            "summary": "禁用指针绑定"
+          }
+        }
+      },
+      "events": {
+        "pressed": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示触发绑定的指针按钮已被按下。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。\n\n合成器应等待 manage 序列完成后再处理进一步的输入事件。这允许窗口管理器客户端例如修改按键绑定和键盘焦点，而不会与未来的输入事件产生竞争。当然，窗口管理器应尽快响应，因为合成器缓冲传入输入事件的能力是有限的。",
+            "summary": "绑定的指针按钮已被按下"
+          }
+        },
+        "released": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示触发绑定的指针按钮已被释放。\n\n释放绑定的修饰键而不释放指针按钮不会触发释放事件。此事件在指针按钮释放时发送，即使修饰键自 pressed 事件以来已更改。\n\n在服务器发送所有其他新状态后，此事件之后将跟随一个 manage_start 事件。\n\n合成器应等待 manage 序列完成后再处理进一步的输入事件。这允许窗口管理器客户端例如修改按键绑定和键盘焦点，而不会与未来的输入事件产生竞争。当然，窗口管理器应尽快响应，因为合成器缓冲传入输入事件的能力是有限的。",
+            "summary": "绑定的指针按钮已被释放"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,563 @@
+{
+  "description": {
+    "type": "description",
+    "text": "此协议规定了一种方式，允许客户端设置 surface 的色彩空间和\nHDR 元数据，并获取输出设备的色彩空间和 HDR 能力信息。\n\n此协议基于一个已提交的上游协议草案，待其获批后我们将迁移至该版本。\n在开发过程中，此协议可能与上游草案存在差异。",
+    "summary": "色彩管理协议"
+  },
+  "interfaces": {
+    "zcr_color_manager_v1": {
+      "description": {
+        "type": "description",
+        "text": "一个全局接口，用于获取色彩管理 surface 和色彩管理 output 对象，\n以及从 ICC 配置文件、参数或枚举名称创建色彩空间对象。",
+        "summary": "色彩管理器单例"
+      },
+      "requests": {
+        "create_color_space_from_icc": {
+          "description": {
+            "type": "description",
+            "text": "从 ICC 配置文件创建色彩空间对象。此请求返回一个\nzcr_color_space_creator_v1 对象，该对象将返回错误\n或成功创建的 zcr_color_space_v1 对象。\n\n要创建的色彩空间描述以 ICC 配置文件的形式，通过参数 icc\n中的文件描述符发送。\n\nfd 必须可寻址，ICC 配置文件的最大大小为 4 MB。\n违反这些要求将引发 icc_fd 协议错误。\n合成器不得修改文件内容，fd 可被密封以防止写入和大小更改。\n\n文件内容必须代表有效的 ICC 配置文件。\nICC 配置文件版本必须为 2 或 4，必须是 3 通道配置文件，\n类别必须为 'input'、'output'、'abstract' 或 'display'。\n违反这些要求不会导致协议错误，但会触发\nzcr_color_space_creator_v1.error 事件。\n\n有关创建对象的更多详细信息，请参阅 zcr_color_space_v1\n和 zcr_color_space_creator_v1 接口。\n\n有关 ICC 配置文件的更多详细信息，请参阅 International Color\nConsortium 的规范（也称为 ISO 15076-1:2010）。",
+            "summary": "从 ICC 配置文件创建色彩空间对象"
+          }
+        },
+        "create_color_space_from_names": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 从已知名称创建色彩空间对象。此请求返回一个\nzcr_color_space_creator_v1 对象，该对象将返回错误\n或成功创建的 zcr_color_space_v1 对象。\n\nEOTF、色度和白点不得为 unknown。否则，或给定值\n未列在枚举中时，将引发 bad_enum 协议错误。\n\n有关创建对象的更多详细信息，请参阅 zcr_color_space_v1\n和 zcr_color_space_creator_v1 接口。请改用\ncreate_color_space_from_complete_names。",
+            "summary": "从已知名称创建色彩空间对象"
+          }
+        },
+        "create_color_space_from_params": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 从参数创建色彩空间对象。此请求返回一个\nzcr_color_space_creator_v1 对象，该对象将返回错误\n或成功创建的 zcr_color_space_v1 对象。\n\nEOTF 不得为 unknown。否则，或给定的 EOTF 未列在\n枚举中时，将引发 bad_enum 协议错误。\n\n白点必须位于红、绿、蓝三基色构成的三角形内部。\n否则将引发 bad_param 协议错误。\n\n所有色度值乘以 10000 以产生协议传输的整数值。\n\n有关创建对象的更多详细信息，请参阅 zcr_color_space_v1\n和 zcr_color_space_creator_v1 接口。请改用\ncreate_color_space_from_complete_params。",
+            "summary": "从参数创建色彩空间对象"
+          }
+        },
+        "get_color_management_output": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 wl_output 创建一个新的\nzcr_color_management_output_v1 对象。\n\n有关更多详细信息，请参阅 zcr_color_management_output_v1 接口。",
+            "summary": "为 wl_output 创建色彩管理接口"
+          }
+        },
+        "get_color_management_surface": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 wl_surface 创建一个新的\nzcr_color_management_surface_v1 对象。\n\n有关更多详细信息，请参阅 zcr_color_management_surface_v1 接口。",
+            "summary": "为 wl_surface 创建色彩管理接口"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 zcr_color_manager_v1 对象。这不会以任何方式\n影响任何其他对象。",
+            "summary": "销毁色彩管理器"
+          }
+        },
+        "create_color_space_from_complete_names": {
+          "description": {
+            "type": "description",
+            "text": "从已知名称创建色彩空间对象。此请求返回一个\nzcr_color_space_creator_v1 对象，该对象将返回错误\n或成功创建的 zcr_color_space_v1 对象。\n\nEOTF、色度和白点不得为 unknown。否则，或给定值\n未列在枚举中时，将引发 bad_enum 协议错误。\n\n此请求还包含矩阵和范围信息。\n\n有关创建对象的更多详细信息，请参阅 zcr_color_space_v1\n和 zcr_color_space_creator_v1 接口。",
+            "summary": "从已知名称创建色彩空间对象"
+          }
+        },
+        "create_color_space_from_complete_params": {
+          "description": {
+            "type": "description",
+            "text": "从参数创建色彩空间对象。此请求返回一个\nzcr_color_space_creator_v1 对象，该对象将返回错误\n或成功创建的 zcr_color_space_v1 对象。\n\nEOTF 不得为 unknown。否则，或给定的 EOTF 未列在\n枚举中时，将引发 bad_enum 协议错误。\n\n白点必须位于红、绿、蓝三基色构成的三角形内部。\n否则将引发 bad_param 协议错误。\n\n所有色度值乘以 10000 以产生协议传输的整数值。\n\n此请求还包含矩阵和范围信息。\n\n有关创建对象的更多详细信息，请参阅 zcr_color_space_v1\n和 zcr_color_space_creator_v1 接口。",
+            "summary": "从参数创建色彩空间对象"
+          }
+        }
+      },
+      "enums": {
+        "eotf_names": {
+          "description": {
+            "type": "description",
+            "text": "描述已知 EOTF 的名称。\n\n合成器必须根据协议接口版本支持所有这些名称。",
+            "summary": "已知 EOTF 名称"
+          },
+          "entries": {
+            "unknown": {
+              "summary": "未知 EOTF"
+            },
+            "linear": {
+              "summary": "线性传递函数"
+            },
+            "srgb": {
+              "summary": "sRGB 传递函数"
+            },
+            "bt2087": {
+              "summary": "BT.2087 传递函数"
+            },
+            "adobergb": {
+              "summary": "AdobeRGB 传递函数"
+            },
+            "pq": {
+              "summary": "感知量化器 / SMPTEST2084"
+            },
+            "hlg": {
+              "summary": "混合对数伽马"
+            },
+            "bt709": {
+              "summary": "用于 rec709 编码视频的伽马"
+            },
+            "extendedsrgb10": {
+              "summary": "带 HDR 余量的 sRGB 传递函数"
+            },
+            "smpte170m": {
+              "summary": "SMPTE240M 传递函数"
+            },
+            "smpte240m": {
+              "summary": "SMPTE240M 传递函数"
+            },
+            "smptest428_1": {
+              "summary": "SMPTEST428_1 传递函数"
+            },
+            "log": {
+              "summary": "LOG 传递函数"
+            },
+            "log_sqrt": {
+              "summary": "LOG Sqrt 传递函数"
+            },
+            "iec61966_2_4": {
+              "summary": "IEC61966_2_4 传递函数"
+            },
+            "bt1361_ecg": {
+              "summary": "BT1361_ECG 传递函数"
+            },
+            "bt2020_10": {
+              "summary": "BT2020_10 传递函数"
+            },
+            "bt2020_12": {
+              "summary": "BT2020_12 传递函数"
+            },
+            "scrgb_linear_80_nits": {
+              "summary": "SCRGB 线性传递函数"
+            },
+            "gamma18": {
+              "summary": "GAMMA18 传递函数"
+            },
+            "gamma28": {
+              "summary": "GAMMA28 传递函数"
+            },
+            "srgb_hdr": {
+              "summary": "sRGB 传递函数"
+            }
+          }
+        },
+        "chromaticity_names": {
+          "description": {
+            "type": "description",
+            "text": "描述已知色度的名称。\n\n合成器必须根据协议接口版本支持所有这些名称。",
+            "summary": "已知色度名称"
+          },
+          "entries": {
+            "unknown": {
+              "summary": "未知色度"
+            },
+            "bt601_525_line": {
+              "summary": "ITU-R BT.601 http://www.itu.int/rec/R-REC-BT.601/en"
+            },
+            "bt601_625_line": {
+              "summary": "ITU-R BT.601 http://www.itu.int/rec/R-REC-BT.601/en"
+            },
+            "smpte170m": {
+              "summary": "SMPTE 170M-1999 https://www.itu.int/rec/R-REC-BT.1700/en"
+            },
+            "bt709": {
+              "summary": "ITU-R BT.709 https://www.itu.int/rec/R-REC-BT.709/en"
+            },
+            "bt2020": {
+              "summary": "ITU-R BT.2020 http://www.itu.int/rec/R-REC-BT.2020/en"
+            },
+            "srgb": {
+              "summary": "IEC/4WD 61966-2-1: sRGB https://webstore.iec.ch/publication/6169"
+            },
+            "displayp3": {
+              "summary": "Display P3 https://developer.apple.com/reference/coregraphics/cgcolorspace/1408916-displayp3"
+            },
+            "adobergb": {
+              "summary": "Adobe RGB https://www.adobe.com/digitalimag/pdfs/AdobeRGB1998.pdf"
+            },
+            "wide_gamut_color_spin": {
+              "summary": ""
+            },
+            "bt470m": {
+              "summary": ""
+            },
+            "smpte240m": {
+              "summary": ""
+            },
+            "xyz_d50": {
+              "summary": ""
+            },
+            "smptest428_1": {
+              "summary": ""
+            },
+            "smptest431_2": {
+              "summary": ""
+            },
+            "film": {
+              "summary": ""
+            }
+          }
+        },
+        "whitepoint_names": {
+          "description": {
+            "type": "description",
+            "text": "描述已知白点的名称。\n\n合成器必须根据协议接口版本支持所有这些名称。",
+            "summary": "已知白点名称"
+          },
+          "entries": {
+            "unknown": {
+              "summary": "未知白点"
+            },
+            "dci": {
+              "summary": "DCI 白点"
+            },
+            "d50": {
+              "summary": "D50 白点"
+            },
+            "d65": {
+              "summary": "D65 白点"
+            }
+          }
+        },
+        "error": {
+          "entries": {
+            "icc_fd": {
+              "summary": "给定的 ICC fd 属性错误"
+            },
+            "bad_enum": {
+              "summary": "作为已知名称给出的值无效"
+            },
+            "bad_param": {
+              "summary": "参数值无效"
+            }
+          }
+        },
+        "matrix_names": {
+          "description": {
+            "type": "description",
+            "text": "描述典型色彩空间矩阵 ID 的名称",
+            "summary": "用于指定色彩矩阵"
+          },
+          "entries": {
+            "unknown": {
+              "summary": "未知范围"
+            },
+            "rgb": {
+              "summary": "RGB 矩阵"
+            },
+            "bt709": {
+              "summary": "BT709 矩阵"
+            },
+            "bt2020_ncl": {
+              "summary": "BT2020_NCL 矩阵"
+            },
+            "bt2020_cl": {
+              "summary": "BT2020_CL 矩阵"
+            },
+            "fcc": {
+              "summary": "FCC 矩阵"
+            },
+            "smpte170m": {
+              "summary": "SMPTE170M 矩阵"
+            },
+            "smpte240m": {
+              "summary": "SMPTE240M 矩阵"
+            },
+            "ydzdx": {
+              "summary": "YDZDX 矩阵"
+            },
+            "bt470bg": {
+              "summary": "BT470BG 矩阵"
+            },
+            "gbr": {
+              "summary": "GBR 矩阵"
+            },
+            "ycocg": {
+              "summary": "YCOCG 矩阵"
+            }
+          }
+        },
+        "range_names": {
+          "description": {
+            "type": "description",
+            "text": "描述典型 RGB 值范围的名称。",
+            "summary": "用于指定 RGB 范围"
+          },
+          "entries": {
+            "unknown": {
+              "summary": "未知范围"
+            },
+            "limited": {
+              "summary": "受限 RGB 色彩范围（8 位时值从 16-235）"
+            },
+            "full": {
+              "summary": "完整 RGB 色彩范围（8 位时值从 0 到 255）"
+            },
+            "derived": {
+              "summary": "范围由 EOTF/MatrixID 定义"
+            }
+          }
+        }
+      }
+    },
+    "zcr_color_management_output_v1": {
+      "description": {
+        "type": "description",
+        "text": "zcr_color_management_output_v1 描述输出设备的色彩属性。\n\n创建 zcr_color_management_output_v1 对象时，它将发送初始事件，\n随后是 wl_output.done 事件。创建 wl_output 及其扩展对象时，\n使用最终的 wl_display.sync 以确保所有扩展的输出事件都已被接收。\n\n如果与 zcr_color_management_output_v1 关联的 wl_output 被销毁，\nzcr_color_management_output_v1 对象将变为惰性。",
+        "summary": "输出设备色彩属性"
+      },
+      "requests": {
+        "get_color_space": {
+          "description": {
+            "type": "description",
+            "text": "为输出设备的当前色彩空间创建一个新的 zcr_color_space_v1 对象。\n输出设备始终恰好有一个活动色彩空间，因此客户端应销毁\n先前调用此请求创建的色彩空间。此请求通常作为对\ncolor_space_changed 事件的响应或在创建\nzcr_color_management_output_v1 对象时发送。\n\n创建的 zcr_color_space_v1 对象保存对象创建时\n输出设备的色彩空间。\n\n生成的色彩空间对象允许 get_information 请求。\n\n有关更多详细信息，请参阅 zcr_color_space_v1 接口。",
+            "summary": "获取输出设备的色彩空间"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 zcr_color_management_output_v1 对象。这不会影响\n任何剩余的协议对象。",
+            "summary": "销毁色彩管理输出"
+          }
+        }
+      },
+      "events": {
+        "color_space_changed": {
+          "description": {
+            "type": "description",
+            "text": "当输出设备的色彩空间发生变化时发送 color_space_changed 事件，\n随后是所有扩展共用的 wl_output.done 事件。\n\n这不是初始事件。",
+            "summary": "色彩空间已更改"
+          }
+        },
+        "extended_dynamic_range": {
+          "description": {
+            "type": "description",
+            "text": "这既是初始事件，也会在值发生变化时发送。\n当值发生变化时，此事件之后是所有扩展共用的\nwl_output.done 事件。\n\n扩展动态范围值描述相对于 SDR 最大白色的可用动态范围。\nEDR 值与亮度成正比，黑色亮度作为零电平。\n值为 1.0 表示显示器无法显示比 SDR 最大白色更亮的内容。\n值为 3.0 表示 SDR 最大白色为显示器可产生的最高亮度的\n三分之一。\n\nSDR 最大白色的绝对亮度取决于显示器功能、观看条件\n和观看者的个人偏好。因此，无法给出以 cd/m² 为单位的\n单一值。使用 HDR 视频模式的合成器应允许用户控制\n用于计算输出 EDR 值的 SDR 最大白色电平。\n\nSDR 最大白色是一个相对参考亮度，允许将来自不同动态范围\n的内容色调映射到单一的公共动态范围进行显示。\n\nEDR 值乘以 1000 以产生协议传输的整数值。",
+            "summary": "输出设备扩展动态范围"
+          }
+        }
+      }
+    },
+    "zcr_color_management_surface_v1": {
+      "description": {
+        "type": "description",
+        "text": "zcr_color_management_surface_v1 允许客户端设置 surface 的\n色彩空间和 HDR 属性。\n\n如果与 zcr_color_management_surface_v1 关联的 wl_surface 被销毁，\nzcr_color_management_surface_v1 对象将变为惰性。",
+        "summary": "surface 的色彩管理扩展"
+      },
+      "requests": {
+        "set_alpha_mode": {
+          "description": {
+            "type": "description",
+            "text": "假设 alpha 通道存在，它始终是线性的。alpha 模式决定\n色彩通道是否包含预乘 alpha。使用直接 alpha 可能具有\n性能优势。\n\nAlpha 模式是双缓冲的，将在调用相应 wl_surface 的\nwl_surface.commit 时应用。\n\n默认情况下，surface 被假定为具有预乘 alpha。",
+            "summary": "设置 surface 的 alpha 模式"
+          }
+        },
+        "set_extended_dynamic_range": {
+          "description": {
+            "type": "description",
+            "text": "设置底层 surface 的扩展动态范围（EDR）值。\nEDR 值是双缓冲的，将在调用相应 wl_surface 的\nwl_surface.commit 时应用。\n\nEDR 值描述相对于 SDR 最大白色编码了多少动态范围。\nEDR 值与亮度成正比，使用黑色亮度作为零电平。\n值为 1.0 表示 SDR 最大白色是 surface 的最高可能亮度。\n值为 3.0 表示 SDR 最大白色是 surface 最高可能亮度的\n三分之一。\n\n附加到 surface 的色彩空间可以使缓冲区中的代码值\n在亮度方面呈非线性。因此，产生最大代码值三分之一亮度\n的代码值可能不是最大代码值的三分之一。\n\n有关输出设备上 SDR 最大白色的定义，请参阅\nzcr_color_management_output_v1.extended_dynamic_range。\n内容制作商可以自由选择其 SDR 最大白色电平。\n如何显示取决于显示器功能和输出 EDR 值。\n\n默认情况下 EDR 值为 1.0。合成器将对图像进行色调映射\n以匹配 surface 所显示的每个输出设备的 EDR。\nEDR 到 EDR 映射的目标是产生一种相对亮度映射，\n无论观看条件和显示器功能如何，都能呈现同样良好的效果，\n前提是输出 EDR 值已根据输出功能和观看环境进行了调整。\n提供已色调映射到 surface 所显示输出设备 EDR 值的内容，\n可能在性能和图像质量方面具有优势。\n\nEDR 值乘以 1000 以产生协议传输的整数值。",
+            "summary": "设置内容扩展动态范围"
+          }
+        },
+        "set_color_space": {
+          "description": {
+            "type": "description",
+            "text": "设置底层 surface 的色彩空间。色彩空间和渲染意图\n是双缓冲的，将在调用相应 wl_surface 的\nwl_surface.commit 时应用。\n\n渲染意图为合成器提供提示，说明在色彩空间转换中\n应优化什么。\n\n默认情况下，surface 被假定为具有 sRGB 色彩空间和\n任意渲染意图。\n\n如果 surface 的色彩空间与其所显示的输出设备的色彩空间\n匹配，性能和色彩准确性可能会提高。要查找这些色彩空间，\n客户端可以监听 preferred_color_space 或\nwl_surface.enter/leave 事件。此改进可能需要使用\nzcr_color_management_output_v1.get_color_space 创建的\n色彩空间对象。",
+            "summary": "设置 surface 的色彩空间"
+          }
+        },
+        "set_default_color_space": {
+          "description": {
+            "type": "description",
+            "text": "此请求将 surface 的色彩空间设置为默认值，请参阅\nset_color_space。设置将在调用相应 wl_surface 的\nwl_surface.commit 时应用。",
+            "summary": "将 surface 的色彩空间设置为默认值"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 zcr_color_management_surface_v1 对象。\n\n当 wl_surface 的最后一个 zcr_color_management_surface_v1\n对象被销毁时，销毁将挂起取消设置 wl_surface 的色彩空间、\n渲染意图和 alpha 模式，类似于 set_color_space 将挂起设置。",
+            "summary": "销毁 surface 的色彩管理接口"
+          }
+        }
+      },
+      "events": {
+        "preferred_color_space": {
+          "description": {
+            "type": "description",
+            "text": "当合成器确定或切换到暗示首选色彩空间的输出设备时，\n发送 preferred_color_space 事件。首选色彩空间是客户端\n用于其 surface 内容时可能获得最佳性能和质量的色彩空间。\n\n此事件不携带 zcr_color_space_v1 而是 wl_output 对象。\n具体的 zcr_color_space_v1 可以通过在输出设备上调用\nzcr_color_management_output_v1.get_color_space 并监听\nzcr_color_management_output_v1.color_space_changed 事件来创建。\n\n由于客户端可能多次绑定到同一全局 wl_output，\n此事件将发送给与首选色彩空间输出设备匹配的每个绑定实例。\n如果客户端根本没有绑定到正确的 wl_output 全局对象，\n则不会发送此事件。\n\n这只是一个提示，客户端可以使用 set_color_space 设置\n任何有效的色彩空间，但提供首选色彩空间中的 surface\n可能会提高性能和色彩准确性。",
+            "summary": "用于色彩优化的输出设备"
+          }
+        }
+      },
+      "enums": {
+        "render_intent": {
+          "description": {
+            "type": "description",
+            "text": "渲染意图允许客户端提示如何执行色彩空间转换。\n\n有关渲染意图的更多详细信息，请参阅 ICC 规范。",
+            "summary": "渲染意图"
+          },
+          "entries": {
+            "perceptual": {
+              "summary": "感知"
+            },
+            "relative": {
+              "summary": "媒体相对色度"
+            },
+            "saturation": {
+              "summary": "饱和度"
+            },
+            "absolute": {
+              "summary": "ICC 绝对色度"
+            },
+            "relative_bpc": {
+              "summary": "媒体相对色度 + 黑点补偿"
+            }
+          }
+        },
+        "alpha_mode": {
+          "description": {
+            "type": "description",
+            "text": "指定 alpha 是否预乘到色彩通道中。如果预乘，\n线性 alpha 值已与色彩通道中的（非线性）色彩通道\n代码值相乘。",
+            "summary": "alpha 模式"
+          },
+          "entries": {
+            "straight": {
+              "summary": "alpha 独立于色彩通道"
+            },
+            "premultiplied": {
+              "summary": "alpha 预乘到色彩通道中"
+            }
+          }
+        }
+      }
+    },
+    "zcr_color_space_creator_v1": {
+      "description": {
+        "type": "description",
+        "text": "zcr_color_space_creator_v1 对象返回创建的色彩空间\n或创建过程中发生的错误。\n\n一旦 zcr_color_space_creator_v1 对象发送了 'created'\n或 'error' 事件，它将自动销毁。",
+        "summary": "色彩空间创建器"
+      },
+      "events": {
+        "created": {
+          "description": {
+            "type": "description",
+            "text": "交付成功创建的色彩空间。\n\n生成的色彩空间对象不允许 get_information 请求。",
+            "summary": "色彩空间对象已创建"
+          }
+        },
+        "error": {
+          "description": {
+            "type": "description",
+            "text": "如果色彩空间创建失败，则发送此事件。",
+            "summary": "色彩空间创建失败"
+          }
+        }
+      },
+      "enums": {
+        "creation_error": {
+          "description": {
+            "type": "description",
+            "text": "尝试创建色彩空间时发生的错误位掩码",
+            "summary": "色彩空间创建错误"
+          },
+          "entries": {
+            "malformed_icc": {
+              "summary": "ICC 配置文件格式错误"
+            },
+            "bad_icc": {
+              "summary": "ICC 配置文件不满足要求"
+            },
+            "bad_primaries": {
+              "summary": "三基色无效"
+            },
+            "bad_whitepoint": {
+              "summary": "白点无效"
+            }
+          }
+        }
+      }
+    },
+    "zcr_color_space_v1": {
+      "description": {
+        "type": "description",
+        "text": "引用一个可附加到 surface 的色彩空间\n（zcr_color_management_surface_v1.set_color_space）。\n它可以提供 ICC 配置文件和已知名称等信息，\n以允许客户端了解色彩空间并自行进行色彩转换。\n\n创建后，无论创建方式如何，zcr_color_space_v1 对象\n始终引用一个固定的色彩空间。\n\n客户端可以使用 zcr_color_manager_v1 请求创建\nzcr_color_space_v1 对象，或通过调用\nzcr_color_management_output_v1.get_color_space 从输出设备创建。\n\n其他扩展可以定义更多的 zcr_color_space_v1 工厂接口。\n这些接口必须显式指定所创建对象的接口版本，\n否则将无法正确对 zcr_color_space_v1 进行版本控制。\n使用在 XML 中未定义 'interface' 属性的 'new_id' 参数\n会强制代码生成器添加两个显式参数：interface 和 version。\nVersion 是所需的显式版本号，interface 应被要求为\n\"zcr_color_space_v1\"。合成器支持的 zcr_color_space_v1 版本\n由 wl_registry 中公布的 zcr_color_manager_v1 定义。",
+        "summary": "色彩空间"
+      },
+      "requests": {
+        "get_information": {
+          "description": {
+            "type": "description",
+            "text": "作为对此请求的响应，合成器将发送描述此色彩空间对象的\n所有可用信息事件，最后发送 'done' 事件。\n其他扩展可以定义在 'done' 之前发送的更多事件。\n\n此请求仅允许在创建对象的消息指定允许 get_information 的\nzcr_color_space_v1 对象上调用。否则将引发\nno_information 协议错误。\n\n同一对象上的每个 get_information 请求将始终返回完全相同的数据。\n\n请参阅 zcr_color_management_output_v1.get_color_space 和\nzcr_color_space_creator_v1.created。",
+            "summary": "获取色彩空间信息"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 zcr_color_space_v1 对象。\n\n销毁在 surface 或输出设备上处于活动状态的 zcr_color_space_v1\n不会更改这些对象的色彩空间。",
+            "summary": "销毁色彩空间"
+          }
+        }
+      },
+      "events": {
+        "icc_file": {
+          "description": {
+            "type": "description",
+            "text": "此事件仅可作为 zcr_color_space_v1.get_information 的\n响应发送。\n\nicc 参数向客户端提供一个文件描述符，可以内存映射\n以获取描述色彩空间的 ICC 配置文件。\n客户端必须使用 MAP_PRIVATE 且只读方式映射 fd。\n\n合成器应在请求信息时始终发送此事件。\nICC 配置文件提供了所有色彩管理客户端可以依赖的共同基础。",
+            "summary": "描述色彩空间的 ICC 配置文件"
+          }
+        },
+        "names": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 此事件仅可作为 zcr_color_space_v1.get_information 的\n响应发送。\n\nEOTF、色度和白点包含这些属性的已知名称（如果可用），\n否则为 unknown。\n\n合成器不应假设所有客户端都能理解这些名称。\n这些名称是为客户端方便而提供的。如果客户端理解名称三元组，\n它可以忽略关于色彩空间的其他信息，例如 ICC 配置文件。\n请改用 complete_names。",
+            "summary": "色彩空间的已知名称"
+          }
+        },
+        "params": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 此事件仅可作为 zcr_color_space_v1.get_information 的\n响应发送。\n\nRGB 三基色值参数连同白点值参数和 eotf 可用于定义\n任意或自定义色彩空间。\n\neotf 枚举包含该属性的已知名称，但合成器不应假设\n所有客户端都能理解这些名称。请改用 complete_params。",
+            "summary": "定义色彩空间的 RGB 三基色和白点"
+          }
+        },
+        "done": {
+          "description": {
+            "type": "description",
+            "text": "此事件仅可作为 zcr_color_space_v1.get_information 的\n响应发送。\n\n这表示该对象的所有色彩空间信息事件已全部交付。",
+            "summary": "色彩空间信息结束"
+          }
+        },
+        "complete_names": {
+          "description": {
+            "type": "description",
+            "text": "此事件仅可作为 zcr_color_space_v1.get_information 的\n响应发送。\n\nEOTF、色度、矩阵、范围和白点包含这些属性的已知名称\n（如果可用），否则为 unknown。\n\n合成器不应假设所有客户端都能理解这些名称。\n这些名称是为客户端方便而提供的。如果客户端理解名称三元组，\n它可以忽略关于色彩空间的其他信息，例如 ICC 配置文件。",
+            "summary": "色彩空间的已知名称"
+          }
+        },
+        "complete_params": {
+          "description": {
+            "type": "description",
+            "text": "此事件仅可作为 zcr_color_space_v1.get_information 的\n响应发送。\n\nRGB 三基色值参数连同白点值参数和 eotf 可用于定义\n任意或自定义色彩空间。\n\neotf 枚举包含该属性的已知名称，但合成器不应假设\n所有客户端都能理解这些名称。",
+            "summary": "定义色彩空间的 RGB 三基色和白点"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "no_information": {
+              "summary": "不允许 get_information"
+            }
+          }
+        }
+      }
+    }
+  }
+}

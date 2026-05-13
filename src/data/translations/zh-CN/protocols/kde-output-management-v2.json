@@ -1,0 +1,368 @@
+{
+  "interfaces": {
+    "kde_output_management_v2": {
+      "description": {
+        "type": "description",
+        "text": "此接口使客户端能够通过服务器设置输出设备的属性，用于屏幕配置。为此，输出设备通过全局 kde_output_device_v2 对象引用。\n\noutputmanagement (wl_global)\n--------------------------\nrequest:\n* create_configuration -> outputconfiguration (wl_resource)\n\noutputconfiguration (wl_resource)\n--------------------------\nrequests:\n* enable(outputdevice, bool)\n* mode(outputdevice, mode)\n* transformation(outputdevice, flag)\n* position(outputdevice, x, y)\n* apply\n\nevents:\n* applied\n* failed\n\n服务器将一个 outputmanagement 对象注册为全局对象。要配置输出，客户端请求 create_configuration，该请求提供一个引用 outputconfiguration 的资源用于一次性配置。这样服务器就知道哪些请求属于一起，并可以按此分组。\n\n在 outputconfiguration 对象上，客户端为每个输出调用是否启用该输出、应设置哪个模式（通过引用已公布模式列表中的模式）以及输出的全局位置。以这种方式配置完所有输出后，客户端调用 apply。\n此时（而非更早）服务器应尝试应用配置。如果成功，服务器发出 applied 信号，否则发出 failed 信号，以便配置客户端了解其配置请求的结果。\n\n通过这种设计，如果服务器内部支持，该接口可以实现原子性的输出配置更改。\n\n警告！此文件中描述的协议是桌面环境的实现细节。普通客户端不得使用此协议。可能会添加不向后兼容的更改，而无需递增扩展的主版本号。",
+        "summary": "通过客户端配置服务器输出"
+      },
+      "requests": {
+        "create_configuration": {
+          "description": {
+            "type": "description",
+            "text": "请求一个 outputconfiguration 对象，客户端可以通过它配置输出设备。",
+            "summary": "提供用于配置输出的 outputconfiguration 对象"
+          }
+        },
+        "create_mode_list": {
+          "description": {
+            "type": "description",
+            "text": "有关详细信息，请参阅 kde_mode_list_v2 和 kde_output_configuration_v2.set_custom_modes 的描述。",
+            "summary": "创建自定义模式列表"
+          }
+        }
+      }
+    },
+    "kde_output_configuration_v2": {
+      "description": {
+        "type": "description",
+        "text": "outputconfiguration 是一个客户端特定的资源，可用于请求服务器对可用输出设备应用更改。\n\n客户端从注册表接收输出设备列表。当它想要应用新设置时，它从 outputmanagement 全局对象创建一个配置对象，通过此对象的 enable、scale、transform 和 mode 调用写入更改。然后它要求服务器以原子方式应用这些设置，例如通过 Linux 的 DRM 接口。\n\n服务器发回信号，指示新设置是已成功应用还是应用失败。outputdevice 对象在更改应用到硬件之后、服务器端发送 applied 事件之前更新。",
+        "summary": "配置单个输出设备"
+      },
+      "requests": {
+        "enable": {
+          "description": {
+            "type": "description",
+            "text": "将输出标记为启用或禁用。",
+            "summary": "启用或禁用输出"
+          }
+        },
+        "mode": {
+          "description": {
+            "type": "description",
+            "text": "为给定输出设置模式。",
+            "summary": "将输出设备切换到指定模式"
+          }
+        },
+        "transform": {
+          "description": {
+            "type": "description",
+            "text": "为给定输出设置变换。",
+            "summary": "变换输出设备"
+          }
+        },
+        "position": {
+          "description": {
+            "type": "description",
+            "text": "设置此输出设备的位置。(x,y) 描述输出在全局空间中的左上角，其中全局空间的原点 (0,0) 必须与最左侧输出的左上角对齐，如果这不能定义唯一的输出，则与顶部输出对齐。\n\n输出之间不能有间隙或重叠，即输出在水平、垂直或两个方向上堆叠。",
+            "summary": "在全局空间中定位输出"
+          }
+        },
+        "scale": {
+          "description": {
+            "type": "description",
+            "text": "设置此输出设备的缩放因子。",
+            "summary": "设置此输出的缩放因子"
+          }
+        },
+        "apply": {
+          "description": {
+            "type": "description",
+            "text": "请求服务器在服务器端将通过此 outputconfiguration 对象请求的属性更改应用到所有输出。\n\n输出配置只能应用一次。如果第二次调用 apply 请求，将发布 already_applied 协议错误。",
+            "summary": "将配置更改应用到所有输出设备"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "summary": "释放 outputconfiguration 对象"
+          }
+        },
+        "overscan": {
+          "description": {
+            "type": "description",
+            "text": "以百分比值设置此输出设备的过扫描值。",
+            "summary": "设置过扫描值"
+          }
+        },
+        "set_vrr_policy": {
+          "description": {
+            "type": "description",
+            "text": "设置合成器在使用可变刷新率时应采用的策略。",
+            "summary": "设置 VRR 策略"
+          }
+        },
+        "set_rgb_range": {
+          "description": {
+            "type": "description",
+            "text": "应使用全范围还是有限范围的颜色。",
+            "summary": "RGB 范围"
+          }
+        },
+        "set_primary_output": {
+          "description": {
+            "type": "description",
+            "summary": "选择使用哪个主输出"
+          }
+        },
+        "set_priority": {
+          "description": {
+            "type": "description",
+            "text": "设置输出在输出顺序列表中的位置，较小的值排在前面。列表没有特定的起始值，此值仅用于排序输出。\n\n输出顺序可用于将桌面环境组件分配到特定屏幕，详见 kde_output_order_v1 和 kde_output-device-v2。请注意，为了行为一致，priority 值在所有已启用的输出中必须是唯一的。",
+            "summary": "设置输出顺序"
+          }
+        },
+        "set_high_dynamic_range": {
+          "description": {
+            "type": "description",
+            "text": "设置输出是否应设置为 HDR 模式。",
+            "summary": "更改是否启用 HDR"
+          }
+        },
+        "set_sdr_brightness": {
+          "description": {
+            "type": "description",
+            "text": "以 nits 为单位设置标准动态范围内容的亮度。仅在输出处于 HDR 模式时有效。请注意，虽然值以 nits 为单位，但这不一定转化为屏幕上相同的亮度。",
+            "summary": "设置 SDR 内容的亮度"
+          }
+        },
+        "set_wide_color_gamut": {
+          "description": {
+            "type": "description",
+            "text": "输出是否应使用广色域。",
+            "summary": "更改是否使用广色域"
+          }
+        },
+        "set_auto_rotate_policy": {
+          "description": {
+            "type": "description",
+            "summary": "更改何时使用自动旋转"
+          }
+        },
+        "set_icc_profile_path": {
+          "description": {
+            "type": "description",
+            "summary": "更改使用的 ICC 配置文件"
+          }
+        },
+        "set_brightness_overrides": {
+          "description": {
+            "type": "description",
+            "summary": "覆盖屏幕亮度限制的元数据"
+          }
+        },
+        "set_sdr_gamut_wideness": {
+          "description": {
+            "type": "description",
+            "text": "这可用于提供用户基于许多现代 sRGB 屏幕上的默认体验所期望的 sRGB 应用程序应有的颜色。",
+            "summary": "描述 sRGB 应用程序假定的色域"
+          }
+        },
+        "set_color_profile_source": {
+          "description": {
+            "type": "description",
+            "summary": "合成器应在输出上使用哪个颜色配置文件来源"
+          }
+        },
+        "set_brightness": {
+          "description": {
+            "type": "description",
+            "text": "设置输出的亮度调节器。它不指定任何绝对值，而只是其他亮度值（如 sdr_brightness 和 brightness_metadata）之上的乘数。0 是最小亮度（不是完全黑暗），10000 是最大亮度。\n在版本 8 及以下的 HDR 激活时支持，在版本 9 及以上时在设备支持 \"brightness\" 能力时支持。",
+            "summary": "亮度乘数"
+          }
+        },
+        "set_color_power_tradeoff": {
+          "description": {
+            "type": "description",
+            "summary": "设置首选的颜色/功耗权衡"
+          }
+        },
+        "set_dimming": {
+          "description": {
+            "type": "description",
+            "text": "设置输出的调光乘数。这类似于亮度设置，但它仅用于临时设置，不是持久的，并且可能因显示器而有不同的实现方式。0 是最小调光因子（不是完全黑暗），10000 表示输出未被调光。\n\n仅在同时支持 \"brightness\" 能力时才支持此功能。",
+            "summary": "调光乘数"
+          }
+        },
+        "set_replication_source": {
+          "description": {
+            "type": "description",
+            "text": "设置输出设备应镜像其视口的源输出。",
+            "summary": "用于镜像的源输出"
+          }
+        },
+        "set_ddc_ci_allowed": {
+          "description": {
+            "type": "description",
+            "summary": "是否应使用 DDC/CI 控制亮度等"
+          }
+        },
+        "set_max_bits_per_color": {
+          "description": {
+            "type": "description",
+            "text": "这限制了发送到显示器的每种颜色的位数。",
+            "summary": "覆盖最大每色位数"
+          }
+        },
+        "set_edr_policy": {
+          "description": {
+            "type": "description",
+            "text": "当 EDR 启用时，合成器可以将背光提高到用户指定设置之上，以便在没有原生 HDR 支持的显示器上呈现 HDR 内容。这通常会带来更好的视觉效果，但也会增加电池使用量。",
+            "summary": "设置合成器何时可以应用 EDR"
+          }
+        },
+        "set_sharpness": {
+          "description": {
+            "type": "description",
+            "text": "这是输出的锐度调节器。0 表示禁用锐度，10000 表示最大锐度。",
+            "summary": "锐度强度"
+          }
+        },
+        "set_custom_modes": {
+          "description": {
+            "type": "description",
+            "text": "设置此输出的自定义模式列表。合成器将响应生成请求的模式并将其添加到输出（或删除不再在列表中的模式）。这对于超频显示器或解决损坏的 EDID 很有用。\n请注意，不保证任何自定义模式实际上能工作，甚至不保证不会损坏显示器（对于 CRT）。确保每个添加的模式适合其显示器完全是用户的责任。",
+            "summary": "设置自定义模式列表"
+          }
+        },
+        "set_auto_brightness": {
+          "description": {
+            "type": "description",
+            "summary": "是否启用自动亮度"
+          }
+        }
+      },
+      "events": {
+        "applied": {
+          "description": {
+            "type": "description",
+            "text": "在服务器成功应用更改后发送。",
+            "summary": "配置更改已应用"
+          }
+        },
+        "failed": {
+          "description": {
+            "type": "description",
+            "text": "如果服务器拒绝更改或应用失败则发送。",
+            "summary": "配置更改应用失败"
+          }
+        },
+        "failure_reason": {
+          "description": {
+            "type": "description",
+            "text": "描述应用输出配置失败的原因。仅在 failure 事件之前发送。",
+            "summary": "失败原因"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "type": "description",
+            "text": "这些错误可以在响应 kde_output_configuration_v2 请求时发出。",
+            "summary": "kde_output_configuration_v2 错误值"
+          },
+          "entries": {
+            "already_applied": {
+              "summary": "配置已被应用"
+            }
+          }
+        },
+        "vrr_policy": {
+          "description": {
+            "type": "description",
+            "text": "描述合成器何时可以使用可变刷新率。",
+            "summary": "描述 VRR 策略"
+          },
+          "entries": {}
+        },
+        "rgb_range": {
+          "description": {
+            "type": "description",
+            "text": "此输出应使用全范围还是有限范围的 RGB。",
+            "summary": "描述 RGB 范围策略"
+          },
+          "entries": {}
+        },
+        "auto_rotate_policy": {
+          "description": {
+            "type": "description",
+            "summary": "描述何时使用自动旋转"
+          },
+          "entries": {}
+        },
+        "color_profile_source": {
+          "description": {
+            "type": "description",
+            "summary": "合成器应在输出上使用哪个颜色配置文件来源"
+          },
+          "entries": {}
+        },
+        "color_power_tradeoff": {
+          "description": {
+            "type": "description",
+            "text": "合成器可以在性能、功耗和颜色准确性之间做很多事情。此设置描述了用户关于应在哪个方向进行权衡的高级偏好。",
+            "summary": "功耗与准确性之间的权衡"
+          },
+          "entries": {
+            "efficiency": {
+              "summary": "优先考虑效率和性能"
+            },
+            "accuracy": {
+              "summary": "优先考虑准确性"
+            }
+          }
+        },
+        "edr_policy": {
+          "description": {
+            "type": "description",
+            "summary": "合成器何时可以使用 EDR"
+          },
+          "entries": {}
+        }
+      }
+    },
+    "kde_mode_list_v2": {
+      "description": {
+        "type": "description",
+        "text": "此列表通过首先设置每个相关属性，然后调用 add_mode 来添加具有这些属性的模式来填充。例如，可以调用\n- set_resolution\n- set_refresh_rate\n- set_reduced_blanking\n- add_mode\n\nadd_mode 不会重置先前设置的属性，它们在对象被销毁之前有效。合成器可能对某些属性（如 reduced_blanking）有合理的默认值，但为了获得一致的结果，最好每次都设置每个已知属性。\n\n参数 resolution 和 refresh rate 是必需的，如果未设置，将发出 missing_parameters 错误。",
+        "summary": "自定义模式列表"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "summary": "销毁模式列表对象"
+          }
+        },
+        "add_mode": {
+          "description": {
+            "type": "description",
+            "summary": "将当前模式配置添加到列表"
+          }
+        },
+        "set_reduced_blanking": {
+          "description": {
+            "type": "description",
+            "text": "减少消隐是一种优化，可以通过减少 vblank 所需的时间来降低显示模式的带宽/时序要求。由于并非所有显示器都支持它，可能仍需要关闭它（如 CRT 需要完全消隐）。",
+            "summary": "模式是否应具有减少消隐"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "type": "description",
+            "text": "这些错误可以在响应 add_mode 请求时发出。",
+            "summary": "kde_mode_list_v2 错误值"
+          },
+          "entries": {
+            "missing_parameters": {
+              "summary": "未设置必需的参数"
+            }
+          }
+        }
+      }
+    }
+  }
+}

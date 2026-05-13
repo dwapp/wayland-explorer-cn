@@ -333,6 +333,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Staging,
         protocol: require('./protocols/color-management-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/color-management-v1.json'),
+        },
     },
     {
         id: 'color-representation-v1',
@@ -380,6 +383,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Experimental,
         protocol: require('./protocols/xx-input-method-v2.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xx-input-method-v2.json'),
+        },
     },
     {
         id: 'xx-session-management-v1',
@@ -661,6 +667,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WlrProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wlr-output-management-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wlr-output-management-unstable-v1.json'),
+        },
     },
     {
         id: 'wlr-output-power-management-unstable-v1',
@@ -817,6 +826,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-output-management-v2.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-output-management-v2.json'),
+        },
     },
     {
         id: 'kde-outputdevice',
@@ -834,6 +846,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-output-device-v2.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-output-device-v2.json'),
+        },
     },
     {
         id: 'kde-output-order-v1',
@@ -871,6 +886,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.KDEProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/kde-plasma-window-management.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/kde-plasma-window-management.json'),
+        },
     },
     {
         id: 'kde-primary-output-v1',
@@ -1288,6 +1306,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-personalization-manager-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-personalization-manager-v1.json'),
+        },
     },
     {
         id: 'treeland-shortcut-manager-v1',
@@ -1415,6 +1436,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.RiverProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/river-window-management-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/river-window-management-v1.json'),
+        },
     },
     {
         id: 'river-xkb-bindings-v1',
@@ -1502,6 +1526,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/aura-shell.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/aura-shell.json'),
+        },
         externalUrl:
             'https://source.chromium.org/chromium/chromium/src/+/master:components/exo/wayland/protocol/aura-shell.xml',
     },
@@ -1511,6 +1538,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/chrome-color-management.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/chrome-color-management.json'),
+        },
         externalUrl:
             'https://source.chromium.org/chromium/chromium/src/+/master:components/exo/wayland/protocol/chrome-color-management.xml',
     },
@@ -1556,6 +1586,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/tizen-extension.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/tizen-extension.json'),
+        },
         externalUrl:
             'https://review.tizen.org/git/?p=platform/core/uifw/wayland-extension.git;a=blob;f=protocol/tizen-extension.xml;h=7bacfa6dbf1f54a74f83fe3a27bca38419397dde;hb=refs/heads/accepted/tizen_common',
     },

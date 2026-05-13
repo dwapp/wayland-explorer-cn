@@ -1,0 +1,1310 @@
+{
+  "interfaces": {
+    "zaura_shell": {
+      "description": {
+        "type": "description",
+        "text": "暴露 aura shell 能力的全局接口，用于为 wl_surface 对象实例化接口扩展。该扩展接口随后允许客户端使用 aura shell 特定的功能。",
+        "summary": "aura_shell"
+      },
+      "requests": {
+        "get_aura_surface": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 wl_surface 实例化接口扩展，以提供 aura shell 功能。如果给定的 wl_surface 未关联 shell surface，则会引发 shell_surface_missing 协议错误。",
+            "summary": "为 aura shell 扩展 surface 接口"
+          }
+        },
+        "get_aura_output": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 wl_output 实例化接口扩展，以提供 aura shell 功能。",
+            "summary": "为 aura shell 扩展 output 接口"
+          }
+        },
+        "surface_submission_in_pixel_coordinates": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 通知服务器在提交 surface 时，此客户端不会使用 wl_surface_set_buffer_scale 来报告缩放比例，也不会通过 vp_viewporter 应用缩放。相反，服务器应应用适当的缩放变换以使提交的 buffer 正确合成。",
+            "summary": "surface 将以像素坐标提交"
+          }
+        },
+        "get_aura_toplevel_for_xdg_toplevel": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 xdg toplevel 接口检索 aura toplevel 接口",
+            "summary": "获取 aura toplevel"
+          }
+        },
+        "get_aura_popup_for_xdg_popup": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 xdg popup 接口检索 aura popup 接口",
+            "summary": "获取 aura popup"
+          }
+        },
+        "release": {
+          "description": {
+            "type": "description",
+            "text": "客户端使用此请求可以告诉服务器它将不再使用 zaura_shell 对象。这不会影响任何其他对象。\n\n此处命名为 \"release\" 是因为 \"destroy\" 是用于释放 wl_proxy 对象的特殊命名函数。将其命名为 \"destroy\" 会在低版本主机上运行时导致编组错误。如果我们迁移到 aura-shell v2，此处所有的 \"release\" 请求应重命名为 \"destroy\"。",
+            "summary": "释放 zaura_shell 对象"
+          }
+        }
+      },
+      "events": {
+        "layout_mode": {
+          "description": {
+            "type": "description",
+            "text": "发送服务器使用的 layout_mode。",
+            "summary": "发送 layout_mode"
+          }
+        },
+        "bug_fix": {
+          "description": {
+            "type": "description",
+            "text": "发送在 exo 服务器上修复的 bug 的 monorail ID，客户端可用于控制功能。",
+            "summary": "发送 bug 修复 ID"
+          }
+        },
+        "desks_changed": {
+          "description": {
+            "type": "description",
+            "text": "当全局桌面状态发生变化时发出通知。此事件在桌面名称更改、桌面添加/删除或桌面重新排序时发出。\"desk_names\" 参数包含以 null 结尾的字符串集合作为桌面名称。",
+            "summary": "发送桌面名称"
+          }
+        },
+        "desk_activation_changed": {
+          "description": {
+            "type": "description",
+            "text": "当活动桌面发生变化时发出通知。",
+            "summary": "发送活动桌面的索引"
+          }
+        },
+        "activated": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端活动 surface 已更改。",
+            "summary": "活动 surface 已更改"
+          }
+        },
+        "set_overview_mode": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端服务器已进入概览模式。概览模式显示与当前桌面关联的所有应用窗口。",
+            "summary": "进入概览模式"
+          }
+        },
+        "unset_overview_mode": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端服务器已退出概览模式。",
+            "summary": "退出概览模式"
+          }
+        },
+        "compositor_version": {
+          "description": {
+            "type": "description",
+            "text": "发送 Exo compositor 版本信息。",
+            "summary": "发送服务器版本"
+          }
+        },
+        "all_bug_fixes_sent": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端已在 exo 服务器上修复的所有 bug ID 已发送完毕。Bug 修复 ID 通过 `bug_fix` 事件逐个发送，而非数组。此事件用于确认所有 ID 已发送完毕。",
+            "summary": "所有 bug 修复 ID 发送完毕"
+          }
+        },
+        "window_corners_radii": {
+          "description": {
+            "type": "description",
+            "text": "以 dips 为单位向客户端发送窗口每个圆角的半径。",
+            "summary": "发送窗口每个圆角的半径"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "aura_surface_exists": {
+              "summary": "该 surface 已关联 aura surface 对象"
+            },
+            "aura_output_exists": {
+              "summary": "该 output 已关联 aura output 对象"
+            }
+          }
+        },
+        "layout_mode": {
+          "description": {
+            "type": "description",
+            "text": "指定服务器的窗口布局模式。",
+            "summary": "布局模式"
+          },
+          "entries": {
+            "windowed": {
+              "summary": "多窗口"
+            },
+            "tablet": {
+              "summary": "平板限制模式"
+            }
+          }
+        }
+      }
+    },
+    "zaura_surface": {
+      "description": {
+        "type": "description",
+        "text": "对 wl_surface 对象的附加接口，允许客户端访问 aura shell 的 surface 特定功能。",
+        "summary": "aura shell 的 wl_surface 接口"
+      },
+      "requests": {
+        "set_frame": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 建议 surface 使用特定帧。自 M105 起弃用。请参阅 zaura_toplevel 和 zaura_popup 上的 set_decoration 方法。",
+            "summary": "为 surface 请求帧"
+          }
+        },
+        "set_parent": {
+          "description": {
+            "type": "description",
+            "text": "设置此 surface 的 \"父级\"。\"x\" 和 \"y\" 参数指定 surface 相对于父级的初始位置。",
+            "summary": "设置此 surface 的父级"
+          }
+        },
+        "set_frame_colors": {
+          "description": {
+            "type": "description",
+            "text": "设置帧颜色。必须在初始 commit 之前设置，否则后续请求可能不会被执行。",
+            "summary": "设置此 surface 的帧颜色"
+          }
+        },
+        "set_startup_id": {
+          "description": {
+            "type": "description",
+            "text": "设置启动 ID。",
+            "summary": "设置此 surface 的启动 ID"
+          }
+        },
+        "set_application_id": {
+          "description": {
+            "type": "description",
+            "text": "设置应用程序 ID。",
+            "summary": "设置此 surface 的应用程序 ID"
+          }
+        },
+        "set_client_surface_id": {
+          "description": {
+            "type": "description",
+            "text": "已弃用。请使用 set_client_surface_str_id 代替。\n设置由客户端分配的 surface 标识符。",
+            "summary": "设置此 surface 的客户端 surface ID"
+          }
+        },
+        "set_occlusion_tracking": {
+          "description": {
+            "type": "description",
+            "text": "在此 surface 上设置遮挡跟踪。当此 surface 的遮挡量发生变化时，客户端将收到新的遮挡比例更新。",
+            "summary": "设置遮挡跟踪区域"
+          }
+        },
+        "unset_occlusion_tracking": {
+          "description": {
+            "type": "description",
+            "text": "取消此 surface 的遮挡跟踪。",
+            "summary": "取消遮挡跟踪区域"
+          }
+        },
+        "activate": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 使此窗口成为活动窗口。这通常意味着将此 surface 重新堆叠到前台。如果 compositor 认为客户端行为不当，可以忽略此请求。通常此请求仅在响应某些用户驱动事件时才会被执行，例如执行应用程序或在已存在的窗口中打开文件。",
+            "summary": "指示此窗口希望成为活动窗口"
+          }
+        },
+        "draw_attention": {
+          "description": {
+            "type": "description",
+            "text": "在不改变用户焦点的情况下吸引对此 surface 的注意。这通常意味着动画化窗口装饰或任务栏图标。如果 compositor 认为合适，仍可忽略此请求，但与 draw_focus 不同的是，这些请求预计来自后台任务，更可能被执行。",
+            "summary": "指示此窗口需要用户的部分注意力"
+          }
+        },
+        "set_fullscreen_mode": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 使用 toplevel 接口中的 set_fullscreen_mode。\n建议窗口系统在此 surface 进入全屏时的行为方式。不会使 surface 进入全屏。\n\n通常默认模式为 \"沉浸式\"。",
+            "summary": "设置 surface 在全屏模式下的行为"
+          }
+        },
+        "set_client_surface_str_id": {
+          "description": {
+            "type": "description",
+            "text": "设置由客户端分配的 surface 标识符。",
+            "summary": "设置此 surface 的客户端 surface ID"
+          }
+        },
+        "set_server_start_resize": {
+          "description": {
+            "type": "description",
+            "text": "建议 surface 使用客户端装饰，但由服务器决定何时何地开始调整大小。服务器还可以应用视觉效果来指示调整大小操作正在进行中。",
+            "summary": "为 surface 请求服务器端阴影"
+          }
+        },
+        "intent_to_snap": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 使用 zaura_toplevel 上的 intent_to_snap。\n通知（或告知）服务器客户端有吸附窗口的意图。要告知不再愿意吸附，请发送 'none'。",
+            "summary": "客户端有意吸附 surface"
+          }
+        },
+        "set_snap_left": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 使用 zaura_toplevel 上的 set_snap_primary。\n请求将 surface 吸附到左侧。",
+            "summary": "将 surface 吸附到左侧"
+          }
+        },
+        "set_snap_right": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 使用 zaura_toplevel 上的 set_snap_secondary。\n请求将 surface 吸附到右侧。",
+            "summary": "将 surface 吸附到右侧"
+          }
+        },
+        "unset_snap": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 使用 zaura_toplevel 上的 unset_snap。\n请求重置 surface 的吸附状态。",
+            "summary": "取消 surface 的吸附状态"
+          }
+        },
+        "set_window_session_id": {
+          "description": {
+            "type": "description",
+            "text": "为 surface 设置窗口会话 ID。",
+            "summary": "设置 surface 窗口会话 ID"
+          }
+        },
+        "set_can_go_back": {
+          "description": {
+            "type": "description",
+            "text": "设置 surface 可以根据其导航列表返回。这允许服务器通过在系统范围的返回手势时最小化窗口来做出反应。",
+            "summary": "设置返回手势时最小化行为"
+          }
+        },
+        "unset_can_go_back": {
+          "description": {
+            "type": "description",
+            "text": "取消设置 surface 可以根据其导航列表返回。参见上文。",
+            "summary": "取消返回手势时最小化行为"
+          }
+        },
+        "set_pip": {
+          "description": {
+            "type": "description",
+            "text": "请求将 surface 设置为画中画（PIP）模式。",
+            "summary": "为 surface 设置画中画"
+          }
+        },
+        "unset_pip": {
+          "description": {
+            "type": "description",
+            "text": "请求取消 surface 的画中画（PIP）模式。",
+            "summary": "取消 surface 的画中画"
+          }
+        },
+        "set_aspect_ratio": {
+          "description": {
+            "type": "description",
+            "text": "设置 surface 的宽高比。",
+            "summary": "为 surface 设置宽高比"
+          }
+        },
+        "move_to_desk": {
+          "description": {
+            "type": "description",
+            "text": "如果 |index| 等于 -1，请求服务器切换客户端是否在所有工作区可见。\n如果 |index| 不是 -1，请求服务器将客户端移动到 |index| 处的桌面。",
+            "summary": "移动到桌面"
+          }
+        },
+        "set_initial_workspace": {
+          "description": {
+            "type": "description",
+            "text": "如果 |initial_workspace| 等于 '-1'，窗口将被恢复并在所有工作区可见；否则，设置初始工作区以将窗口恢复到相应的工作区。这不是双缓冲的，必须在附加 buffer 之前设置。",
+            "summary": "恢复时的初始工作区"
+          }
+        },
+        "set_pin": {
+          "description": {
+            "type": "description",
+            "text": "请求固定窗口，这意味着系统不允许用户离开该窗口，直到满足退出条件。\n\n这是一个请求将窗口固定，使用户无法访问任何其他窗口/应用程序。有两种模式：\nA. trusted 为 0 - 限制较少，允许用户通过预定义的身份验证方式退出窗口。\nB. trusted 不为 0，此时受信任的应用程序正在锁定系统并需要解锁。这用于例如学校考试。",
+            "summary": "固定窗口（受信任或不受信任）"
+          }
+        },
+        "unset_pin": {
+          "description": {
+            "type": "description",
+            "text": "请求允许用户离开先前固定的窗口。\n\n这是一个请求取消固定先前固定的窗口。无论窗口是以受信任状态锁定还是不受信任状态锁定，都无关紧要。",
+            "summary": "取消固定窗口"
+          }
+        },
+        "release": {
+          "description": {
+            "type": "description",
+            "text": "销毁 zaura_surface 对象。当角色从 wl_surface 取消映射时，客户端应销毁此对象。\n\n有关析构函数命名，请参阅 zaura_shell.release。",
+            "summary": "销毁 zaura_surface"
+          }
+        },
+        "show_tooltip": {
+          "description": {
+            "type": "description",
+            "text": "在服务器端显示工具提示。\n`x` 和 `y` 指定工具提示在 surface 局部坐标中的位置。\n`hide_delay` 和 `show_delay` 指定显示/隐藏工具提示前的等待时间，单位为毫秒。",
+            "summary": "显示工具提示窗口"
+          }
+        },
+        "hide_tooltip": {
+          "description": {
+            "type": "description",
+            "text": "隐藏由同一客户端在服务器端创建的工具提示。即使没有工具提示窗口可隐藏，也可以调用此方法。",
+            "summary": "隐藏工具提示窗口"
+          }
+        },
+        "set_accessibility_id": {
+          "description": {
+            "type": "description",
+            "text": "为 surface 设置无障碍窗口 ID。负数将从 surface 中移除现有的无障碍 ID。",
+            "summary": "为 surface 设置无障碍 ID"
+          }
+        }
+      },
+      "events": {
+        "occlusion_changed": {
+          "description": {
+            "type": "description",
+            "text": "当此 surface 的遮挡量发生变化时发出通知。遮挡更新以 0 到 1 的定点数发送，表示遮挡比例。",
+            "summary": "遮挡变化通知"
+          }
+        },
+        "lock_frame_normal": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端将窗口锁定在正常或还原状态。当窗口被锁定时，窗口框架应看起来处于还原状态，但实际上并非如此。锁定发生在拖动最大化窗口时。",
+            "summary": "通知客户端服务器有意将窗口锁定在正常或还原状态"
+          }
+        },
+        "unlock_frame_normal": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端解锁窗口（如果先前已锁定）。解锁发生在拖动最大化窗口时。",
+            "summary": "通知客户端服务器有意解锁窗口的正常或还原状态"
+          }
+        },
+        "occlusion_state_changed": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端窗口的遮挡状态已更改。客户端只有在先前通过 set_occlusion_tracking 为特定 surface 请求遮挡跟踪时才会收到这些消息。",
+            "summary": "通知客户端遮挡状态已更改"
+          }
+        },
+        "desk_changed": {
+          "description": {
+            "type": "description",
+            "text": "当窗口的桌面状态发生变化时发出通知。当窗口被移动到另一个桌面或其分配到所有桌面的状态发生变化时，会发出此事件。",
+            "summary": "窗口桌面状态已更改"
+          }
+        },
+        "start_throttle": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端开始在 surface 上进行节流。",
+            "summary": "开始在 surface 上节流"
+          }
+        },
+        "end_throttle": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端结束在 surface 上的节流。",
+            "summary": "结束在 surface 上的节流"
+          }
+        },
+        "tooltip_shown": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端工具提示已显示并带有状态。\n`x` 和 `y` 指定工具提示在 surface 局部坐标中的位置。",
+            "summary": "工具提示已在服务器端显示"
+          }
+        },
+        "tooltip_hidden": {
+          "description": {
+            "type": "description",
+            "text": "通知客户端工具提示已隐藏。",
+            "summary": "工具提示已在服务器端隐藏"
+          }
+        }
+      },
+      "enums": {
+        "frame_type": {
+          "description": {
+            "type": "description",
+            "text": "可用于装饰 surface 的帧类型。",
+            "summary": "不同的帧类型"
+          },
+          "entries": {
+            "none": {
+              "summary": "无帧"
+            },
+            "normal": {
+              "summary": "带阴影的标题栏"
+            },
+            "shadow": {
+              "summary": "仅阴影"
+            }
+          }
+        },
+        "occlusion_change_reason": {
+          "description": {
+            "type": "description",
+            "text": "描述遮挡变化原因的枚举。由用户操作引起的遮挡变化可能包括用户移动窗口、改变遮挡、或打开/关闭窗口改变遮挡等情况。",
+            "summary": "遮挡变化原因"
+          },
+          "entries": {
+            "user_action": {
+              "summary": "由用户操作引起的遮挡变化"
+            }
+          }
+        },
+        "fullscreen_mode": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 此 surface 进入全屏时可能的窗口系统行为。",
+            "summary": "指定 surface 在全屏模式下的行为"
+          },
+          "entries": {
+            "immersive": {
+              "summary": "用户可以通过指向或滑过屏幕边缘来访问系统 UI（如任务栏和窗口框架）"
+            },
+            "plain": {
+              "summary": "用户无法使用鼠标/触摸访问系统 UI"
+            }
+          }
+        },
+        "snap_direction": {
+          "description": {
+            "type": "description",
+            "text": "Surface 吸附方向。",
+            "summary": "surface 吸附方向"
+          },
+          "entries": {
+            "none": {
+              "summary": ""
+            },
+            "left": {
+              "summary": ""
+            },
+            "right": {
+              "summary": ""
+            }
+          }
+        },
+        "occlusion_state": {
+          "description": {
+            "type": "description",
+            "text": "描述 surface 的遮挡状态。",
+            "summary": "surface 遮挡状态"
+          },
+          "entries": {
+            "unknown": {
+              "summary": "未跟踪 surface 的遮挡状态"
+            },
+            "visible": {
+              "summary": "surface 可见"
+            },
+            "occluded": {
+              "summary": "surface 被遮挡"
+            },
+            "hidden": {
+              "summary": "surface 不可见"
+            }
+          }
+        },
+        "tooltip_trigger": {
+          "description": {
+            "type": "description",
+            "text": "描述触发工具提示的方式。",
+            "summary": "工具提示触发类型"
+          },
+          "entries": {
+            "cursor": {
+              "summary": "由光标触发"
+            },
+            "keyboard": {
+              "summary": "由键盘触发"
+            }
+          }
+        }
+      }
+    },
+    "zaura_output": {
+      "description": {
+        "type": "description",
+        "text": "对 wl_output 对象的附加接口，允许客户端访问 aura shell 的 output 特定功能。",
+        "summary": "aura shell 的 wl_output 接口"
+      },
+      "requests": {
+        "release": {
+          "description": {
+            "type": "description",
+            "text": "销毁此 zaura_shell 对象。\n\n当由此 zaura_shell 对象实例创建的 zaura_surface 仍然存在时，销毁已绑定的 zaura_shell 对象是非法的，并将导致协议错误。\n\n有关析构函数命名，请参阅 zaura_shell.release。",
+            "summary": "销毁 zaura_output"
+          }
+        }
+      },
+      "events": {
+        "scale": {
+          "description": {
+            "type": "description",
+            "text": "scale 事件描述输出的可用缩放比例。\n\n绑定到 output 对象时发送该事件，始终会有一个缩放比例，即当前缩放比例。如果输出更改缩放比例，将再次发送该事件，表示当前的缩放比例。换句话说，当前缩放比例始终是最后收到的带有 current 标志的缩放比例。",
+            "summary": "公布输出的可用缩放比例"
+          }
+        },
+        "connection": {
+          "description": {
+            "type": "description",
+            "text": "connection 事件描述输出的连接方式。\n\n绑定到 output 对象时发送该事件。",
+            "summary": "公布输出的连接信息"
+          }
+        },
+        "device_scale_factor": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述输出的设备特定缩放因子。\n\n设备特定缩放因子在输出的生命周期内不会改变。它不像 wl_output 接口提供的缩放因子那样仅限于整数值。通过将此设备缩放因子与当前输出缩放相结合，可以确定 compositor 使用的精确内容缩放。\n\n绑定到 output 对象时发送该事件。",
+            "summary": "公布输出的设备缩放因子"
+          }
+        },
+        "insets": {
+          "description": {
+            "type": "description",
+            "text": "此事件以逻辑屏幕坐标描述输出的内边距，据此可以计算工作区域。\n\n此事件在 wl_output.done 之前发送，客户端将在之后应用更改。",
+            "summary": "公布输出的工作区域内边距"
+          }
+        },
+        "logical_transform": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述输出的逻辑变换。wl_output.geometry 的变换对应于显示器面板的旋转，而逻辑变换对应于显示器的逻辑旋转。\n\n此事件在 wl_output.done 之前发送，客户端将在之后应用更改。",
+            "summary": "公布输出的逻辑变换"
+          }
+        },
+        "display_id": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 ChromeOS 分配给每个显示器的 64 位显示 ID。该值是不透明的，不应进行解释。",
+            "summary": "公布输出的显示 ID"
+          }
+        },
+        "activated": {
+          "description": {
+            "type": "description",
+            "text": "通知此输出现在是活动输出。通常在没有特定边界的情况下创建新窗口时用作目标显示器。",
+            "summary": "新窗口的目标显示器"
+          }
+        }
+      },
+      "enums": {
+        "scale_property": {
+          "description": {
+            "type": "description",
+            "text": "这些标志描述输出缩放的属性。用于 scale 事件的标志位域中。",
+            "summary": "缩放信息"
+          },
+          "entries": {
+            "current": {
+              "summary": "表示这是当前缩放比例"
+            },
+            "preferred": {
+              "summary": "表示这是首选缩放比例"
+            }
+          }
+        },
+        "scale_factor": {
+          "entries": {}
+        },
+        "connection_type": {
+          "entries": {}
+        }
+      }
+    },
+    "zaura_toplevel": {
+      "description": {
+        "type": "description",
+        "text": "对 toplevel shell 的接口，允许客户端访问 shell 特定功能。",
+        "summary": "aura shell 的 toplevel shell 接口"
+      },
+      "requests": {
+        "set_orientation_lock": {
+          "description": {
+            "type": "description",
+            "text": "当此 surface 处于全屏状态时请求特定的方向行为。",
+            "summary": "为远程 surface 设置方向锁定"
+          }
+        },
+        "surface_submission_in_pixel_coordinates": {
+          "description": {
+            "type": "description",
+            "text": "通知服务器在提交此 surface 时，此客户端不会使用 wl_surface_set_buffer_scale 来报告缩放比例，也不会通过 vp_viewporter 应用缩放。相反，服务器应应用适当的缩放变换以使提交的 buffer 正确合成。",
+            "summary": "surface 将以像素坐标提交"
+          }
+        },
+        "set_supports_screen_coordinates": {
+          "description": {
+            "type": "description",
+            "text": "请求此操作将启用与 aura_toplevel 关联的 surface 中的屏幕坐标，包括子 surface 和将此 toplevel 作为父级添加的弹出窗口。应在首次 commit 之前设置。",
+            "summary": "在窗口边界中启用屏幕坐标"
+          }
+        },
+        "set_window_bounds": {
+          "description": {
+            "type": "description",
+            "text": "以 DP 屏幕坐标请求 surface 的新位置和边界。大小将应用于 set_geometry 中使用的可见边界。输出是 compositor 用于确定窗口应移动到哪个输出的提示。如果输出为 null，compositor 应仅根据给定边界做出决定。这些参数只是一个请求，compositor 可能会忽略、根据窗口管理器施加的规则调整大小和位置，或为将来的操作保留它。例如，compositor 不允许位置超出输出范围，或者如果 toplevel surface 处于最大化状态，compositor 可能只存储它，并在取消最大化时使用它。",
+            "summary": "设置窗口大小和位置"
+          }
+        },
+        "set_restore_info": {
+          "description": {
+            "type": "description",
+            "text": "请求新创建的浏览器窗口的会话 ID 和恢复 ID。设置 compositor 用于在创建时恢复 toplevel surface 状态（如窗口位置、窗口状态）的信息。这不是双缓冲的，必须在发送首次 commit 之前设置。",
+            "summary": "设置会话 ID 和恢复 ID"
+          }
+        },
+        "set_system_modal": {
+          "description": {
+            "type": "description",
+            "text": "请求 toplevel surface 成为系统模态。compositor 将阻止其他窗口接收事件。如果有多个系统模态 surface，compositor 将决定哪个接收事件。",
+            "summary": "使窗口成为系统模态"
+          }
+        },
+        "unset_system_modal": {
+          "description": {
+            "type": "description",
+            "text": "请求取消 toplevel surface 的系统模态状态。compositor 将允许其他窗口接收事件。",
+            "summary": "取消窗口系统模态状态"
+          }
+        },
+        "set_restore_info_with_window_id_source": {
+          "description": {
+            "type": "description",
+            "text": "请求窗口的会话 ID 和恢复 ID。设置 compositor 用于在创建时恢复 toplevel surface 状态（如窗口位置、窗口状态）的信息。这不是双缓冲的，必须在发送首次 commit 之前设置。这与 set_restore_info 不同，用于创建多个与 restore_id_source 关联的窗口的客户端。",
+            "summary": "设置会话 ID 和恢复窗口 ID 来源"
+          }
+        },
+        "set_decoration": {
+          "description": {
+            "type": "description",
+            "text": "允许客户端为 zaura_toplevel 请求特定装饰。服务器不必遵守此请求。有关可用选项，请参阅 decoration_type。必须在首次 commit 之前设置，否则后续请求可能不会被执行。自 M105 起可用。",
+            "summary": "为 surface 请求装饰"
+          }
+        },
+        "release": {
+          "description": {
+            "type": "description",
+            "text": "销毁此 zaura_toplevel 对象。当角色从 wl_surface 取消映射时，客户端应调用销毁。\n\n有关析构函数命名，请参阅 zaura_shell.release。",
+            "summary": "销毁 zaura_toplevel"
+          }
+        },
+        "set_float": {
+          "description": {
+            "type": "description",
+            "text": "[已弃用] 使用 set_float_to_location。\n这是一个将 surface 置于其他 surface 之上的请求。",
+            "summary": "将 surface 浮动在顶部"
+          }
+        },
+        "unset_float": {
+          "description": {
+            "type": "description",
+            "text": "请求重置 surface 的浮动状态。",
+            "summary": "取消 surface 浮动"
+          }
+        },
+        "set_z_order": {
+          "description": {
+            "type": "description",
+            "text": "设置 toplevel surface 的 z 序。有关可用选项，请参阅 z_order_level。",
+            "summary": "设置窗口的 z 序"
+          }
+        },
+        "set_origin": {
+          "description": {
+            "type": "description",
+            "text": "以设备无关像素（DP）请求 surface 的新位置，相对于给定输出的左上角。\n\n空输出表示当前包含 surface 的任何输出。\n\n这些参数只是一个请求，compositor 可能会忽略它们，由于窗口管理器施加的规则而调整它们，或为将来的操作保留它们。例如，compositor 不允许位置超出输出范围；或者如果 toplevel surface 处于最大化状态，compositor 可能只存储它，并在取消最大化时使用它。",
+            "summary": "以 DP 为单位设置窗口位置"
+          }
+        },
+        "activate": {
+          "description": {
+            "type": "description",
+            "text": "激活此窗口。这相当于将窗口带到前台。如果 compositor 认为客户端行为不当，可以忽略此请求。",
+            "summary": "激活窗口"
+          }
+        },
+        "deactivate": {
+          "description": {
+            "type": "description",
+            "text": "停用此窗口。这相当于请求该窗口不成为前台窗口。确切行为由 compositor 定义。如果 compositor 认为客户端行为不当，可以忽略此请求。",
+            "summary": "停用窗口"
+          }
+        },
+        "set_fullscreen_mode": {
+          "description": {
+            "type": "description",
+            "text": "建议窗口管理器在此 surface 进入全屏时的行为方式。不会使 surface 进入全屏。\n\n确切地说，如果 surface 尚未处于全屏状态，切换模式从客户端角度来看不会立即产生影响，但会改变下次请求使 surface 进入全屏时的行为。\n如果 surface 已经处于全屏状态，则此请求会立即生效，在普通和沉浸式全屏模式之间切换。",
+            "summary": "设置 surface 在全屏模式下的行为"
+          }
+        },
+        "set_scale_factor": {
+          "description": {
+            "type": "description",
+            "text": "客户端有一个与每个 zaura toplevel 关联的 32 位浮点缩放因子。此缩放因子必须精确传播到 exo。为此，我们 reinterpret_cast 为 32 位 uint，稍后再转换回 float。这是因为 wayland 不支持浮点数的原生传输。由于不同的 CPU 架构可能对 IEEE 754 浮点数使用不同的字节序表示，此协议隐式假设调用方和接收方是同一台机器。为避免冗余消息，此请求仅需在 zaura toplevel 缩放因子更改时调用一次。这是双缓冲状态，将在下一次 commit 中应用。",
+            "summary": "允许客户端为将来的 buffer commit 设置缩放因子"
+          }
+        },
+        "set_snap_primary": {
+          "description": {
+            "type": "description",
+            "text": "请求将 surface 吸附到左侧或顶部（如果是主布局），否则吸附到右侧或底部。",
+            "summary": "将 surface 吸附到主吸附位置"
+          }
+        },
+        "set_snap_secondary": {
+          "description": {
+            "type": "description",
+            "text": "请求将 surface 吸附到右侧或底部（如果是主布局），否则吸附到左侧或顶部。",
+            "summary": "将 surface 吸附到次吸附位置"
+          }
+        },
+        "intent_to_snap": {
+          "description": {
+            "type": "description",
+            "text": "通知（或告知）服务器客户端有吸附窗口的意图。要告知不再愿意吸附，请发送 'none'。",
+            "summary": "客户端有意吸附 surface"
+          }
+        },
+        "unset_snap": {
+          "description": {
+            "type": "description",
+            "text": "请求取消窗口的吸附状态。",
+            "summary": "取消窗口吸附"
+          }
+        },
+        "set_persistable": {
+          "description": {
+            "type": "description",
+            "text": "请求窗口的可持久化状态。在窗口属性中设置窗口的可持久化状态。应在首次 commit 之前调用。",
+            "summary": "描述窗口是否可持久化"
+          }
+        },
+        "set_shape": {
+          "description": {
+            "type": "description",
+            "text": "以 DP 为单位设置 toplevel 窗口的形状。传入 NULL 将重置窗口的形状。\n\n此方法仅应用于支持现有的（已弃用的）Chrome Apps SetShape API，不应用于任何其他目的。",
+            "summary": "以 DP 为单位设置 surface 的形状"
+          }
+        },
+        "set_top_inset": {
+          "description": {
+            "type": "description",
+            "text": "为 surface 设置顶部内边距。这表示标题栏高度，应为非负值。",
+            "summary": "为 surface 设置顶部内边距"
+          }
+        },
+        "ack_rotate_focus": {
+          "description": {
+            "type": "description",
+            "text": "如果焦点已成功在 surface 内部的 UI 元素之间旋转，客户端回复 'handled'。如果焦点未旋转，客户端回复 'not_handled'。服务器可使用此信息将焦点移动到下一个可聚焦的 surface。\n\n请注意，客户端处理中的延迟可能导致服务器收到过时的确认。",
+            "summary": "旋转焦点事件的状态"
+          }
+        },
+        "set_can_maximize": {
+          "description": {
+            "type": "description",
+            "text": "向窗口管理器提示 toplevel surface 可以最大化。",
+            "summary": "提示 toplevel surface 可以最大化"
+          }
+        },
+        "unset_can_maximize": {
+          "description": {
+            "type": "description",
+            "text": "向窗口管理器提示 toplevel surface 不应被最大化。请注意，窗口管理器仍可能请求客户端最大化。在这种情况下，客户端应尊重窗口管理器的请求并最大化。之后可以取消最大化状态。",
+            "summary": "提示 toplevel surface 不应被最大化"
+          }
+        },
+        "set_can_fullscreen": {
+          "description": {
+            "type": "description",
+            "text": "向窗口管理器提示 toplevel surface 可以进入全屏。",
+            "summary": "提示 toplevel surface 可以进入全屏"
+          }
+        },
+        "unset_can_fullscreen": {
+          "description": {
+            "type": "description",
+            "text": "向窗口管理器提示 toplevel surface 不应进入全屏。请注意，窗口管理器仍可能请求客户端进入全屏。在这种情况下，客户端应尊重窗口管理器的请求并进入全屏。之后可以退出全屏。",
+            "summary": "提示 toplevel surface 不应进入全屏"
+          }
+        },
+        "set_float_to_location": {
+          "description": {
+            "type": "description",
+            "text": "这是一个将 surface 置于其他 surface 之上的请求。",
+            "summary": "将 surface 浮动在顶部"
+          }
+        },
+        "set_window_corner_radii": {
+          "description": {
+            "type": "description",
+            "text": "客户端以 DP（设备无关像素）为单位指定要应用于窗口的每个圆角的半径。\n\n窗口圆角半径是双缓冲的，将在调用相应 wl_surface 的 wl_surface.commit 时应用。\n\n注意：圆角半径会影响 wl_surface 树，包括子 surface。一旦调用此协议，surface 将无法设置自己的圆角边界，因为圆角窗口边界将应用于整个 surface 树。",
+            "summary": "请求为 surface 的窗口应用圆角"
+          }
+        },
+        "set_shadow_corner_radii": {
+          "description": {
+            "type": "description",
+            "text": "客户端以设备无关像素（DP）为单位指定要应用于与 aura toplevel surface 关联的阴影的每个圆角半径。\n\n阴影圆角半径是双缓冲的，将在调用相应 wl_surface 的 wl_surface.commit 时应用。",
+            "summary": "请求为 surface 的阴影应用圆角"
+          }
+        }
+      },
+      "events": {
+        "configure": {
+          "description": {
+            "type": "description",
+            "text": "配置更改，还包括以屏幕坐标表示的窗口原点。",
+            "summary": "建议 surface 更改"
+          }
+        },
+        "origin_change": {
+          "description": {
+            "type": "description",
+            "text": "当窗口原点发生变化时发送的通知。与 configure 不同，这不意味着客户端需要调整大小。值以屏幕坐标表示。",
+            "summary": "窗口原点更改"
+          }
+        },
+        "configure_raster_scale": {
+          "description": {
+            "type": "description",
+            "text": "设置此窗口的光栅缩放比例。应在 configure 事件序列期间调用。为此，我们 reinterpret_cast 为 32 位 uint，稍后再转换回 float。这是因为 wayland 不支持浮点数的原生传输。由于不同的 CPU 架构可能对 IEEE 754 浮点数使用不同的字节序表示，此协议隐式假设调用方和接收方是同一台机器。",
+            "summary": "在 configure 期间设置光栅缩放比例"
+          }
+        },
+        "rotate_focus": {
+          "description": {
+            "type": "description",
+            "text": "在 toplevel 窗口内旋转焦点。窗口必须将其可聚焦视图排序为稳定且线性可遍历的顺序。在旋转焦点之前，surface 应已被激活并拥有键盘焦点。如果 surface 未被激活或没有键盘焦点，服务器应首先激活并为窗口输入键盘焦点。事件顺序示例可能是：\n\n1. 激活 surface\n2. 输入键盘焦点\n3. 旋转焦点\n\n如果窗口未被激活或没有键盘焦点，客户端应回复 \"not handled\" 且不执行任何操作。\n\n要开始新的旋转序列，服务器将 \"restart\" 参数设置为 true。如果 \"restart\" 参数为 true，窗口应将焦点设置在给定方向的第一个 UI 元素上，不执行任何旋转。\n\n客户端应通过 \"ack_rotate_focus\" 请求中的 \"handled\" 字段回复旋转是否成功。客户端应在确认消息中传递事件序列号和方向。",
+            "summary": "在窗口内旋转焦点"
+          }
+        },
+        "overview_change": {
+          "description": {
+            "type": "description",
+            "text": "窗口正在概览模式中显示。请注意，这与 shell 概览状态不同，因为并非所有窗口都是概览网格的一部分。",
+            "summary": "窗口处于概览中"
+          }
+        },
+        "configure_occlusion_state": {
+          "description": {
+            "type": "description",
+            "text": "设置此窗口的遮挡状态。应在 configure 事件序列期间调用。当遮挡状态需要作为同步操作设置时使用此事件，与非同步的 occlusion_state_changed 不同。例如，可用于将窗口标记为隐藏以便释放资源。当再次使其可见时，可能需要一些时间来重新创建 buffer，这就是为什么此操作需要同步。",
+            "summary": "在 configure 期间设置遮挡状态"
+          }
+        }
+      },
+      "enums": {
+        "orientation_lock": {
+          "description": {
+            "type": "description",
+            "text": "定义 surface 处于全屏状态时的方向请求。",
+            "summary": "方向锁定请求"
+          },
+          "entries": {
+            "none": {
+              "summary": "无方向锁定"
+            },
+            "portrait": {
+              "summary": "主或次纵向"
+            },
+            "landscape": {
+              "summary": "主或次横向"
+            },
+            "current": {
+              "summary": "保持当前方向"
+            },
+            "portrait_primary": {
+              "summary": "主纵向"
+            },
+            "landscape_primary": {
+              "summary": "主横向"
+            },
+            "portrait_secondary": {
+              "summary": "次纵向"
+            },
+            "landscape_secondary": {
+              "summary": "次横向"
+            }
+          }
+        },
+        "state": {
+          "description": {
+            "type": "description",
+            "text": "此处包含的状态是对 XDG shell 和特定 aura 窗口中定义的状态的补充。",
+            "summary": "对 xdg 状态的补充 aura 状态"
+          },
+          "entries": {
+            "immersive": {
+              "description": {
+                "type": "description",
+                "text": "用户可以通过指向或滑过屏幕边缘来访问系统 UI（如任务栏和窗口框架）。",
+                "summary": "隐藏标题栏和任务栏的沉浸模式"
+              }
+            },
+            "minimized": {
+              "description": {
+                "type": "description",
+                "text": "窗口已被最小化。",
+                "summary": "surface 已最小化"
+              }
+            },
+            "snapped_primary": {
+              "description": {
+                "type": "description",
+                "text": "如果显示器处于横向模式，窗口吸附到左侧；如果处于纵向模式，窗口吸附到顶部。",
+                "summary": "窗口吸附在主位置"
+              }
+            },
+            "snapped_secondary": {
+              "description": {
+                "type": "description",
+                "text": "如果显示器处于横向模式，窗口吸附到右侧；如果处于纵向模式，窗口吸附到底部。",
+                "summary": "窗口吸附在次位置"
+              }
+            },
+            "floated": {
+              "description": {
+                "type": "description",
+                "text": "窗口浮动在其他窗口之上。每个桌面允许一个浮动窗口。当同一桌面上已有浮动窗口时浮动新窗口，将取消原有浮动窗口的浮动状态。",
+                "summary": "窗口浮动在顶部"
+              }
+            },
+            "pip": {
+              "description": {
+                "type": "description",
+                "text": "窗口处于画中画模式。",
+                "summary": "窗口处于画中画"
+              }
+            },
+            "pinned": {
+              "description": {
+                "type": "description",
+                "text": "窗口已被固定。",
+                "summary": "窗口已被固定"
+              }
+            },
+            "trusted_pinned": {
+              "description": {
+                "type": "description",
+                "text": "窗口已被受信任固定。",
+                "summary": "窗口已被受信任固定"
+              }
+            }
+          }
+        },
+        "decoration_type": {
+          "description": {
+            "type": "description",
+            "text": "装饰类型用于修改 surface（例如投影阴影）。",
+            "summary": "不同的装饰类型"
+          },
+          "entries": {
+            "none": {
+              "summary": "无帧"
+            },
+            "normal": {
+              "summary": "带阴影的标题栏"
+            },
+            "shadow": {
+              "summary": "仅阴影"
+            }
+          }
+        },
+        "z_order_level": {
+          "description": {
+            "type": "description",
+            "text": "用于设置 toplevel surface 的不同 z 序级别。",
+            "summary": "窗口的 z 序级别"
+          },
+          "entries": {
+            "normal": {
+              "summary": "窗口的默认级别"
+            },
+            "floating_window": {
+              "summary": "浮动窗口 z 序高于其他普通窗口"
+            },
+            "floating_ui_element": {
+              "summary": "用于显示在浮动窗口之上的非窗口样式 UI"
+            },
+            "security_surface": {
+              "summary": "不能被干扰或覆盖"
+            }
+          }
+        },
+        "fullscreen_mode": {
+          "description": {
+            "type": "description",
+            "text": "此 surface 进入全屏时可能的窗口系统行为。",
+            "summary": "指定 surface 在全屏模式下的行为"
+          },
+          "entries": {
+            "plain": {
+              "summary": "用户无法使用鼠标/触摸访问系统 UI"
+            },
+            "immersive": {
+              "summary": "用户可以通过指向或滑过屏幕边缘来访问系统 UI（如任务栏和窗口框架）"
+            }
+          }
+        },
+        "snap_direction": {
+          "description": {
+            "type": "description",
+            "text": "窗口吸附方向。",
+            "summary": "窗口吸附方向"
+          },
+          "entries": {
+            "none": {
+              "summary": "取消窗口吸附"
+            },
+            "primary": {
+              "summary": "将窗口吸附到主布局的左侧或顶部，次布局的右侧或底部"
+            },
+            "secondary": {
+              "summary": "将窗口吸附到主布局的右侧或底部，次布局的顶部或左侧"
+            }
+          }
+        },
+        "persistable": {
+          "description": {
+            "type": "description",
+            "text": "二进制枚举映射为布尔值，描述值是否可持久化。",
+            "summary": "描述值是否可持久化"
+          },
+          "entries": {
+            "not_persistable": {
+              "summary": "值不可持久化"
+            },
+            "persistable": {
+              "summary": "值可持久化"
+            }
+          }
+        },
+        "rotate_direction": {
+          "entries": {}
+        },
+        "rotate_restart_state": {
+          "entries": {}
+        },
+        "rotate_handled_state": {
+          "entries": {}
+        },
+        "float_start_location": {
+          "description": {
+            "type": "description",
+            "text": "surface 被浮动时可能的起始位置。",
+            "summary": "指定刚被浮动的 surface 的位置"
+          },
+          "entries": {
+            "bottom_right": {
+              "summary": "浮动时，surface 移动到工作区域的右下角。这是默认值。"
+            },
+            "bottom_left": {
+              "summary": "浮动时，surface 移动到工作区域的左下角。"
+            }
+          }
+        },
+        "in_overview": {
+          "description": {
+            "type": "description",
+            "text": "二进制枚举映射为布尔值，描述值是否在概览中。",
+            "summary": "描述值是否在概览中"
+          },
+          "entries": {
+            "not_in_overview": {
+              "summary": "值不在概览中"
+            },
+            "in_overview": {
+              "summary": "值在概览中"
+            }
+          }
+        }
+      }
+    },
+    "zaura_popup": {
+      "description": {
+        "type": "description",
+        "text": "对 popup shell 的接口，允许客户端访问 shell 特定功能。",
+        "summary": "aura shell 的 popup shell 接口"
+      },
+      "requests": {
+        "surface_submission_in_pixel_coordinates": {
+          "description": {
+            "type": "description",
+            "text": "通知服务器在提交此 surface 时，此客户端不会使用 wl_surface_set_buffer_scale 来报告缩放比例，也不会通过 vp_viewporter 应用缩放。相反，服务器应应用适当的缩放变换以使提交的 buffer 正确合成。",
+            "summary": "surface 将以像素坐标提交"
+          }
+        },
+        "set_decoration": {
+          "description": {
+            "type": "description",
+            "text": "允许客户端为 zaura_toplevel 请求特定装饰。服务器不必遵守此请求。有关可用选项，请参阅 decoration_type。自 M105 起可用。",
+            "summary": "为 surface 请求装饰"
+          }
+        },
+        "set_menu": {
+          "description": {
+            "type": "description",
+            "text": "将弹出类型设置为菜单。",
+            "summary": "将弹出类型设置为菜单"
+          }
+        },
+        "release": {
+          "description": {
+            "type": "description",
+            "text": "此请求销毁 zaura_popup。当角色从 wl_surface 取消映射时，客户端应调用销毁。\n\n有关析构函数命名，请参阅 zaura_shell.release。",
+            "summary": "销毁 zaura_popup"
+          }
+        },
+        "set_scale_factor": {
+          "description": {
+            "type": "description",
+            "text": "客户端有一个与每个 zaura popup 关联的 32 位浮点缩放因子。此缩放因子必须精确传播到 exo。为此，我们 reinterpret_cast 为 32 位 uint，稍后再转换回 float。这是因为 wayland 不支持浮点数的原生传输。由于不同的 CPU 架构可能对 IEEE 754 浮点数使用不同的字节序表示，此协议隐式假设调用方和接收方是同一台机器。为避免冗余消息，此请求仅需在 zaura popup 的缩放因子更改时调用一次。",
+            "summary": "允许客户端为将来的 buffer commit 设置缩放因子"
+          }
+        }
+      },
+      "enums": {
+        "decoration_type": {
+          "description": {
+            "type": "description",
+            "text": "装饰类型用于修改 surface（例如投影阴影）。",
+            "summary": "不同的装饰类型"
+          },
+          "entries": {
+            "none": {
+              "summary": "无帧"
+            },
+            "normal": {
+              "summary": "带阴影的标题栏"
+            },
+            "shadow": {
+              "summary": "仅阴影"
+            }
+          }
+        }
+      }
+    },
+    "zaura_output_manager": {
+      "description": {
+        "type": "description",
+        "text": "[已弃用] 自 M122 起弃用。请参阅 zaura_output_manager_v2 接口。\n\n负责确保客户端在绑定 wl_output 后立即以及随后需要时拥有给定输出的完整状态视图的全局接口。\n\n客户端可以预期给定 wl_output 的所有管理器事件在关联的 wl_output.done 事件之前到达。客户端必须在任何输出全局接口之前绑定到管理器全局接口。",
+        "summary": "aura shell 的输出管理器接口"
+      },
+      "events": {
+        "done": {
+          "description": {
+            "type": "description",
+            "text": "此事件在给定 wl_output 的所有 zaura_output_manager 相关属性发送完毕后发送。",
+            "summary": "已发送关于输出的所有信息"
+          }
+        },
+        "display_id": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 ChromeOS 分配给每个显示器的 64 位显示 ID。该值是不透明的，不应进行解释。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "公布输出的显示 ID"
+          }
+        },
+        "logical_position": {
+          "description": {
+            "type": "description",
+            "text": "position 事件描述 wl_output 在全局 compositor 空间中的位置。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "输出在全局 compositor 空间中的位置"
+          }
+        },
+        "logical_size": {
+          "description": {
+            "type": "description",
+            "text": "logical_size 事件描述输出在全局 compositor 空间中的逻辑大小。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "输出在全局 compositor 空间中的大小"
+          }
+        },
+        "physical_size": {
+          "description": {
+            "type": "description",
+            "text": "显示器的物理分辨率（以像素为单位）。该值不应包含任何过扫描内边距或显示旋转（面板方向调整除外）。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "输出的像素大小"
+          }
+        },
+        "insets": {
+          "description": {
+            "type": "description",
+            "text": "此事件以逻辑屏幕坐标描述输出的内边距，据此可以计算工作区域。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "公布输出的工作区域内边距"
+          }
+        },
+        "device_scale_factor": {
+          "description": {
+            "type": "description",
+            "text": "输出设备的缩放因子。我们将浮点缩放因子 reinterpret_cast 为 32 位 uint，稍后再转换回 float。这是因为 wayland 不支持浮点数的原生传输。由于不同的 CPU 架构可能对 IEEE 754 浮点数使用不同的字节序表示，此协议隐式假设调用方和接收方是同一台机器。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "公布输出的设备缩放因子"
+          }
+        },
+        "logical_transform": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述输出的逻辑变换。面板变换对应于显示器面板的旋转，而逻辑变换对应于显示器的逻辑旋转。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "输出的逻辑变换"
+          }
+        },
+        "panel_transform": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述输出的面板变换，即关联显示器的面板旋转。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "输出的面板变换"
+          }
+        },
+        "name": {
+          "description": {
+            "type": "description",
+            "text": "name 是一个 UTF-8 字符串，其内容没有定义的约定。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "此输出的可读名称"
+          }
+        },
+        "description": {
+          "description": {
+            "type": "description",
+            "text": "description 是一个 UTF-8 字符串，其内容没有定义的约定。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "此输出的可读描述"
+          }
+        },
+        "activated": {
+          "description": {
+            "type": "description",
+            "text": "通知此输出现在是活动输出。通常在没有特定边界的情况下创建新窗口时用作目标显示器。",
+            "summary": "新窗口的目标显示器"
+          }
+        },
+        "overscan_insets": {
+          "description": {
+            "type": "description",
+            "text": "此事件以物理像素描述输出的过扫描内边距。\n\n绑定到 output 对象时发送该事件，随后在输出状态更改时发送。",
+            "summary": "公布的输出过扫描内边距"
+          }
+        }
+      }
+    }
+  }
+}

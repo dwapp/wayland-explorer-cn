@@ -1,0 +1,401 @@
+{
+  "description": {
+    "type": "description",
+    "text": "此协议允许应用程序充当 compositor 的输入法。\n\n输入法上下文用于管理输入法的状态。\n\n文本字符串以 UTF-8 编码，其索引和长度以字节为单位。\n\n本文档在使用 \"must\"、\"should\"、\"may\" 等词语时遵循 RFC 2119。\n\n警告！此文件中描述的协议目前处于实验阶段。预计会出现不兼容的主要版本更改。不建议在没有选择机制的情况下暴露此协议。",
+    "summary": "用于创建输入法的协议"
+  },
+  "interfaces": {
+    "xx_input_method_v1": {
+      "description": {
+        "type": "description",
+        "text": "输入法对象允许客户端组合文本。\n\n该对象将客户端连接到应用程序中的文本输入，并让客户端充当某个 seat 的输入法。\n\nxx_input_method_v1 对象可以处于两种不同的状态：活跃和非活跃。在活跃状态下，该对象与文本输入关联并进行通信。在非活跃状态下，没有关联的文本输入，唯一的通信是与 compositor 进行的。最初，输入法处于非活跃状态。\n\n在非活跃状态下发出的请求必须被 compositor 接受。由于序列号机制以及在 activate 事件时的状态重置，它们不会对下一个文本输入的状态产生任何影响。\n\n每个 seat 的输入法对象不得超过一个。",
+        "summary": "输入法"
+      },
+      "requests": {
+        "perform_action": {
+          "description": {
+            "type": "description",
+            "text": "对此文本输入执行操作。\n\n通过此事件设置的值是双缓冲的。它们必须在下一个 commit 请求时应用并重置为初始值。\n\naction 的初始值为 none。",
+            "summary": "执行操作"
+          }
+        },
+        "commit_string": {
+          "description": {
+            "type": "description",
+            "text": "发送提交字符串文本以插入到应用程序中。\n\n在当前光标位置插入字符串（参见 commit 事件序列）。要提交的字符串可以是按键后的单个字符，也可以是某些组合的结果。\n\n参数 text 是一个包含要插入字符串的缓冲区。Wayland 消息有最大长度限制，因此 text 不能超过 4000 字节。\n\n通过此请求设置的值是双缓冲的。它们必须在下一个 .commit 请求时应用并重置为初始值。\n\ntext 的初始值为空字符串。",
+            "summary": "提交字符串"
+          }
+        },
+        "set_preedit_string": {
+          "description": {
+            "type": "description",
+            "text": "向应用程序文本输入发送预编辑字符串文本。\n\n在当前光标位置放置新的组合文本（预编辑）。必须删除任何先前设置的组合文本。必须删除任何先前存在的选定文本。光标移动到预编辑字符串内的新位置。\n\n参数 text 是一个包含预编辑字符串的缓冲区。Wayland 消息有最大长度限制，因此 text 不能超过 4000 字节。\n\n参数 cursor_begin 和 cursor_end 以字节为单位，相对于提交的字符串缓冲区的开头计算。当两者都等于 -1 时，文本输入应隐藏光标。\n\ncursor_begin 表示光标的开始。cursor_end 表示光标的结束。它可以等于或不同于 cursor_begin。\n\n通过此请求设置的值是双缓冲的。它们必须在下一个 xx_input_method_v1.commit 请求时应用。\n它们必须在下一个已提交的 .deactivate 事件时重置为初始值。\n\ntext 的初始值为空字符串。cursor_begin 和 cursor_end 的初始值均为 0。",
+            "summary": "预编辑字符串"
+          }
+        },
+        "delete_surrounding_text": {
+          "description": {
+            "type": "description",
+            "text": "删除周围文本。\n\nbefore_length 和 after_length 是当前光标索引之前和之后要删除的字节数（不包括预编辑文本）。\n\n如果文本被选定，则必须删除它。\n\n如果索引超过可用文本边界，应调整它们以适应边界并重新尝试删除。如果索引不在字节边界上，则文本输入客户端应删除至少那么多字节。在这种情况下，客户端决定结束点，但建议使用与使用键盘删除时相同的字符边界。\n\n如果存在任何预编辑文本，则为此事件将其替换为光标。实际上，before_length 从预编辑文本的开头计算，after_length 从其结尾计算（参见 commit 事件序列）。\n\n通过此请求设置的值是双缓冲的。它们必须在下一个 xx_input_method_v1.commit 请求时应用并重置为初始值。\n\nbefore_length 和 after_length 的初始值均为 0。",
+            "summary": "删除文本"
+          }
+        },
+        "move_cursor": {
+          "description": {
+            "type": "description",
+            "text": "取消选择文本，移动光标并选择文本。\n\n这相当于在文本上拖动鼠标：它取消选择当前可能选定的任何内容并选择新的文本范围。\n\n参数中使用的偏移量以字节为单位，相对于当前光标位置。Cursor 是光标的新位置，anchor 是选择的另一端。如果没有选择，anchor 应等于 cursor。\n\n偏移量不考虑预编辑内容，此请求也不会以任何方式更改预编辑。\n\ncursor 和 anchor 都必须位于代码点边界上，否则文本输入客户端可能会忽略请求。因此不建议输入法将它们中的任何一个移动到 surrounding_text 中接收的文本之外。\n\n当不支持 surrounding_text 时，偏移量不得解释为字节，而是解释为至少与代码点一样大的人类可读单位，例如字素。\n\ncursor 和 anchor 参数还可以采用以下特殊值：\nBEGINNING := 0x8000_0000 = i32::MIN\nEND := 0x7fff_ffff = i32::MAX\n分别表示输入字段中所有文本的开头和结尾。\n\n通过此事件设置的值是双缓冲的。它们必须在下一个 commit 请求时应用并重置为初始值。\n\ncursor 和 anchor 的初始值均为 0。",
+            "summary": "移动光标并更改选择"
+          }
+        },
+        "commit": {
+          "description": {
+            "type": "description",
+            "text": "应用来自 commit_string、set_preedit_string 和 delete_surrounding_text 请求的状态更改。\n\n与这些事件相关的状态是双缓冲的，每个事件都会修改待处理状态。此请求用待处理状态替换当前状态。\n\n连接的文本输入应按以下顺序评估更改：\n\n1. 用光标替换现有的预编辑字符串。\n2. 删除请求的周围文本。\n3. 在光标位于其末尾的情况下插入提交字符串。\n4. 移动光标和选择。\n5. 计算要发送的周围文本。\n6. 在光标位置插入新的预编辑文本。\n7. 将光标放在预编辑文本内。\n8. 执行请求的操作。\n\n请注意，输入法接收的选定文本不能超过 4000 字节，例如当选择了整个文档时可能会出现这种情况。尽管如此，文本输入必须在插入提交字符串之前删除整个选定范围。\n\nprotocol_compat == xx_text_input 时的序列号处理\n\n序列号应设置为 0。\n\nprotocol_compat == text_input_v3 时的序列号处理\n\n序列号反映客户端已知的 xx_input_method_v1 对象的最后状态。serial 参数的值必须等于该对象已发出的 done 事件的数量。当 compositor 收到的 commit 请求的序列号与过去的 done 事件数量不同时，它必须照常进行，但不应更改 xx_input_method_v1 对象的当前状态。",
+            "summary": "应用状态"
+          }
+        },
+        "get_input_popup_surface": {
+          "description": {
+            "type": "description",
+            "text": "创建一个新的 xx_input_popup_surface_v2 对象，包装给定的 surface。\n\n该 surface 被分配 \"input_popup\" 角色。如果该 surface 已经有分配的角色，compositor 必须发出协议错误。\n\n在接收到已提交的 .activate 之前发出此请求会导致 \"inactive\" 错误。",
+            "summary": "创建弹出 surface"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 xx_input_method_v1 对象及任何关联的子对象。",
+            "summary": "销毁输入法"
+          }
+        }
+      },
+      "events": {
+        "activate": {
+          "description": {
+            "type": "description",
+            "text": "通知在此 seat 上聚焦的文本输入请求激活输入法。\n\n此事件的目的是为 compositor 提供一个活跃的输入法。\n\n此事件重置与先前 surrounding_text、text_change_cause 和 content_type 事件相关的所有状态，以及与 set_preedit_string、commit_string 和 delete_surrounding_text 请求相关的状态，并销毁任何现有的 input_popup_surface 对象。此外，它将 xx_input_method_v1 对象标记为活跃。\n\n如果文本输入支持相应功能，surrounding_text 和 content_type 事件必须在下一个 done 事件之前发送。\n\n通过此事件设置的状态是双缓冲的。它将在下一个 xx_input_method_v1.done 事件时应用，并保持有效直到更改。",
+            "summary": "输入法已被请求"
+          }
+        },
+        "deactivate": {
+          "description": {
+            "type": "description",
+            "text": "通知当前没有聚焦的文本输入需要在此 seat 上活跃的输入法。\n\n此事件将 xx_input_method_v1 对象标记为非活跃。compositor 必须销毁所有现有的 xx_input_popup_surface_v2 对象。\n\n此事件重置与先前 surrounding_text、text_change_cause 和 content_type 事件相关的所有状态，以及与 set_preedit_string、commit_string 和 delete_surrounding_text 请求相关的状态。\n\n通过此事件设置的状态是双缓冲的。它将在下一个 xx_input_method_v1.done 事件时应用，并保持有效直到更改。",
+            "summary": "deactivate 事件"
+          }
+        },
+        "surrounding_text": {
+          "description": {
+            "type": "description",
+            "text": "更新光标周围的纯文本，不包括预编辑文本。\n\n如果存在任何预编辑文本，则为此事件将其替换为光标。\n\n参数 text 是一个包含预编辑字符串的缓冲区，必须包含光标位置和完整的选择。它应在这些内容前后包含额外的字符。Wayland 消息有最大长度限制，因此 text 不能超过 4000 字节。\n\ncursor 是文本缓冲区中光标的字节偏移量。\n\nanchor 是文本缓冲区中选择锚点的字节偏移量。如果没有选定文本，anchor 必须与 cursor 相同。\n\n如果此事件在第一个 done 事件之前未到达，输入法可以假设文本输入不支持此功能，并忽略后续的 surrounding_text 事件。\n\n通过此事件设置的值是双缓冲的。它们将在下一个 xx_input_method_v1.done 事件时应用并设置为初始值。\n\n受影响字段的初始状态为空，表示文本输入不支持发送周围文本。如果应用了空值，后续更改它们的尝试可能不会生效。",
+            "summary": "周围文本事件"
+          }
+        },
+        "text_change_cause": {
+          "description": {
+            "type": "description",
+            "text": "告知输入法光标周围文本更改的原因。\n\n每当客户端检测到文本、光标或锚点位置的外部更改时，它必须向 compositor 发出此请求。此请求旨在让输入法有机会以适当的方式更新预编辑文本，例如当用户开始使用键盘输入时将其删除。\n\ncause 描述更改的来源。\n\n通过此事件设置的值是双缓冲的。它将在下一个 xx_input_method_v1.done 事件时应用并设置为初始值。\n\ncause 的初始值为 input_method。",
+            "summary": "指示周围文本更改的原因"
+          }
+        },
+        "content_type": {
+          "description": {
+            "type": "description",
+            "text": "指示当前 xx_input_method_v1 实例的内容类型和提示。\n\n通过此事件设置的值是双缓冲的。它们将在下一个 xx_input_method_v1.done 事件时应用。\n它们在下一个已提交的 deactivate 事件时重置为初始值。\n\nhint 的初始值为 none，purpose 的初始值为 normal。",
+            "summary": "内容用途和提示"
+          }
+        },
+        "set_available_actions": {
+          "description": {
+            "type": "description",
+            "text": "通告当前活跃文本输入可用的操作。\n\n通过此事件设置的值是双缓冲的。它们将在下一个 .done 事件时应用。\n它们在下一个已提交的 deactivate 事件时重置为初始值。\n\n初始值为空集：没有可用的操作。\n\navailable_actions 数组中的值来自 text-input-v3.action。",
+            "summary": "通告可用操作"
+          }
+        },
+        "announce_supported_features": {
+          "description": {
+            "type": "description",
+            "text": "通知输入法当前活跃的文本输入客户端能够做什么。\n\n此事件应与 .activate 在同一个 .done 序列中发送。否则，输入法可能会忽略它。\n\n通过此事件设置的值是双缓冲的。它们将在下一个 .done 事件时应用。\n它们在下一个已提交的 deactivate 事件时重置为初始值。\n\nfeatures 的初始值为 none。",
+            "summary": "通告额外支持的功能"
+          }
+        },
+        "announce_protocol_compat": {
+          "description": {
+            "type": "description",
+            "text": "告知输入法客户端文本输入客户端支持哪些类型的事件。\n\n\n\n通过此事件设置的值是双缓冲的。它们将在下一个 .done 事件时应用。\n它们在下一个已提交的 deactivate 事件时重置为初始值。\n\ncompositor 可以将此事件作为从非活跃切换到活跃状态的 .done 链的一部分发送。除此之外不得发送此事件。\n\nversion 的初始值为 text_input_v3。",
+            "summary": "设置文本输入的兼容性级别"
+          }
+        },
+        "done": {
+          "description": {
+            "type": "description",
+            "text": "原子地应用最近发送给客户端的状态更改。\n\ndone 事件建立并更新客户端的状态，必须在任何更改后发出以应用它们。\n\n文本输入状态（内容用途、内容提示、周围文本和更改原因）在输入法上下文中是概念上双缓冲的。\n\n事件修改待处理状态，而不是输入法使用的当前状态。done 事件原子地应用所有待处理状态，替换当前状态。done 之后，新的待处理状态如每个相关请求所记录。\n\n事件必须按到达顺序应用。\n\n除非另有说明，否则当前状态和待处理状态都不会被修改。",
+            "summary": "应用状态"
+          }
+        },
+        "unavailable": {
+          "description": {
+            "type": "description",
+            "text": "输入法不再可用。\n\n如果在创建时同一 seat 关联了另一个 input_method 对象，compositor 必须将此事件作为对象上的唯一事件发出。\n\n当对象不再可用时（例如由于 seat 被移除），compositor 必须发出此请求。\n\n输入法上下文变为无效，应在处理 deactivate 后销毁。除 destroy 请求外，必须忽略任何进一步的请求和事件。",
+            "summary": "输入法不可用"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "surface_has_role": {
+              "summary": "surface 已有角色"
+            },
+            "inactive": {
+              "summary": "操作要求输入法处于活跃状态"
+            }
+          }
+        },
+        "protocol_compat": {
+          "description": {
+            "type": "description",
+            "text": "告知输入法客户端文本输入客户端支持哪些类型的事件。",
+            "summary": "协议兼容性值"
+          },
+          "entries": {
+            "text_input_v3": {
+              "summary": "zwp-text-input-v3 语义"
+            },
+            "xx_text_input": {
+              "description": {
+                "type": "description",
+                "text": "与 v3 相比，更改了 serial 的含义。\n文本输入客户端现在以 \"尽力而为\" 的方式应用请求的更新。",
+                "summary": "xx-text-input 语义"
+              }
+            }
+          }
+        }
+      }
+    },
+    "xx_input_popup_surface_v2": {
+      "description": {
+        "type": "description",
+        "text": "输入法弹出 surface 是一个短暂的临时 surface。\n它用作显示建议、候选项或其他输入相关用途的区域。\n\ncompositor 应将其锚定在活跃文本输入光标区域。\n\n客户端必须在对应的 wl_surface 上调用 wl_surface.commit，以便 input_popup_surface 状态更新生效，除非另有说明。\n\n在初始 wl_surface.commit 之后，compositor 必须用 configure 序列进行回复（参见 .start_configure），初始化弹出窗口的所有 compositor 提供的状态。这意味着使用适当的事件提供以下值：\n\n- width\n- height\n- anchor_x\n- anchor_y\n- anchor_width\n- anchor_height\n- serial\n\n只有在客户端收到 configure 序列并回复 .ack_configure 后，弹出窗口才会呈现给用户。\n\n一个示例初始化序列可能如下所示：\n\n1. 客户端 (Cl): popup = input_method.get_popup(wl_surface, positioner)\n2. Cl: wl_surface.commit()\n3. compositor (Co): popup.start_configure(150, 150, 10, -2, 5, 30)\n5. Co: input_method.done()\n6. Cl: ack_configure()\n7. Cl: wl_surface.commit()\n\n新创建的 input_popup_surface 将堆叠在与同一文本输入关联的所有先前创建的 input_popup_surface 之上。\n\n用户选择新文本字段并输入一些文本的典型序列：\n\n1. compositor (Co): input_method.activate()\n2. Co: input_method.done()\n3. [初始化序列]\n4. Co: input_method.set_surrounding_text(\"new text\")\n5. Co: popup.start_configure(150, 150, -60, -2, 55, 30)\n6. Co: input_method.done()\n7. 客户端 (Cl): ack_configure()\n8. Cl: wl_surface.commit()\n\n当对应的 input_method 收到已提交的 .deactivate 事件时，弹出窗口被销毁并变为无效，其 surface 被取消映射。\n\n在 xx_input_popup_surface_v2 对象存在期间，客户端不得销毁底层的 wl_surface。",
+        "summary": "弹出 surface"
+      },
+      "requests": {
+        "ack_configure": {
+          "description": {
+            "type": "description",
+            "text": "此请求通知 compositor 客户端已更新其 surface 以响应 configure 序列。\n\n此请求的目的是同步 surface 几何形状与 surface 内容的更新。例如，当 compositor 分配了比以前更大的尺寸时，客户端必须在弹出窗口以新尺寸显示给用户之前填充额外的空间。当 compositor 收到 .ack_configure 时，它可以继续绘制新尺寸。\n\n.ack_configure 应在每次提交的 configure 序列之后发送，传递其中接收到的 serial。\n\n.ack_configure 请求在概念上是双缓冲的。\n每个请求都会覆盖前一个请求。一旦在对应的 surface 上发送 .commit 请求，该请求就会生效。\n\n如果客户端在能够响应一个 configure 序列之前收到多个 configure 序列，它可以通过在 .ack_configure 请求中使用最后一个 configure 序列的 serial 来仅确认最后一个 configure 序列。\n\n提交 .ack_configure 请求会消耗该请求附带的 serial 号，以及在此 input_popup_surface 上提交的、在被引用的 serial 之前的 configure 序列发送的所有 serial 号。\n\n提交此请求时使用的 serial 如果从未出现在此 surface 的 configure 序列中，或者之前已被提交过，会引发 invalid_serial 错误。",
+            "summary": "确认 configure 序列"
+          }
+        },
+        "reposition": {
+          "description": {
+            "type": "description",
+            "text": "重新定位已映射的弹出窗口。弹出窗口将根据传入的 input_popup_positioner 对象中的详细信息放置。\n\n该请求会立即处理，无需发出 wl_surface.commit，但实际的重新定位稍后在 .ack_configure 之后进行。\n\ncompositor 应回复一个 configure 序列，包括：\n- input_popup_surface.start_configure,\n- input_popup_surface.repositioned，包括此请求中传入的 token。\n\n这将丢弃先前 positioner 设置的任何参数。\n\n如果在 .repositioned 事件作为 configure 序列的一部分提交之前发送了多个 .reposition 请求，compositor 可以忽略除最后一个之外的所有请求。\n\n新的弹出窗口位置在客户端确认相应的 configure 序列之前不会生效。详见 input_popup_surface.repositioned。\n\ntoken 本身是不透明的，没有其他特殊含义。",
+            "summary": "重新计算弹出窗口的位置"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "这会销毁弹出窗口。显式销毁 input_popup_surface 对象也会关闭弹出窗口并取消映射 surface。",
+            "summary": "移除弹出窗口"
+          }
+        }
+      },
+      "events": {
+        "start_configure": {
+          "description": {
+            "type": "description",
+            "text": "start_configure 事件更新弹出窗口的几何形状并标记 configure 序列的开始。\n\nanchor_* 参数表示弹出窗口所附加到的锚点的几何形状，相对于弹出窗口 surface 的左上角。请注意，这使得 anchor_x、anchor_y 与 xdg_popup 中表示的相反。\n\nconfigure 序列是一组配置 input_popup_surface 状态的一个或多个事件，从此事件开始，以 input_method.done 结束。在 input_method.done 事件之后，configure 序列被视为已提交。\n\n在 configure 序列中由事件设置的状态在概念上是双缓冲的。\n每个参数都会覆盖其先前的值。状态更改应与结束序列的 input_method.done 原子地应用，并且 serial 的值应返回到未定义值。\n\n在 configure 序列之外（当 serial 未定义时）接收到的 input_popup_surface 对象上的事件必须被客户端忽略。\n\n每当 compositor（重新）定位弹出窗口或锚点的形状发生变化时（例如在弹出窗口创建之后，或响应输入文本和文本光标移动），应发送 configure 序列。\n\n客户端可以响应 input_method.done 更新 surface。除非弹出窗口被 input_method.done 销毁，否则客户端必须在序列结束后且提交新 surface 之前的某个时间点回复带有 start_configure 事件中发送的 serial 的 .ack_configure 请求。\n\n如果客户端在能够响应一个 configure 序列之前收到多个 configure 序列，它可以自由丢弃除最后一个接收到的事件之外的所有事件。",
+            "summary": "配置弹出 surface"
+          }
+        },
+        "repositioned": {
+          "description": {
+            "type": "description",
+            "text": "compositor 发送 .repositioned 事件以响应 .reposition 请求，通知其完成。\n\n弹出窗口的新几何形状可以使用 configure 序列中的附加事件来传达，包括：\n- input_popup_surface.start_configure，和\n- .anchor_position 事件以更新相对于锚点的相对位置。\n\n当响应 .reposition 请求时，token 参数是该请求中传入的 token。\n\n此事件作为 configure 序列的一部分发送。\n此事件设置的状态在概念上是双缓冲的。\n每个参数都会覆盖其先前的值。状态更改应与下一个 input_method.done 事件原子地应用。\n\n客户端可以选择更新弹出窗口的内容，但必须确认新的弹出窗口配置才能使新位置生效。详见 input_popup_surface.ack_configure。",
+            "summary": "通知 reposition 请求完成"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_serial": {
+              "summary": "收到的确认针对已被确认或从未发出的 serial"
+            }
+          }
+        }
+      }
+    },
+    "xx_input_popup_positioner_v1": {
+      "description": {
+        "type": "description",
+        "text": "input_popup_positioner 提供了一组规则，用于将输入法弹出 surface 放置在相对于光标的位置。\n可以定义规则以确保文本输入区域保持在可见区域的边界内，并指定弹出窗口如何更改其位置，例如沿轴滑动或围绕矩形翻转。这些由 positioner 创建的规则受到弹出窗口必须与包含文本输入的 surface 相交或至少部分相邻的要求的约束。\n\n有关可能规则的详细信息，请参阅各种请求。\n\n新创建的 positioner 具有以下状态：\n- 0 surface 宽度\n- 0 surface 高度\n- 锚点在中心（\"none\"）\n- 重力方向朝向中心（\"none\"）\n- 约束调整设置为 none\n- 偏移量 x = 0, y = 0\n- 非响应式\n\n在接收到将 positioner 作为参数的请求时，compositor 会复制 input_popup_positioner 指定的规则。因此，在请求完成后，input_popup_positioner 对象可以被销毁或重用；对对象的进一步更改不会影响先前的用法。\n\n要使 input_popup_positioner 对象被视为完整，其状态必须包含非零的宽度和高度。在定位 surface 时传递不完整的 input_popup_positioner 对象会引发 invalid_positioner 错误。",
+        "summary": "输入法弹出窗口定位器"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "通知 compositor positioner 将不再使用。",
+            "summary": "销毁 input_popup_positioner 对象"
+          }
+        },
+        "set_size": {
+          "description": {
+            "type": "description",
+            "text": "设置要使用 positioner 对象定位的 surface 的尺寸。尺寸以 surface 局部坐标给出，对应于窗口几何形状。参见 xdg_surface.set_window_geometry。\n\n如果任一维度设置为零，将引发 invalid_input 错误。",
+            "summary": "设置待定位矩形的尺寸"
+          }
+        },
+        "set_anchor": {
+          "description": {
+            "type": "description",
+            "text": "定义锚点矩形的锚点。指定的锚点用于派生弹出 surface 将相对于其定位的锚点。如果设置了角锚点（例如 'top_left' 或 'bottom_right'），锚点将在指定的角落；否则，派生的锚点将在指定边缘的中心，或者如果未指定边缘则在锚点矩形的中心。",
+            "summary": "设置锚点矩形的锚点"
+          }
+        },
+        "set_gravity": {
+          "description": {
+            "type": "description",
+            "text": "定义 surface 应相对于锚点矩形的锚点放置的方向。如果指定了角重力（例如 'bottom_right' 或 'top_left'），则 surface 将朝向指定的重力方向放置；否则，子 surface 将在任何未指定重力的轴上居中于锚点。如果重力不在 'gravity' 枚举中，将引发 invalid_input 错误。",
+            "summary": "设置 surface 重力"
+          }
+        },
+        "set_constraint_adjustment": {
+          "description": {
+            "type": "description",
+            "text": "指定如果原始预期位置导致 surface 被约束（意味着至少部分在 compositor 设置的定位边界之外）时应如何调整弹出窗口。通过构建位掩码来设置调整，描述当 surface 在该轴上被约束时要进行的调整。\n\n如果未为某个轴设置任何位，compositor 将假设子 surface 在被约束时不应更改其在该轴上的位置。\n\n如果为某个轴设置了多个位，调整的应用顺序在相应的调整描述中指定。\n\n默认调整为 none。",
+            "summary": "设置被约束时要进行的调整"
+          }
+        },
+        "set_offset": {
+          "description": {
+            "type": "description",
+            "text": "指定 surface 位置相对于锚点矩形上的锚点和 surface 上的锚点的偏移量。例如，如果锚点矩形的锚点在 (x, y)，surface 具有重力 bottom|right，偏移量为 (ox, oy)，则计算出的 surface 位置将为 (x + ox, y + oy)。surface 的偏移位置是用于约束测试的位置。参见 set_constraint_adjustment。\n\n一个示例用例是将弹出菜单放置在用户界面元素的顶部，同时将父 surface 的用户界面元素与弹出 surface 中某处放置的某个用户界面元素对齐。",
+            "summary": "设置 surface 位置偏移量"
+          }
+        },
+        "set_reactive": {
+          "description": {
+            "type": "description",
+            "text": "设置为响应式时，如果用于约束的条件发生变化（例如包含文本输入的窗口移动），surface 将被重新约束。\n\n每当条件发生变化且弹出窗口被重新约束时，会发送带有更新几何形状的 configure 序列。",
+            "summary": "持续重新约束 surface"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_input": {
+              "summary": "提供了无效的输入"
+            }
+          }
+        },
+        "anchor": {
+          "entries": {
+            "none": {
+              "summary": "无边缘，指定中心"
+            }
+          }
+        },
+        "gravity": {
+          "entries": {
+            "none": {
+              "summary": "中心到中心"
+            }
+          }
+        },
+        "constraint_adjustment": {
+          "description": {
+            "type": "description",
+            "text": "约束调整值定义了当未调整的位置会导致 surface 部分被约束时，compositor 调整 surface 位置的方式。\n\nsurface 是否被视为“受约束”由 compositor 确定。例如，surface 可能部分在 compositor 定义的“工作区域”之外，因此需要调整子 surface 的位置直到其完全在工作区域内。\n\n这些调整可以组合，按照定义的优先级：1) 翻转，2) 滑动，3) 调整大小。",
+            "summary": "约束调整"
+          },
+          "entries": {
+            "none": {
+              "description": {
+                "type": "description",
+                "text": "即使 surface 在某个轴上被约束（例如部分在输出边缘之外），也不要更改 surface 位置。",
+                "summary": "被约束时不要移动 surface"
+              }
+            },
+            "slide_x": {
+              "description": {
+                "type": "description",
+                "text": "沿 x 轴滑动 surface 直到它不再被约束。\n\n首先尝试沿重力方向在 x 轴上滑动，直到重力相反方向的边缘不受约束或重力方向的边缘被约束。\n\n然后尝试沿重力相反方向在 x 轴上滑动，直到重力方向的边缘不受约束或重力相反方向的边缘被约束。",
+                "summary": "沿 x 轴移动直到不受约束"
+              }
+            },
+            "slide_y": {
+              "description": {
+                "type": "description",
+                "text": "沿 y 轴滑动 surface 直到它不再被约束。\n\n首先尝试沿重力方向在 y 轴上滑动，直到重力相反方向的边缘不受约束或重力方向的边缘被约束。\n\n然后尝试沿重力相反方向在 y 轴上滑动，直到重力方向的边缘不受约束或重力相反方向的边缘被约束。",
+                "summary": "沿 y 轴移动直到不受约束"
+              }
+            },
+            "flip_x": {
+              "description": {
+                "type": "description",
+                "text": "如果 surface 在 x 轴上被约束，则反转 x 轴上的锚点和重力。例如，如果 surface 的左边缘被约束，重力为 'left'，锚点为 'left'，则将重力更改为 'right'，锚点更改为 'right'。\n\n如果调整后的位置也被约束，flip_x 调整的结果位置将是调整之前的位置。",
+                "summary": "反转 x 轴上的锚点和重力"
+              }
+            },
+            "flip_y": {
+              "description": {
+                "type": "description",
+                "text": "如果 surface 在 y 轴上被约束，则反转 y 轴上的锚点和重力。例如，如果 surface 的底边缘被约束，重力为 'bottom'，锚点为 'bottom'，则将重力更改为 'top'，锚点更改为 'top'。\n\n调整后的位置根据原始锚点矩形和偏移量计算，但使用新的翻转后的锚点和重力值。\n\n如果调整后的位置也被约束，flip_y 调整的结果位置将是调整之前的位置。",
+                "summary": "反转 y 轴上的锚点和重力"
+              }
+            },
+            "resize_x": {
+              "description": {
+                "type": "description",
+                "text": "水平调整 surface 大小，使其完全不受约束。",
+                "summary": "水平调整 surface 大小"
+              }
+            },
+            "resize_y": {
+              "description": {
+                "type": "description",
+                "text": "垂直调整 surface 大小，使其完全不受约束。",
+                "summary": "垂直调整 surface 大小"
+              }
+            }
+          }
+        }
+      }
+    },
+    "xx_input_method_manager_v2": {
+      "description": {
+        "type": "description",
+        "text": "输入法管理器允许客户端成为选定 seat 上的输入法。\n\n在任何给定时间，不得有超过一个输入法与任何 seat 关联。",
+        "summary": "输入法管理器"
+      },
+      "requests": {
+        "get_input_method": {
+          "description": {
+            "type": "description",
+            "text": "请求与给定 seat 关联的新输入 xx_input_method_v1 对象。",
+            "summary": "请求输入法对象"
+          }
+        },
+        "get_positioner": {
+          "description": {
+            "type": "description",
+            "text": "创建一个 positioner 对象。positioner 对象用于相对于某个父 surface 定位 surface。详见接口描述和 xdg_surface.get_popup。",
+            "summary": "创建 positioner 对象"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 xx_input_method_manager_v2 对象。\n\n由其发起的 xx_input_method_v1 对象仍然有效。",
+            "summary": "销毁输入法管理器"
+          }
+        }
+      }
+    }
+  }
+}

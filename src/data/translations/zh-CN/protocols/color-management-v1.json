@@ -1,0 +1,862 @@
+{
+  "description": {
+    "type": "description",
+    "text": "The aim of the color management extension is to allow clients to know\nthe color properties of outputs, and to tell the compositor about the color\nproperties of their content on surfaces. All surface contents must be\nreadily intended for some display, but not necessarily for the display at\nhand. Doing this enables a compositor to perform automatic color management\nof content for different outputs according to how content is intended to\nlook like.\n\nFor an introduction, see the section \"Color management\" in the Wayland\ndocumentation at https://wayland.freedesktop.org/docs/html/ .\n\nThe color properties are represented as an image description object which\nis immutable after it has been created. A wl_output always has an\nassociated image description that clients can observe. A wl_surface\nalways has an associated preferred image description as a hint chosen by\nthe compositor that clients can also observe. Clients can set an image\ndescription on a wl_surface to denote the color characteristics of the\nsurface contents.\n\nAn image description essentially defines a display and (indirectly) its\nviewing environment. An image description includes SDR and HDR colorimetry\nand encoding, HDR metadata, and some parameters related to the viewing\nenvironment. An image description does not include the properties set\nthrough color-representation extension. It is expected that the\ncolor-representation extension is used in conjunction with the\ncolor-management extension when necessary, particularly with the YUV family\nof pixel formats.\n\nThe normative appendix for this protocol is in the appendix.md file beside\nthis XML file.\n\nThe color-and-hdr repository\n(https://gitlab.freedesktop.org/pq/color-and-hdr) contains\nbackground information on the protocol design and legacy color management.\nIt also contains a glossary, learning resources for digital color, tools,\nsamples and more.\n\nThe terminology used in this protocol is based on common color science and\ncolor encoding terminology where possible. The glossary in the color-and-hdr\nrepository shall be the authority on the definition of terms in this\nprotocol.\n\nWarning! The protocol described in this file is currently in the testing\nphase. Backward compatible changes may be added together with the\ncorresponding interface version bump. Backward incompatible changes can\nonly be done by creating a new major version of the extension.",
+    "summary": "色彩管理协议"
+  },
+  "interfaces": {
+    "wp_color_manager_v1": {
+      "description": {
+        "type": "description",
+        "text": "用于获取 wl_surface 和 wl_output 对象的色彩管理扩展以及创建客户端自定义图像描述对象的单例全局接口。扩展接口允许获取输出的图像描述和设置 surface 的图像描述。\n\n合成器不应移除此全局对象。",
+        "summary": "色彩管理器单例"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 wp_color_manager_v1 对象。这不会以任何方式影响任何其他对象。",
+            "summary": "销毁色彩管理器"
+          }
+        },
+        "get_output": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 wl_output 创建一个新的 wp_color_management_output_v1 对象。\n\n详见 wp_color_management_output_v1 接口。",
+            "summary": "为 wl_output 创建色彩管理接口"
+          }
+        },
+        "get_surface": {
+          "description": {
+            "type": "description",
+            "text": "如果给定的 wl_surface 已存在 wp_color_management_surface_v1 对象，则引发协议错误 surface_exists。\n\n为给定的 wl_surface 创建一个新的 wp_color_management_surface_v1 对象。\n\n详见 wp_color_management_surface_v1 接口。",
+            "summary": "为 wl_surface 创建色彩管理接口"
+          }
+        },
+        "get_surface_feedback": {
+          "description": {
+            "type": "description",
+            "text": "为给定的 wl_surface 创建一个新的 wp_color_management_surface_feedback_v1 对象。\n\n详见 wp_color_management_surface_feedback_v1 接口。",
+            "summary": "创建色彩管理反馈接口"
+          }
+        },
+        "create_icc_creator": {
+          "description": {
+            "type": "description",
+            "text": "创建一个基于 ICC 的图像描述创建器对象，所有属性初始未设置。客户端可以使用该对象的接口定义图像描述所需的所有属性，最终创建 wp_image_description_v1 对象。\n\n当合成器通告 wp_color_manager_v1.feature.icc_v2_v4 时可以使用此请求。否则此请求将引发协议错误 unsupported_feature。",
+            "summary": "创建基于 ICC 的图像描述创建器对象"
+          }
+        },
+        "create_parametric_creator": {
+          "description": {
+            "type": "description",
+            "text": "创建一个参数化图像描述创建器对象，所有属性初始未设置。客户端可以使用该对象的接口定义图像描述所需的所有属性，最终创建 wp_image_description_v1 对象。\n\n当合成器通告 wp_color_manager_v1.feature.parametric 时可以使用此请求。否则此请求将引发协议错误 unsupported_feature。",
+            "summary": "创建参数化图像描述创建器对象"
+          }
+        },
+        "create_windows_scrgb": {
+          "description": {
+            "type": "description",
+            "text": "This creates a pre-defined image description for the so-called\nWindows-scRGB stimulus encoding. This comes from the Windows 10 handling\nof its own definition of an scRGB color space for an HDR screen\ndriven in BT.2100/PQ signalling mode.\n\nWindows-scRGB uses sRGB (BT.709) color primaries and white point.\nThe transfer characteristic is extended linear.\n\nThe nominal color channel value range is extended, meaning it includes\nnegative and greater than 1.0 values. Negative values are used to\nescape the sRGB color gamut boundaries. To make use of the extended\nrange, the client needs to use a pixel format that can represent those\nvalues, e.g. floating-point 16 bits per channel.\n\nNominal color value R=G=B=0.0 corresponds to BT.2100/PQ system\n0 cd/m², and R=G=B=1.0 corresponds to BT.2100/PQ system 80 cd/m².\nThe maximum is R=G=B=125.0 corresponding to 10k cd/m².\n\nWindows-scRGB is displayed by Windows 10 by converting it to\nBT.2100/PQ, maintaining the CIE 1931 chromaticity and mapping the\nluminance as above. No adjustment is made to the signal to account\nfor the viewing conditions.\n\nThe reference white level of Windows-scRGB is unknown. If a\nreference white level must be assumed for compositor processing, it\nshould be R=G=B=2.5375 corresponding to 203 cd/m² of Report ITU-R\nBT.2408-7.\n\nThe target color volume of Windows-scRGB is unknown. The color gamut\nmay be anything between sRGB and BT.2100.\n\nNote: EGL_EXT_gl_colorspace_scrgb_linear definition differs from\nWindows-scRGB by using R=G=B=1.0 as the reference white level, while\nWindows-scRGB reference white level is unknown or varies. However,\nit seems probable that Windows implements both\nEGL_EXT_gl_colorspace_scrgb_linear and Vulkan\nVK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT as Windows-scRGB.\n\nThis request can be used when the compositor advertises\nwp_color_manager_v1.feature.windows_scrgb.\nOtherwise this request raises the protocol error unsupported_feature.\n\nThe resulting image description object does not allow get_information\nrequest. The wp_image_description_v1.ready event shall be sent.",
+            "summary": "创建 Windows-scRGB 图像描述对象"
+          }
+        },
+        "get_image_description": {
+          "description": {
+            "type": "description",
+            "text": "此请求检索引用背后的图像描述。\n\nget_information 请求仅在创建引用的请求允许时才能使用。",
+            "summary": "从引用创建图像描述"
+          }
+        }
+      },
+      "events": {
+        "supported_intent": {
+          "description": {
+            "type": "description",
+            "text": "当此对象创建时，应立即为合成器支持的每个渲染意图发送一次此事件。\n\n合成器不得通告在绑定接口版本中已弃用的意图。",
+            "summary": "支持的渲染意图"
+          }
+        },
+        "supported_feature": {
+          "description": {
+            "type": "description",
+            "text": "当此对象创建时，应立即为枚举中列出的每个合成器支持的功能发送一次此事件。\n\n合成器不得通告在绑定接口版本中已弃用的功能。",
+            "summary": "支持的功能"
+          }
+        },
+        "supported_tf_named": {
+          "description": {
+            "type": "description",
+            "text": "当此对象创建时，应立即为合成器在参数化图像描述创建器中支持的每个命名传递函数发送一次此事件。\n\n合成器不得通告在绑定接口版本中已弃用的传递函数。",
+            "summary": "支持的命名传递特性"
+          }
+        },
+        "supported_primaries_named": {
+          "description": {
+            "type": "description",
+            "text": "当此对象创建时，应立即为合成器在参数化图像描述创建器中支持的每组命名原色发送一次此事件。\n\n合成器不得通告在绑定接口版本中已弃用的名称。",
+            "summary": "支持的命名原色"
+          }
+        },
+        "done": {
+          "description": {
+            "type": "description",
+            "text": "当所有支持的渲染意图、功能、传递函数和命名原色都已发送后，发送此事件。",
+            "summary": "所有功能已发送"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "unsupported_feature": {
+              "summary": "请求不支持"
+            },
+            "surface_exists": {
+              "summary": "色彩管理 surface 已存在"
+            }
+          }
+        },
+        "render_intent": {
+          "description": {
+            "type": "description",
+            "text": "有关渲染意图的更多详情，请参阅 International Color Consortium 的 ICC.1:2022 规范。\n\nICC 定义的渲染意图原则适用于所有类型的图像描述，不仅限于带有 ICC 文件配置文件的图像描述。\n\n合成器必须支持感知渲染意图。其他渲染意图是可选的。",
+            "summary": "渲染意图"
+          },
+          "entries": {
+            "perceptual": {
+              "summary": "感知"
+            },
+            "relative": {
+              "summary": "媒体相对色度"
+            },
+            "saturation": {
+              "summary": "饱和度"
+            },
+            "absolute": {
+              "summary": "ICC 绝对色度"
+            },
+            "relative_bpc": {
+              "summary": "媒体相对色度 + 黑点补偿"
+            },
+            "absolute_no_adaptation": {
+              "description": {
+                "type": "description",
+                "text": "此渲染意图是修改后的绝对渲染意图，假设观察者未适应显示白点，因此不进行 surface 与显示之间的色度适应。这对于色彩校样应用程序很有用。",
+                "summary": "ICC 绝对色度（无适应）"
+              }
+            }
+          }
+        },
+        "feature": {
+          "description": {
+            "type": "description",
+            "summary": "合成器支持的功能"
+          },
+          "entries": {
+            "icc_v2_v4": {
+              "summary": "create_icc_creator 请求"
+            },
+            "parametric": {
+              "summary": "create_parametric_creator 请求"
+            },
+            "set_primaries": {
+              "summary": "参数化 set_primaries 请求"
+            },
+            "set_tf_power": {
+              "summary": "参数化 set_tf_power 请求"
+            },
+            "set_luminances": {
+              "summary": "参数化 set_luminances 请求"
+            },
+            "set_mastering_display_primaries": {
+              "description": {
+                "type": "description",
+                "text": "合成器支持 set_mastering_display_primaries 请求，目标色域完全包含在主色域内。",
+                "summary": "参数化 set_mastering_display_primaries 请求"
+              }
+            },
+            "extended_target_volume": {
+              "description": {
+                "type": "description",
+                "text": "合成器还支持扩展到主色域之外的目标色域。\n\n仅在同时支持 set_mastering_display_primaries 功能时才能通告此功能。",
+                "summary": "参数化目标超出主色域"
+              }
+            },
+            "windows_scrgb": {
+              "summary": "create_windows_scrgb 请求"
+            }
+          }
+        },
+        "primaries": {
+          "description": {
+            "type": "description",
+            "text": "用于编码已知原色集的命名原色。\n\n值 0 无效，永远不会出现在枚举列表中。",
+            "summary": "命名原色"
+          },
+          "entries": {
+            "srgb": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的原色：\n- Rec. ITU-R BT.709-6\n- Rec. ITU-R BT.1361-0 常规色域系统和扩展色域系统（历史）\n- IEC 61966-2-1 sRGB 或 sYCC\n- IEC 61966-2-4\n- SMPTE RP 177 (1993) Annex B",
+                "summary": "BT.709 标准定义的 sRGB 色彩空间原色"
+              }
+            },
+            "pal_m": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的原色：\n- Rec. ITU-R BT.470-6 System M（历史）\n- 美国国家电视系统委员会 1953 年彩色电视传输标准建议\n- 美国联邦通信委员会 (2003) Title 47 Code of Federal Regulations 73.682 (a)(20)",
+                "summary": "BT.470 标准定义的 PAL-M 原色"
+              }
+            },
+            "pal": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的原色：\n- Rec. ITU-R BT.470-6 System B, G（历史）\n- Rec. ITU-R BT.601-7 625\n- Rec. ITU-R BT.1358-0 625（历史）\n- Rec. ITU-R BT.1700-0 625 PAL 和 625 SECAM",
+                "summary": "BT.601 标准定义的 PAL 原色"
+              }
+            },
+            "ntsc": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的原色：\n- Rec. ITU-R BT.601-7 525\n- Rec. ITU-R BT.1358-1 525 或 625（历史）\n- Rec. ITU-R BT.1700-0 NTSC\n- SMPTE 170M (2004)\n- SMPTE 240M (1999)（历史）",
+                "summary": "BT.601 标准定义的 NTSC 原色"
+              }
+            },
+            "generic_film": {
+              "description": {
+                "type": "description",
+                "text": "由 ITU-T H.273 建议书 \"Coding-independent code points for video signal type identification\" 为 \"generic film\" 定义的原色。",
+                "summary": "使用 C 光源的通用胶片色彩滤镜"
+              }
+            },
+            "bt2020": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的原色：\n- Rec. ITU-R BT.2020-2\n- Rec. ITU-R BT.2100-0",
+                "summary": "BT.2020 和 BT.2100 标准定义的原色"
+              }
+            },
+            "cie1931_xyz": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义为 CIE 1931 XYZ 色彩空间最大范围的原色：\n- SMPTE ST 428-1\n- (CIE 1931 XYZ as in ISO 11664-1)",
+                "summary": "完整 CIE 1931 XYZ 色彩空间的原色"
+              }
+            },
+            "dci_p3": {
+              "description": {
+                "type": "description",
+                "text": "由数字电影系统定义并发布于 SMPTE RP 431-2 (2011) 的原色。",
+                "summary": "SMPTE RP 431 标准定义的 DCI P3 色彩空间原色"
+              }
+            },
+            "display_p3": {
+              "description": {
+                "type": "description",
+                "text": "由数字电影系统定义并发布于 SMPTE EG 432-1 (2010) 的原色。",
+                "summary": "SMPTE EG 432 标准定义的 DCI-P3 色彩空间 Display P3 变体原色"
+              }
+            },
+            "adobe_rgb": {
+              "description": {
+                "type": "description",
+                "text": "由 Adobe 定义为 \"Adobe RGB\" 并于 ISO 12640-4 (2011) 发布的原色。",
+                "summary": "ISO 12640 标准定义的 Adobe RGB 色彩空间原色"
+              }
+            }
+          }
+        },
+        "transfer_function": {
+          "description": {
+            "type": "description",
+            "text": "用于表示已知显示设备传递特性的命名传递函数。\n\n值 0 无效，永远不会出现在枚举列表中。\n\n公式见 appendix.md。",
+            "summary": "命名传递函数"
+          },
+          "entries": {
+            "bt1886": {
+              "description": {
+                "type": "description",
+                "text": "Rec. ITU-R BT.1886 是以下标准假定的显示传递特性：\n- Rec. ITU-R BT.601-7 525 和 625\n- Rec. ITU-R BT.709-6\n- Rec. ITU-R BT.2020-2\n\n此传递函数包含来自 Rec. ITU-R BT.2035 的以下默认亮度：\n- 主色域最小值：0.01 cd/m²\n- 主色域最大值：100 cd/m²\n- 参考白：100 cd/m²",
+                "summary": "BT.1886 显示传递特性"
+              }
+            },
+            "gamma22": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的传递特性：\n- Rec. ITU-R BT.470-6 System M（历史）\n- 美国国家电视系统委员会 1953 年彩色电视传输标准建议\n- 美国联邦通信委员会 (2003) Title 47 Code of Federal Regulations 73.682 (a) (20)\n- Rec. ITU-R BT.1700-0 625 PAL 和 625 SECAM\n- IEC 61966-2-1（参考显示）",
+                "summary": "假设显示 gamma 2.2 传递函数"
+              }
+            },
+            "gamma28": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的传递特性：\n- Rec. ITU-R BT.470-6 System B, G（历史）",
+                "summary": "假设显示 gamma 2.8 传递函数"
+              }
+            },
+            "st240": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的传递特性：\n- SMPTE ST 240 (1999)",
+                "summary": "SMPTE ST 240 传递函数"
+              }
+            },
+            "ext_linear": {
+              "description": {
+                "type": "description",
+                "text": "定义在所有实数上的线性传递函数。归一化电信号值等于归一化光信号值。",
+                "summary": "扩展线性传递函数"
+              }
+            },
+            "log_100": {
+              "description": {
+                "type": "description",
+                "text": "对数传递特性（100:1 范围）。",
+                "summary": "对数 100:1 传递函数"
+              }
+            },
+            "log_316": {
+              "description": {
+                "type": "description",
+                "text": "对数传递特性（100 * Sqrt(10) : 1 范围）。",
+                "summary": "对数 (100*Sqrt(10) : 1) 传递函数"
+              }
+            },
+            "xvycc": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的传递特性：\n- IEC 61966-2-4",
+                "summary": "IEC 61966-2-4 传递函数"
+              }
+            },
+            "srgb": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的传递特性：\n- IEC 61966-2-1 sRGB\n\n根据经验，视频、电影和计算机图形使用 gamma22，ICC 校准的打印工作流使用 compound_power_2_4。",
+                "summary": "已弃用（模糊的 sRGB 传递函数）"
+              }
+            },
+            "ext_srgb": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的传递特性：\n- IEC 61966-2-1 sYCC",
+                "summary": "已弃用（扩展 sRGB 分段传递函数）"
+              }
+            },
+            "st2084_pq": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的传递特性：\n- SMPTE ST 2084 (2014)，适用于 10、12、14 和 16 位系统\n- Rec. ITU-R BT.2100-2 感知量化 (PQ) 系统\n\n此传递函数包含以下默认亮度：\n- 主色域最小值：0.005 cd/m²\n- 主色域最大值：10000 cd/m²\n- 参考白：203 cd/m²\n\n主色域最小值和最大值之间的差值必须约为 10000 cd/m²，因为这是 ST 2084 和 BT.2100 定义的 EOTF 的摆幅。参考白的默认值是协议补充：由 ITU-R BT.2408-7 报告建议，不是 ST 2084 或 BT.2100 的一部分。",
+                "summary": "感知量化器传递函数"
+              }
+            },
+            "st428": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的传递特性：\n- SMPTE ST 428-1 (2019)",
+                "summary": "SMPTE ST 428 传递函数"
+              }
+            },
+            "hlg": {
+              "description": {
+                "type": "description",
+                "text": "由以下标准定义的传递特性：\n- ARIB STD-B67 (2015)\n- Rec. ITU-R BT.2100-2 混合对数伽马 (HLG) 系统\n\n此传递函数包含以下默认亮度：\n- 主色域最小值：0.005 cd/m²\n- 主色域最大值：1000 cd/m²\n- 参考白：203 cd/m²\n\nHLG 是一种相对的显示参考信号，具有指定的到显示峰值亮度的非线性映射（HLG OOTF）。此处使用的所有 HLG 绝对亮度值均假设峰值显示为 1000 cd/m²。\n\n参考白的默认值是协议补充：由 ITU-R BT.2408-7 报告建议，不是 ARIB STD-B67 或 BT.2100 的一部分。",
+                "summary": "混合对数伽马传递函数"
+              }
+            },
+            "compound_power_2_4": {
+              "description": {
+                "type": "description",
+                "text": "由 IEC 61966-2-1 定义的编码特性，适用于反转编码函数的显示设备。",
+                "summary": "IEC 61966-2-1 编码函数"
+              }
+            }
+          }
+        }
+      }
+    },
+    "wp_color_management_output_v1": {
+      "description": {
+        "type": "description",
+        "text": "wp_color_management_output_v1 描述输出的色彩属性。\n\nwp_color_management_output_v1 与 wl_output 对象底层的 wl_output 全局对象关联。因此客户端销毁 wl_output 对象没有影响，但合成器移除输出全局对象会使 wp_color_management_output_v1 对象变为惰性。",
+        "summary": "输出色彩属性"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 wp_color_management_output_v1 对象。这不会影响任何剩余的协议对象。",
+            "summary": "销毁色彩管理输出"
+          }
+        },
+        "get_image_description": {
+          "description": {
+            "type": "description",
+            "text": "为输出的当前图像描述创建一个新的 wp_image_description_v1 对象。输出始终恰好有一个活动的图像描述，因此客户端应销毁此请求先前调用创建的图像描述。此请求通常作为对 image_description_changed 事件的响应或在创建 wp_color_management_output_v1 对象时发送。\n\n输出的图像描述表示输出期望的色彩编码。如果内容更新与其显示输出的图像描述匹配，可能会有性能和功耗优势，以及更好的色彩再现。如果内容更新在与其图像描述不匹配的其他输出上显示，则这些输出上的色彩再现可能会明显更差。\n\n创建的 wp_image_description_v1 对象保存对象创建时输出的图像描述。\n\n生成的图像描述对象允许 get_information 请求。\n\n如果此协议对象是惰性的，生成的图像描述对象应立即发送 wp_image_description_v1.failed 事件，原因为 no_output。\n\n如果接口版本不足以支持输出的图像描述，即客户端不支持传递关键信息所需的所有事件，生成的图像描述对象应立即发送 wp_image_description_v1.failed 事件，原因为 low_version。\n\n否则对象应立即发送 ready 事件。",
+            "summary": "获取输出的图像描述"
+          }
+        }
+      },
+      "events": {
+        "image_description_changed": {
+          "description": {
+            "type": "description",
+            "text": "每当输出的图像描述更改时发送此事件，随后是所有扩展中共用的 wl_output.done 事件。\n\n如果客户端想使用更新后的图像描述，需要再次调用 get_image_description，因为图像描述对象是不可变的。",
+            "summary": "图像描述已更改"
+          }
+        }
+      }
+    },
+    "wp_color_management_surface_v1": {
+      "description": {
+        "type": "description",
+        "text": "wp_color_management_surface_v1 允许客户端设置 surface 的色彩空间和 HDR 属性。\n\n如果与 wp_color_management_surface_v1 关联的 wl_surface 被销毁，wp_color_management_surface_v1 对象将变为惰性。",
+        "summary": "surface 的色彩管理扩展"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 wp_color_management_surface_v1 对象，执行与 unset_image_description 相同的操作。",
+            "summary": "销毁 surface 的色彩管理接口"
+          }
+        },
+        "set_image_description": {
+          "description": {
+            "type": "description",
+            "text": "如果此协议对象是惰性的，则引发协议错误 inert。\n\n设置底层 surface 的图像描述。图像描述和渲染意图是双缓冲状态，参见 wl_surface.commit。\n\n客户端有责任理解其在 surface 上设置的图像描述，并提供与该图像描述匹配的内容。合成器可能会转换图像以匹配其自身或其他图像描述。\n\n未就绪的图像描述（参见 wp_image_description_v1）在此请求中是禁止的，在这种情况下将引发协议错误 image_description。\n\n所有已就绪的图像描述（参见 wp_image_description_v1）都是允许的，合成器必须始终接受。\n\n当在 surface 上设置图像描述时，它建立了 surface 像素值与 surface 色度之间的明确链接。对于某些像素值，此链接可能是未定义的，详见图像描述创建器接口。非有限浮点值（NaN、Inf）的色度始终是未定义的。\n\n渲染意图提供了客户端对 surface 色度应如何映射到每个输出的偏好。render_intent 值必须是合成器通过 wp_color_manager_v1.render_intent 事件通告的值之一，否则将引发协议错误 render_intent。\n\n默认情况下，surface 没有关联的图像描述或渲染意图。此类 surface 上的色彩处理由合成器实现定义。合成器应将此类 surface 视为 sRGB 处理，但如果有特定要求也可以不同处理。\n\n设置图像描述具有复制语义；此请求之后，可以立即销毁图像描述而不影响 surface 的待处理状态。",
+            "summary": "设置 surface 图像描述"
+          }
+        },
+        "unset_image_description": {
+          "description": {
+            "type": "description",
+            "text": "如果此协议对象是惰性的，则引发协议错误 inert。\n\n此请求从 surface 移除任何图像描述。有关合成器如何处理没有图像描述的 surface，参见 set_image_description。这是双缓冲状态，参见 wl_surface.commit。",
+            "summary": "移除 surface 图像描述"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "type": "description",
+            "summary": "协议错误"
+          },
+          "entries": {
+            "render_intent": {
+              "summary": "不支持的渲染意图"
+            },
+            "image_description": {
+              "summary": "无效的图像描述"
+            },
+            "inert": {
+              "summary": "对惰性对象的禁止请求"
+            }
+          }
+        }
+      }
+    },
+    "wp_color_management_surface_feedback_v1": {
+      "description": {
+        "type": "description",
+        "text": "wp_color_management_surface_feedback_v1 允许客户端获取 surface 的首选图像描述。\n\n如果与此对象关联的 wl_surface 被销毁，wp_color_management_surface_feedback_v1 对象将变为惰性。",
+        "summary": "surface 的色彩管理扩展"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁 wp_color_management_surface_feedback_v1 对象。",
+            "summary": "销毁 surface 的色彩管理接口"
+          }
+        },
+        "get_preferred": {
+          "description": {
+            "type": "description",
+            "text": "如果此协议对象是惰性的，则引发协议错误 inert。\n\n首选图像描述表示合成器当前对此 wl_surface 的首选色彩编码。如果内容更新的图像描述与首选图像描述匹配，可能会有性能和功耗优势，以及更好的色彩再现。\n\n为 wl_surface 的当前首选图像描述创建一个新的 wp_image_description_v1 对象。客户端应停止使用并销毁此请求先前为关联 wl_surface 创建的图像描述。此请求通常作为对 preferred_changed 事件的响应或在创建 wp_color_management_surface_feedback_v1 对象时发送（如果客户端能够适应图像描述）。\n\n创建的 wp_image_description_v1 对象保存对象创建时 wl_surface 的首选图像描述。\n\n生成的图像描述对象允许 get_information 请求。\n\n如果图像是参数化的，客户端应仅在图像描述与客户端内容完全匹配时才将其设置到 wl_surface 上。特别是如果其他一切都匹配，但目标色域大于客户端所需，客户端应使用其精确参数创建自己的参数化图像描述。\n\n如果接口版本不足以支持首选图像描述，即客户端不支持传递关键信息所需的所有事件，生成的图像描述对象应立即发送 wp_image_description_v1.failed 事件，原因为 low_version，否则对象应立即发送 ready 事件。",
+            "summary": "获取首选图像描述"
+          }
+        },
+        "get_preferred_parametric": {
+          "description": {
+            "type": "description",
+            "text": "与 get_preferred 的描述相同，但返回的图像描述保证是参数化的。这适用于只能处理参数化图像描述的客户端。\n\n如果合成器不支持参数化图像描述，将发出 unsupported_feature 错误。",
+            "summary": "获取首选图像描述"
+          }
+        }
+      },
+      "events": {
+        "preferred_changed": {
+          "description": {
+            "type": "description",
+            "text": "从接口版本 2 开始，发送 'preferred_changed2' 而非此事件。定义参见 'preferred_changed2' 事件。",
+            "summary": "首选图像描述已更改（32 位）"
+          }
+        },
+        "preferred_changed2": {
+          "description": {
+            "type": "description",
+            "text": "首选图像描述是客户端用于其 wl_surface 内容时可能为合成器带来最大性能和/或质量优势的图像描述。每当合成器更改 wl_surface 的首选图像描述时发送此事件。\n\n此事件发送新首选状态的标识作为参数，因此已知图像描述的客户端可以重用它。否则，如果客户端想知道首选图像描述是什么，应使用 get_preferred 请求。\n\n首选图像描述不会自动用于任何用途。它只是一个提示，客户端可以通过 set_image_description 设置任何有效的图像描述，但使用首选图像描述提供 wl_surface 内容可能会提高性能和色彩准确性。因此，有能力的客户端应按照首选图像描述进行渲染。",
+            "summary": "首选图像描述已更改"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "type": "description",
+            "summary": "协议错误"
+          },
+          "entries": {
+            "inert": {
+              "summary": "对惰性对象的禁止请求"
+            },
+            "unsupported_feature": {
+              "summary": "尝试使用不支持的功能"
+            }
+          }
+        }
+      }
+    },
+    "wp_image_description_creator_icc_v1": {
+      "description": {
+        "type": "description",
+        "text": "此类型的对象用于收集从 ICC 文件创建 wp_image_description_v1 对象所需的所有信息。完整的必需参数集由以下属性组成：\n- ICC 文件\n\n如果客户端要创建图像描述，每个必需属性必须恰好设置一次。设置请求会验证属性是否已设置。创建请求会验证所有必需属性是否已设置。可能有多个替代请求用于设置每个属性，在这种情况下客户端必须选择其中一个。\n\n一旦所有属性都已设置，必须使用创建请求来创建图像描述对象，同时销毁创建器。\n\n像素值（ICC 中的设备值）与其各自色度之间的链接由特定 ICC 配置文件的详细信息定义。这些详细信息还决定了色度何时变为未定义。",
+        "summary": "图像描述 ICC 信息持有者"
+      },
+      "requests": {
+        "create": {
+          "description": {
+            "type": "description",
+            "text": "基于先前在此对象上设置的 ICC 信息创建图像描述对象。合成器必须在某个未定义但有限的时间内解析 ICC 数据。\n\n验证参数集的完整性。如果集不完整，将引发协议错误 incomplete_set。完整集的定义参见此接口的描述。\n\n如果合成器不支持该信息的特定组合，生成的图像描述对象应立即发送 wp_image_description_v1.failed 事件，原因为 'unsupported'。如果从该信息创建了有效的图像描述，最终将改为发送 wp_image_description_v1.ready 事件。\n\n此请求销毁 wp_image_description_creator_icc_v1 对象。\n\n生成的图像描述对象不允许 get_information 请求。",
+            "summary": "从 ICC 数据创建图像描述对象"
+          }
+        },
+        "set_icc_file": {
+          "description": {
+            "type": "description",
+            "text": "设置用作图像描述基础的 ICC 配置文件。\n\n数据应在给定偏移量处通过给定的 fd 找到，具有给定的长度。fd 必须可寻址和可读。违反这些要求将引发协议错误 bad_fd。\n\n如果由于与客户端无关的错误导致读取数据失败，合成器应在创建的 wp_image_description_v1 上发送 wp_image_description_v1.failed 事件，原因为 'operating_system'。\n\nICC 配置文件的最大大小为 32 MB。如果长度大于该值或为零，将引发协议错误 bad_size。如果 offset + length 超过文件大小，将引发协议错误 out_of_file。\n\n合成器可以在此请求之后的任何时间读取文件，直到以下先发生的情况：\n- 如果发出了 create 请求，wp_image_description_v1 对象发送 failed 或 ready 事件；或\n- 如果未发出 create 请求，此 wp_image_description_creator_icc_v1 对象被销毁。\n\n合成器不得修改文件内容，fd 可以被密封以防止写入和大小更改。客户端必须尽最大努力确保数据在合成器读取期间不会更改。\n\n数据必须表示有效的 ICC 配置文件。ICC 配置文件版本必须为 2 或 4，必须是 3 通道配置文件，类别必须为 Display 或 ColorSpace。违反这些要求不会导致协议错误，但最终会在创建的 wp_image_description_v1 上发送 wp_image_description_v1.failed 事件，原因为 'unsupported'。\n\n有关 ICC 配置文件的更多详情，请参阅 International Color Consortium 规范 ICC.1:2022。\n\n如果此对象已设置 ICC 文件，将引发协议错误 already_set。",
+            "summary": "设置 ICC 配置文件"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "type": "description",
+            "summary": "协议错误"
+          },
+          "entries": {
+            "incomplete_set": {
+              "summary": "不完整的参数集"
+            },
+            "already_set": {
+              "summary": "属性已设置"
+            },
+            "bad_fd": {
+              "summary": "fd 不可寻址和可读"
+            },
+            "bad_size": {
+              "summary": "无数据或数据过多"
+            },
+            "out_of_file": {
+              "summary": "offset + length 超过文件大小"
+            }
+          }
+        }
+      }
+    },
+    "wp_image_description_creator_params_v1": {
+      "description": {
+        "type": "description",
+        "text": "此类型的对象用于收集创建 wp_image_description_v1 对象所需的所有参数。完整的必需参数集由以下属性组成：\n- 传递特性函数 (tf)\n- 原色和白点的色度（主色域）\n\n以下属性是可选的，如果未明确设置则有明确定义的默认值：\n- 主色域亮度范围\n- 参考白亮度电平\n- 母版显示原色和白点（目标色域）\n- 母版亮度范围\n\n以下属性是可选的，如果未明确设置将被忽略：\n- 最大内容亮度电平\n- 最大帧平均亮度电平\n\n如果客户端要创建图像描述，每个必需属性必须恰好设置一次。设置请求会验证属性是否已设置。创建请求会验证所有必需属性是否已设置。可能有多个替代请求用于设置每个属性，在这种情况下客户端必须选择其中一个。\n\n一旦所有属性都已设置，必须使用创建请求来创建图像描述对象，同时销毁创建器。\n\n查看由生成的图像描述定义的显示设备（包括观看环境）的观察者，被假定为完全适应主色域的白点。\n\n以下任一条件将导致像素的色度变为未定义：\n- 超出传递特性定义范围的值。\n- 超出目标色域的三刺激值。\n- 如果不支持 extended_target_volume：超出主色域的三刺激值。\n\n与此接口创建的图像描述最接近的对应物是 ICC 中的 Display 类配置文件。",
+        "summary": "图像描述参数持有者"
+      },
+      "requests": {
+        "create": {
+          "description": {
+            "type": "description",
+            "text": "基于先前在此对象上设置的参数创建图像描述对象。\n\n验证参数集的完整性。如果集不完整，将引发协议错误 incomplete_set。完整集的定义参见此接口的描述。\n\n当 max_cll 和 max_fall 都设置时，max_fall 必须小于或等于 max_cll，否则将引发协议错误 invalid_luminance。\n\n在版本 1 中，以下条件也会导致协议错误 invalid_luminance。版本 2 及更高版本没有此要求。\n- 当设置 max_cll 时，它必须大于母版亮度范围的 min L 且小于或等于 max L。\n- 当设置 max_fall 时，它必须大于母版亮度范围的 min L 且小于或等于 max L。\n\n如果合成器不支持参数集的特定组合，生成的图像描述对象应立即发送 wp_image_description_v1.failed 事件，原因为 'unsupported'。如果从参数集创建了有效的图像描述，最终将改为发送 wp_image_description_v1.ready 事件。\n\n此请求销毁 wp_image_description_creator_params_v1 对象。\n\n生成的图像描述对象不允许 get_information 请求。",
+            "summary": "使用参数创建图像描述对象"
+          }
+        },
+        "set_tf_named": {
+          "description": {
+            "type": "description",
+            "text": "使用显式枚举的命名函数设置传递特性。\n\n当生成的图像描述附加到图像时，内容应根据传递特性的行业标准实践进行解码。\n\n仅允许使用通过 wp_color_manager_v1 事件 supported_tf_named 通告的名称。其他值将引发协议错误 invalid_tf。\n\n如果此对象已设置传递特性，将引发协议错误 already_set。",
+            "summary": "命名传递特性"
+          }
+        },
+        "set_tf_power": {
+          "description": {
+            "type": "description",
+            "text": "将色彩分量传递特性设置为具有给定指数的幂曲线。负值通过将曲线的正半部分关于原点镜像处理。曲线的有效域和范围是所有有限实数。此曲线表示从电信号到光信号的色彩通道值转换。\n\n曲线指数应乘以 10000 以获得参数 eexp 值，精度为 4 位小数。\n\n曲线指数必须至少为 1.0 且最多为 10.0。否则将引发协议错误 invalid_tf。\n\n如果此对象已设置传递特性，将引发协议错误 already_set。\n\n当合成器通告 wp_color_manager_v1.feature.set_tf_power 时可以使用此请求。否则此请求将引发协议错误 unsupported_feature。",
+            "summary": "作为幂曲线的传递特性"
+          }
+        },
+        "set_primaries_named": {
+          "description": {
+            "type": "description",
+            "text": "使用显式命名集设置原色和白点。这描述了作为色彩值编码基础的主色域。\n\n仅允许使用通过 wp_color_manager_v1 事件 supported_primaries_named 通告的名称。其他值将引发协议错误 invalid_primaries_named。\n\n如果此对象已设置原色，将引发协议错误 already_set。",
+            "summary": "命名原色"
+          }
+        },
+        "set_primaries": {
+          "description": {
+            "type": "description",
+            "text": "使用 CIE 1931 xy 色度坐标设置原色和白点。这描述了作为色彩值编码基础的主色域。\n\n每个坐标值乘以 100 万以获得参数值，精度为 6 位小数。\n\n如果此对象已设置原色，将引发协议错误 already_set。\n\n当合成器通告 wp_color_manager_v1.feature.set_primaries 时可以使用此请求。否则此请求将引发协议错误 unsupported_feature。",
+            "summary": "作为色度坐标的原色"
+          }
+        },
+        "set_luminances": {
+          "description": {
+            "type": "description",
+            "text": "Sets the primary color volume luminance range and the reference white\nluminance level. These values include the minimum display emission, but\nnot external flare. The minimum display emission is assumed to have\nthe chromaticity of the primary color volume white point.\n\nThe default luminances from\nhttps://www.color.org/chardata/rgb/srgb.xalter are\n- primary color volume minimum: 0.2 cd/m²\n- primary color volume maximum: 80 cd/m²\n- reference white: 80 cd/m²\n\nSetting a named transfer characteristic can imply other default\nluminances.\n\nThe default luminances get overwritten when this request is used.\nWith transfer_function.st2084_pq the given 'max_lum' value is ignored,\nand 'max_lum' is taken as 'min_lum' + 10000 cd/m².\n\n'min_lum' and 'max_lum' specify the minimum and maximum luminances of\nthe primary color volume as reproduced by the targeted display.\n\n'reference_lum' specifies the luminance of the reference white as\nreproduced by the targeted display, and reflects the targeted viewing\nenvironment.\n\nCompositors should make sure that all content is anchored, meaning that\nan input signal level of 'reference_lum' on one image description and\nanother input signal level of 'reference_lum' on another image\ndescription should produce the same output level, even though the\n'reference_lum' on both image representations can be different.\n\n'reference_lum' may be higher than 'max_lum'. In that case reaching\nthe reference white output level in image content requires the\n'extended_target_volume' feature support.\n\nIf 'max_lum' or 'reference_lum' are less than or equal to 'min_lum',\nthe protocol error invalid_luminance is raised.\n\nThe minimum luminance is multiplied by 10000 to get the argument\n'min_lum' value and carries precision of 4 decimals. The maximum\nluminance and reference white luminance values are unscaled.\n\nIf the primary color volume luminance range and the reference white\nluminance level have already been set on this object, the protocol error\nalready_set is raised.\n\nThis request can be used if the compositor advertises\nwp_color_manager_v1.feature.set_luminances. Otherwise this request\nraises the protocol error unsupported_feature.",
+            "summary": "主色域亮度范围和参考白"
+          }
+        },
+        "set_mastering_display_primaries": {
+          "description": {
+            "type": "description",
+            "text": "使用 CIE 1931 xy 色度坐标提供母版显示的原色和白点。这与 SMPTE ST 2086 的 HDR 静态元数据定义兼容。\n\n母版显示原色和母版显示亮度定义了目标色域。\n\n如果未明确设置母版显示原色，目标色域被假定具有与主色域相同的原色。\n\n目标色域由给定母版显示原色和白点定义的色彩空间中 0.0 到 1.0（含）之间的所有三刺激值定义。容器色彩空间和母版显示色彩空间之间的色度是相同的，即使白点不同也不应用色度适应。\n\n目标色域可以超出主色域，以允许使用现有色彩空间定义（例如 scRGB）获得更大的色域。它也可以小于主色域，以最小化大色彩空间（HDR 元数据）的色域和色调映射距离。\n\n要使用整个目标色域，需要选择合适的像素格式（例如浮点数以超出主色域，或像 xvYCC 那样滥用有限量化范围）。\n\n每个坐标值乘以 100 万以获得参数值，精度为 6 位小数。\n\n如果此对象已设置母版显示原色，将引发协议错误 already_set。\n\n当合成器通告 wp_color_manager_v1.feature.set_mastering_display_primaries 时可以使用此请求。否则此请求将引发协议错误 unsupported_feature。该通告仅暗示支持完全包含在主色域内的目标色域。\n\n如果合成器还支持超出主色域的目标色域，必须通告 wp_color_manager_v1.feature.extended_target_volume。如果客户端使用超出主色域的目标色域而合成器不支持，结果是实现定义的。建议合成器检测此情况并优雅地使图像描述失败，但也可能导致色彩伪影。",
+            "summary": "作为色度坐标的母版显示原色"
+          }
+        },
+        "set_mastering_luminance": {
+          "description": {
+            "type": "description",
+            "text": "设置内容母版处理期间使用的亮度范围，作为最小和最大绝对亮度 L。这些值包括最小显示发射和环境眩光亮度，假定为光学相加并具有主色域白点的色度。这应与 SMPTE ST 2086 的 HDR 静态元数据定义兼容。\n\n母版显示原色和母版显示亮度定义了目标色域。\n\n如果未明确设置母版亮度，目标色域被假定具有与主色域相同的最小和最大亮度。\n\n如果 max L 小于或等于 min L，将引发协议错误 invalid_luminance。\n\nMin L 值乘以 10000 以获得参数 min_lum 值，精度为 4 位小数。Max L 值不缩放用于 max_lum。\n\n当合成器通告 wp_color_manager_v1.feature.set_mastering_display_primaries 时可以使用此请求。否则此请求将引发协议错误 unsupported_feature。该通告仅暗示支持完全包含在主色域内的目标色域。\n\n如果合成器还支持超出主色域的目标色域，必须通告 wp_color_manager_v1.feature.extended_target_volume。如果客户端使用超出主色域的目标色域而合成器不支持，结果是实现定义的。建议合成器检测此情况并优雅地使图像描述失败，但也可能导致色彩伪影。",
+            "summary": "显示母版亮度范围"
+          }
+        },
+        "set_max_cll": {
+          "description": {
+            "type": "description",
+            "text": "设置 CTA-861-H 定义的最大内容亮度电平 (max_cll)。\n\nmax_cll 默认未定义。",
+            "summary": "最大内容亮度电平"
+          }
+        },
+        "set_max_fall": {
+          "description": {
+            "type": "description",
+            "text": "设置 CTA-861-H 定义的最大帧平均亮度电平 (max_fall)。\n\nmax_fall 默认未定义。",
+            "summary": "最大帧平均亮度电平"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "type": "description",
+            "summary": "协议错误"
+          },
+          "entries": {
+            "incomplete_set": {
+              "summary": "不完整的参数集"
+            },
+            "already_set": {
+              "summary": "属性已设置"
+            },
+            "unsupported_feature": {
+              "summary": "请求不支持"
+            },
+            "invalid_tf": {
+              "summary": "无效的传递特性"
+            },
+            "invalid_primaries_named": {
+              "summary": "无效的命名原色"
+            },
+            "invalid_luminance": {
+              "summary": "无效的亮度值或范围"
+            }
+          }
+        }
+      }
+    },
+    "wp_image_description_v1": {
+      "description": {
+        "type": "description",
+        "text": "图像描述携带有关像素色彩编码及其预期显示和观看环境的信息。图像描述通过 wp_color_management_surface_v1.set_image_description 附加到 wl_surface。合成器可以使用此信息将像素值解码为色度上有意义的量，使合成器能够转换 surface 内容以适应各种显示和观看环境。\n\n注意，wp_image_description_v1 对象在创建后不能立即使用。对象最终会发送 'ready' 或 'failed' 事件，这在所有创建它的请求中都有指定。对象在收到 'ready' 事件后被视为 \"就绪\"。\n\n未就绪的对象使用是非法的，只能被销毁。此接口中的任何其他请求将导致 'not_ready' 协议错误。尝试通过其他接口使用未就绪的对象将引发那里定义的协议错误。\n\n一旦创建且无论如何创建，wp_image_description_v1 对象始终引用一个固定的图像描述。创建后不能更改。",
+        "summary": "色度图像描述"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁此对象。销毁未就绪的对象是安全的。\n\n销毁 wp_image_description_v1 对象没有副作用，即使 wp_color_management_surface_v1.set_image_description 尚未跟随 wl_surface.commit。",
+            "summary": "销毁图像描述"
+          }
+        },
+        "get_information": {
+          "description": {
+            "type": "description",
+            "text": "创建一个 wp_image_description_info_v1 对象，该对象传递构成图像描述的信息。\n\n并非所有图像描述协议对象都允许 get_information 请求。是否允许由创建对象的请求定义。如果不允许 get_information，将引发协议错误 no_information。",
+            "summary": "获取图像描述信息"
+          }
+        }
+      },
+      "events": {
+        "failed": {
+          "description": {
+            "type": "description",
+            "text": "如果创建 wp_image_description_v1 对象因未定义为协议错误的原因而失败，则发送此事件。\n\n创建图像描述对象的请求定义了是否以及何时可能发生这种情况。只有此类创建请求可以触发此事件。图像描述成功形成后不能触发此事件。\n\n一旦发送此事件，wp_image_description_v1 对象将永远不会就绪，只能被销毁。",
+            "summary": "创建图像描述时的优雅错误"
+          }
+        },
+        "ready": {
+          "description": {
+            "type": "description",
+            "text": "从接口版本 2 开始，发送 'ready2' 事件而非此事件。\n\n此事件的定义参见 'ready2' 事件。与此事件的区别如下。\n\nid 号仅在协议对象存在期间有效。如果引用同一图像描述记录的所有协议对象被销毁，id 号可能被回收用于不同的图像描述记录。",
+            "summary": "对象已就绪可供使用（32 位）"
+          }
+        },
+        "ready2": {
+          "description": {
+            "type": "description",
+            "text": "一旦发送此事件，wp_image_description_v1 对象被视为 \"就绪\"。就绪的对象可用于发送请求，也可通过其他接口使用。\n\n每个就绪的 wp_image_description_v1 协议对象引用合成器中的底层图像描述记录。多个协议对象可能最终引用同一记录。客户端可以通过比较 id 号来识别这些 \"副本\"：如果两个协议对象的数字相同，则协议对象引用同一图像描述记录。两个不同的图像描述记录不能同时具有相同的 id 号。id 号在图像描述记录的生命周期内不会更改。\n\n图像描述 id 号不是协议对象 id。零保留为无效 id 号。客户端不应在协议中通过 id 号引用图像描述。id 号可能无法在 Wayland 连接之间移植。合成器不得发送无效的 id 号。\n\n合成器不得回收图像描述 id 号。\n\n此标识允许客户端对图像描述记录进行去重，如果已有图像描述信息则避免 get_information 请求。",
+            "summary": "对象已就绪可供使用"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "description": {
+            "type": "description",
+            "summary": "协议错误"
+          },
+          "entries": {
+            "not_ready": {
+              "summary": "尝试使用未就绪的对象"
+            },
+            "no_information": {
+              "summary": "不允许 get_information"
+            }
+          }
+        },
+        "cause": {
+          "description": {
+            "type": "description",
+            "summary": "通用失败原因"
+          },
+          "entries": {
+            "low_version": {
+              "summary": "接口版本过低"
+            },
+            "unsupported": {
+              "summary": "不支持的图像描述数据"
+            },
+            "operating_system": {
+              "summary": "与客户端无关的错误"
+            },
+            "no_output": {
+              "summary": "相关输出不再存在"
+            }
+          }
+        }
+      }
+    },
+    "wp_image_description_info_v1": {
+      "description": {
+        "type": "description",
+        "text": "精确地发送一次描述图像描述对象的所有匹配事件，最后发送 'done' 事件。\n\n这意味着：\n- 如果图像是参数化的，必须发送：\n  - primaries\n  - named_primaries（如适用）\n  - tf_power 和 tf_named 中至少一个（如适用）\n  - luminances\n  - target_primaries\n  - target_luminance\n- 如果图像是参数化的，可以发送（如适用）：\n  - target_max_cll\n  - target_max_fall\n- 如果图像包含 ICC 配置文件，必须发送 icc_file 事件\n\n一旦 wp_image_description_info_v1 对象发送了 'done' 事件，它将自动销毁。\n\n从同一 wp_image_description_v1 创建的每个 wp_image_description_info_v1 应始终返回完全相同的数据。",
+        "summary": "色度图像描述信息"
+      },
+      "events": {
+        "done": {
+          "description": {
+            "type": "description",
+            "text": "信号信息事件结束并销毁对象。",
+            "summary": "信息结束"
+          }
+        },
+        "icc_file": {
+          "description": {
+            "type": "description",
+            "text": "icc 参数向客户端提供一个文件描述符，可以通过内存映射来提供与图像描述匹配的 ICC 配置文件。fd 是只读的，如果映射则客户端必须使用 MAP_PRIVATE 映射。\n\nICC 配置文件版本和其他详细信息由合成器决定。没有规定客户端可以请求特定类型的配置文件。",
+            "summary": "与图像描述匹配的 ICC 配置文件"
+          }
+        },
+        "primaries": {
+          "description": {
+            "type": "description",
+            "text": "使用 CIE 1931 xy 色度坐标传递主色域原色和白点。\n\n每个坐标值乘以 100 万以获得参数值，精度为 6 位小数。",
+            "summary": "作为色度坐标的原色"
+          }
+        },
+        "primaries_named": {
+          "description": {
+            "type": "description",
+            "text": "使用显式枚举的命名集传递主色域原色和白点。",
+            "summary": "命名原色"
+          }
+        },
+        "tf_power": {
+          "description": {
+            "type": "description",
+            "text": "此图像描述的色彩分量传递特性是纯幂曲线。此事件提供幂函数的指数。此曲线表示从电信号到光信号的像素或色彩值转换。\n\n曲线指数已乘以 10000 以获得参数 eexp 值，精度为 4 位小数。",
+            "summary": "作为幂曲线的传递特性"
+          }
+        },
+        "tf_named": {
+          "description": {
+            "type": "description",
+            "text": "使用显式枚举的命名函数传递传递特性。",
+            "summary": "命名传递特性"
+          }
+        },
+        "luminances": {
+          "description": {
+            "type": "description",
+            "text": "传递主色域亮度范围和参考白亮度电平。这些值包括最小显示发射和环境眩光亮度，假定为光学相加并具有主色域白点的色度。\n\n最小亮度乘以 10000 以获得参数 'min_lum' 值，精度为 4 位小数。最大亮度和参考白亮度值不缩放。",
+            "summary": "主色域亮度范围和参考白"
+          }
+        },
+        "target_primaries": {
+          "description": {
+            "type": "description",
+            "text": "使用 CIE 1931 xy 色度坐标提供目标色域的原色和白点。这与 SMPTE ST 2086 用于母版显示的 HDR 静态元数据定义兼容。\n\n主色域是关于色彩如何编码的，而目标色域是实际可显示的色域。\n\n每个坐标值乘以 100 万以获得参数值，精度为 6 位小数。",
+            "summary": "作为色度坐标的目标原色"
+          }
+        },
+        "target_luminance": {
+          "description": {
+            "type": "description",
+            "text": "提供图像描述所针对的亮度范围，作为最小和最大绝对亮度 L。这些值包括最小显示发射和环境眩光亮度，假定为光学相加并具有主色域白点的色度。这应与 SMPTE ST 2086 的 HDR 静态元数据定义兼容。\n\n此亮度范围仅为理论值，可能与实际显示发出的光亮度不对应。\n\nMin L 值乘以 10000 以获得参数 min_lum 值，精度为 4 位小数。Max L 值不缩放用于 max_lum。",
+            "summary": "目标亮度范围"
+          }
+        },
+        "target_max_cll": {
+          "description": {
+            "type": "description",
+            "text": "提供图像描述的目标 max_cll。max_cll 由 CTA-861-H 定义。\n\n此亮度仅为理论值，可能与实际显示发出的光亮度不对应。",
+            "summary": "目标最大内容亮度电平"
+          }
+        },
+        "target_max_fall": {
+          "description": {
+            "type": "description",
+            "text": "提供图像描述的目标 max_fall。max_fall 由 CTA-861-H 定义。\n\n此亮度仅为理论值，可能与实际显示发出的光亮度不对应。",
+            "summary": "目标最大帧平均亮度电平"
+          }
+        }
+      }
+    },
+    "wp_image_description_reference_v1": {
+      "description": {
+        "type": "description",
+        "text": "此对象是对图像描述的引用。此接口冻结在版本 1，以允许其他协议创建 wp_image_description_v1 对象。\n\n可以使用 wp_color_manager_v1.get_image_description 请求检索底层图像描述。",
+        "summary": "图像描述的引用"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "销毁此对象。这对引用的图像描述没有影响。",
+            "summary": "销毁引用"
+          }
+        }
+      }
+    }
+  }
+}

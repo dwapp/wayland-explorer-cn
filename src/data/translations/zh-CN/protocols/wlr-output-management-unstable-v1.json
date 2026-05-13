@@ -1,0 +1,386 @@
+{
+  "description": {
+    "type": "description",
+    "text": "此协议暴露用于获取和修改输出设备配置的接口。\n\n警告！此文件中描述的协议是实验性的，可能会进行不兼容的更改。向后兼容的更改可能会与相应的接口版本号一起添加。不兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被宣布为稳定版本，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。",
+    "summary": "用于配置输出设备的协议"
+  },
+  "interfaces": {
+    "zwlr_output_manager_v1": {
+      "description": {
+        "type": "description",
+        "text": "此接口是一个管理器，允许读取和写入当前输出设备配置。\n\n显示像素的输出设备（例如物理监视器或窗口中的虚拟输出）被表示为 head。客户端无法创建或销毁 head，但可以启用或禁用它们，并且可以更改它们的属性。每个 head 可以有一个或多个可用的模式。\n\n每当 head 出现时（例如插入监视器），它将通过 head 事件进行通告。在绑定输出管理器之后，所有当前的 head 都会被通告。\n\n每当 head 的属性发生变化时，相关的 wlr_output_head 事件将被发送。并非所有 head 属性都会被发送：只有已更改的属性需要发送。\n\n每当 head 消失时（例如拔出监视器），将发送 wlr_output_head.finished 事件。\n\n在一个或多个 head 出现、更改或消失之后，将发送 done 事件。它携带一个序列号，可用于 create_configuration 请求来更新 head 属性。\n\n从此协议获取的信息应仅用于输出配置目的。此协议不是为常规客户端设计的通用输出属性通告协议。应改用 xdg-output 等协议。",
+        "summary": "输出设备配置管理器"
+      },
+      "requests": {
+        "create_configuration": {
+          "description": {
+            "type": "description",
+            "text": "创建一个新的输出配置对象。这允许更新 head 属性。",
+            "summary": "创建新的输出配置对象"
+          }
+        },
+        "stop": {
+          "description": {
+            "type": "description",
+            "text": "表示客户端不再希望接收输出配置更改的事件。但是 compositor 可能会发出更多事件，直到发出 finished 事件。\n\n客户端在此请求之后不得发送任何更多请求。",
+            "summary": "停止发送事件"
+          }
+        }
+      },
+      "events": {
+        "head": {
+          "description": {
+            "type": "description",
+            "text": "此事件引入一个新的 head。每当新的 head 出现时（例如插入监视器）或在绑定输出管理器之后会发生这种情况。",
+            "summary": "引入新的 head"
+          }
+        },
+        "done": {
+          "description": {
+            "type": "description",
+            "text": "在绑定到输出管理器对象之后以及任何后续更改之后，所有信息发送完毕后发送此事件。这也适用于子 head 和 mode 对象。换句话说，每当 head 或 mode 被创建或销毁以及它们的属性之一被更改时，都会发送此事件。并非每次当前配置更改时都会重新发送所有状态：只发送实际的更改。\n\n这使得输出配置的更改可以被视为原子操作，即使它们通过多个事件发生。\n\n发送一个序列号以供将来在 create_configuration 请求中使用。",
+            "summary": "已发送当前配置的所有信息"
+          }
+        },
+        "finished": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示 compositor 已完成发送管理器事件。compositor 将在此事件发送后立即销毁该对象，因此它将变为无效，客户端应释放与其关联的任何资源。",
+            "summary": "compositor 已完成管理器操作"
+          }
+        }
+      }
+    },
+    "zwlr_output_head_v1": {
+      "description": {
+        "type": "description",
+        "text": "head 是一个输出设备。wl_output 对象和 head 之间的区别在于，即使 head 被关闭也会被通告。head 对象仅通告属性，不能直接用于更改它们。\n\nhead 有一些只读属性：modes、name、description 和 physical_size。客户端无法更改这些属性。\n\n其他属性可以通过 wlr_output_configuration 对象进行更新。\n\n通过此接口发送的属性通过 wlr_output_manager.done 事件原子地应用。不保证属性发送的顺序。",
+        "summary": "输出设备"
+      },
+      "requests": {
+        "release": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端将不再使用此 head 对象。",
+            "summary": "销毁 head 对象"
+          }
+        }
+      },
+      "events": {
+        "name": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 head 名称。\n\n命名约定由 compositor 定义，但仅限于字母数字字符和连字符 (-)。每个名称在所有 wlr_output_head 对象中是唯一的，但如果 wlr_output_head 对象被销毁，相同的名称可能会在以后被重用。在具有相同硬件和软件配置的会话中，名称也将保持一致。\n\n名称的示例包括 'HDMI-A-1'、'WL-1'、'X11-1' 等。但是，不要假设名称是底层 DRM 连接器、X11 连接等的反映。\n\n如果此 head 匹配 wl_output，则 wl_output.name 事件必须报告相同的名称。\n\nname 事件在创建 wlr_output_head 对象之后发送。此事件每个对象只发送一次，并且在 wlr_output_head 对象的生命周期内名称不会更改。",
+            "summary": "head 名称"
+          }
+        },
+        "description": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 head 的人类可读描述。\n\ndescription 是一个 UTF-8 字符串，其内容没有定义的约定。示例可能包括 'Foocorp 11\" Display' 或 'Virtual X11 output via :1'。但是，不要假设名称是底层 DRM 连接器的品牌、型号、序列号或底层 X11 连接的显示名称等的反映。\n\n如果此 head 匹配 wl_output，则 wl_output.description 事件必须报告相同的名称。\n\ndescription 事件在创建 wlr_output_head 对象之后发送。此事件每个对象只发送一次，并且在 wlr_output_head 对象的生命周期内描述不会更改。",
+            "summary": "head 描述"
+          }
+        },
+        "physical_size": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 head 的物理尺寸。仅当 head 具有物理尺寸时（例如不是投影仪或虚拟设备），才会发送此事件。\n\nphysical_size 事件在创建 wlr_output_head 对象之后发送。此事件每个对象只发送一次，并且在 wlr_output_head 对象的生命周期内物理尺寸不会更改。",
+            "summary": "head 物理尺寸"
+          }
+        },
+        "mode": {
+          "description": {
+            "type": "description",
+            "text": "此事件为此 head 引入一个模式。每个支持的模式发送一次。",
+            "summary": "引入模式"
+          }
+        },
+        "enabled": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 head 是否已启用。禁用的 head 不会映射到全局 compositor 空间的某个区域。\n\n当 head 被禁用时，某些属性（current_mode、position、transform 和 scale）将无关紧要。",
+            "summary": "head 已启用或禁用"
+          }
+        },
+        "current_mode": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述此 head 当前使用的模式。仅在输出已启用时才会发送。",
+            "summary": "当前模式"
+          }
+        },
+        "position": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 head 在全局 compositor 空间中的位置。仅在输出已启用时才会发送。",
+            "summary": "当前位置"
+          }
+        },
+        "transform": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述当前应用于 head 的变换。仅在输出已启用时才会发送。",
+            "summary": "当前变换"
+          }
+        },
+        "scale": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 head 在全局 compositor 空间中的缩放比例。仅在输出已启用时才会发送。",
+            "summary": "当前缩放比例"
+          }
+        },
+        "finished": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示 head 不再可用。head 对象变为无效。客户端应发送销毁请求并释放与其关联的任何资源。",
+            "summary": "head 已消失"
+          }
+        },
+        "make": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 head 的制造商。\n\n与 model 和 serial_number 事件一起，其目的是允许客户端识别来自以前会话的 head，并例如加载特定于 head 的配置。\n\n不保证此事件会被发送。原因可能是 compositor 没有关于 head 制造商的信息，或者在当前设置中制造商的定义不合理，例如在虚拟会话中。客户端仍然可以尝试通过其他事件的可用信息来识别 head，但应注意误报的风险增加。\n\n如果发送，make 事件在创建 wlr_output_head 对象之后发送，并且每个对象只发送一次。在 wlr_output_head 对象的生命周期内，制造商不会更改。\n\n不建议在 UI 中向用户显示 make 字符串。为此，应优先使用 description 事件提供的字符串。",
+            "summary": "head 制造商"
+          }
+        },
+        "model": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 head 的型号。\n\n与 make 和 serial_number 事件一起，其目的是允许客户端识别来自以前会话的 head，并例如加载特定于 head 的配置。\n\n不保证此事件会被发送。原因可能是 compositor 没有关于 head 型号的信息，或者在当前设置中型号的定义不合理，例如在虚拟会话中。客户端仍然可以尝试通过其他事件的可用信息来识别 head，但应注意误报的风险增加。\n\n如果发送，model 事件在创建 wlr_output_head 对象之后发送，并且每个对象只发送一次。在 wlr_output_head 对象的生命周期内，型号不会更改。\n\n不建议在 UI 中向用户显示 model 字符串。为此，应优先使用 description 事件提供的字符串。",
+            "summary": "head 型号"
+          }
+        },
+        "serial_number": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 head 的序列号。\n\n与 make 和 model 事件一起，其目的是允许客户端识别来自以前会话的 head，并例如加载特定于 head 的配置。\n\n不保证此事件会被发送。原因可能是 compositor 没有关于 head 序列号的信息，或者在当前设置中序列号的定义不合理。客户端仍然可以尝试通过其他事件的可用信息来识别 head，但应注意误报的风险增加。\n\n如果发送，serial_number 事件在创建 wlr_output_head 对象之后发送，并且每个对象只发送一次。在 wlr_output_head 对象的生命周期内，序列号不会更改。\n\n不建议在 UI 中向用户显示 serial_number 字符串。为此，应优先使用 description 事件提供的字符串。",
+            "summary": "head 序列号"
+          }
+        },
+        "adaptive_sync": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述 head 当前是否启用了 adaptive sync。Adaptive sync 也称为可变刷新率 (Variable Refresh Rate) 或 VRR。",
+            "summary": "当前 adaptive sync 状态"
+          }
+        }
+      },
+      "enums": {
+        "adaptive_sync_state": {
+          "entries": {
+            "disabled": {
+              "summary": "adaptive sync 已禁用"
+            },
+            "enabled": {
+              "summary": "adaptive sync 已启用"
+            }
+          }
+        }
+      }
+    },
+    "zwlr_output_mode_v1": {
+      "description": {
+        "type": "description",
+        "text": "此对象描述输出模式。\n\n某些 head 不支持输出模式，在这种情况下不会通告模式。\n\n通过此接口发送的属性通过 wlr_output_manager.done 事件原子地应用。不保证属性发送的顺序。",
+        "summary": "输出模式"
+      },
+      "requests": {
+        "release": {
+          "description": {
+            "type": "description",
+            "text": "此请求表示客户端将不再使用此 mode 对象。",
+            "summary": "销毁 mode 对象"
+          }
+        }
+      },
+      "events": {
+        "size": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述模式的尺寸。尺寸以输出设备的物理硬件单位给出。这不一定与全局 compositor 空间中的输出尺寸相同。例如，输出可能被缩放或变换。",
+            "summary": "模式尺寸"
+          }
+        },
+        "refresh": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述模式的固定垂直刷新率。仅在模式具有固定刷新率时才会发送。",
+            "summary": "模式刷新率"
+          }
+        },
+        "preferred": {
+          "description": {
+            "type": "description",
+            "text": "此事件将此模式通告为首选模式。",
+            "summary": "模式为首选"
+          }
+        },
+        "finished": {
+          "description": {
+            "type": "description",
+            "text": "此事件表示模式不再可用。mode 对象变为无效。客户端应发送销毁请求并释放与其关联的任何资源。",
+            "summary": "模式已消失"
+          }
+        }
+      }
+    },
+    "zwlr_output_configuration_v1": {
+      "description": {
+        "type": "description",
+        "text": "客户端使用此对象来描述完整的输出配置。\n\n首先，客户端需要设置输出配置。每个 head 可以被启用（并配置）或禁用。使用相同的 head 发送两个 enable_head 或 disable_head 请求是协议错误。在配置中省略 head 也是协议错误。\n\n然后，客户端可以应用或测试配置。compositor 将以 succeeded、failed 或 cancelled 事件进行回复。最后，客户端应销毁配置对象。",
+        "summary": "输出配置"
+      },
+      "requests": {
+        "enable_head": {
+          "description": {
+            "type": "description",
+            "text": "启用 head。此请求创建一个 head 配置对象，可用于更改 head 的属性。",
+            "summary": "启用并配置 head"
+          }
+        },
+        "disable_head": {
+          "description": {
+            "type": "description",
+            "text": "禁用 head。",
+            "summary": "禁用 head"
+          }
+        },
+        "apply": {
+          "description": {
+            "type": "description",
+            "text": "应用新的输出配置。\n\n如果配置成功应用，不保证新的输出状态与请求的配置完全匹配。例如，如果 compositor 不支持分数缩放，它可能会四舍五入缩放值。\n\n发送此请求后，compositor 必须以 succeeded、failed 或 cancelled 事件进行响应。发送不是析构器的请求是协议错误。",
+            "summary": "应用配置"
+          }
+        },
+        "test": {
+          "description": {
+            "type": "description",
+            "text": "测试新的输出配置。配置不会被应用，只会被验证。\n\n即使 compositor 成功测试了配置，应用它也可能失败。\n\n发送此请求后，compositor 必须以 succeeded、failed 或 cancelled 事件进行响应。发送不是析构器的请求是协议错误。",
+            "summary": "测试配置"
+          }
+        },
+        "destroy": {
+          "description": {
+            "type": "description",
+            "text": "使用此请求，客户端可以告知 compositor 它不再使用配置对象。任何未应用的输出更改将被丢弃。\n\n此请求还会销毁通过此对象创建的 wlr_output_configuration_head 对象。",
+            "summary": "销毁输出配置"
+          }
+        }
+      },
+      "events": {
+        "succeeded": {
+          "description": {
+            "type": "description",
+            "text": "在 compositor 成功应用更改或测试更改后发送。\n\n收到此事件后，客户端应销毁此对象。\n\n如果当前配置已更改，将发送描述更改的事件，然后发送 wlr_output_manager.done 事件。",
+            "summary": "配置更改成功"
+          }
+        },
+        "failed": {
+          "description": {
+            "type": "description",
+            "text": "如果 compositor 拒绝更改或应用更改失败，则发送。compositor 应恢复由触发此事件的 apply 请求所做的任何更改。\n\n收到此事件后，客户端应销毁此对象。",
+            "summary": "配置更改失败"
+          }
+        },
+        "cancelled": {
+          "description": {
+            "type": "description",
+            "text": "如果 compositor 因为输出状态发生变化且客户端信息过时（例如在输出热插拔之后）而取消配置，则发送。\n\n客户端可以使用更新的序列号创建新配置并重试。\n\n收到此事件后，客户端应销毁此对象。",
+            "summary": "配置已被取消"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_configured_head": {
+              "summary": "head 已被配置两次"
+            },
+            "unconfigured_head": {
+              "summary": "head 尚未配置"
+            },
+            "already_used": {
+              "summary": "在配置已应用或测试后发送请求"
+            }
+          }
+        }
+      }
+    },
+    "zwlr_output_configuration_head_v1": {
+      "description": {
+        "type": "description",
+        "text": "客户端使用此对象来更新单个 head 的配置。\n\n设置相同的属性两次是协议错误。",
+        "summary": "head 配置"
+      },
+      "requests": {
+        "set_mode": {
+          "description": {
+            "type": "description",
+            "text": "此请求设置 head 的模式。",
+            "summary": "设置模式"
+          }
+        },
+        "set_custom_mode": {
+          "description": {
+            "type": "description",
+            "text": "此请求为 head 分配自定义模式。尺寸以输出设备的物理硬件单位给出。如果设置为零，则刷新率未指定。\n\n同时设置 mode 和 custom mode 是协议错误。",
+            "summary": "设置自定义模式"
+          }
+        },
+        "set_position": {
+          "description": {
+            "type": "description",
+            "text": "此请求设置 head 在全局 compositor 空间中的位置。",
+            "summary": "设置位置"
+          }
+        },
+        "set_transform": {
+          "description": {
+            "type": "description",
+            "text": "此请求设置 head 的变换。",
+            "summary": "设置变换"
+          }
+        },
+        "set_scale": {
+          "description": {
+            "type": "description",
+            "text": "此请求设置 head 的缩放比例。",
+            "summary": "设置缩放比例"
+          }
+        },
+        "set_adaptive_sync": {
+          "description": {
+            "type": "description",
+            "text": "此请求启用/禁用 adaptive sync。Adaptive sync 也称为可变刷新率 (Variable Refresh Rate) 或 VRR。",
+            "summary": "启用/禁用 adaptive sync"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_set": {
+              "summary": "属性已被设置"
+            },
+            "invalid_mode": {
+              "summary": "模式不属于此 head"
+            },
+            "invalid_custom_mode": {
+              "summary": "模式无效"
+            },
+            "invalid_transform": {
+              "summary": "transform 值超出枚举范围"
+            },
+            "invalid_scale": {
+              "summary": "缩放比例为负数或零"
+            },
+            "invalid_adaptive_sync_state": {
+              "summary": "set_adaptive_sync 请求中使用了无效的枚举值"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,429 @@
+{
+  "interfaces": {
+    "kde_output_device_v2": {
+      "description": {
+        "type": "description",
+        "text": "输出设备描述了合成器可用的显示设备。output_device 与 wl_output 类似，但侧重于输出配置管理。\n\n客户端可以查询所有全局 output_device 对象以列出所有可用的显示设备，包括那些当前可能未被合成器表示为 wl_output 的设备。\n\n客户端通过 outputconfiguration 接口向服务器发送配置更改，服务器将配置更改应用到硬件并向输出设备发出相应的更改信号。\n\n此对象在启动时作为全局对象发布，用于每个可用的显示设备，或在设备稍后可用时发布（例如通过物理连接器热插拔）。\n\n警告！此文件中描述的协议是桌面环境的实现细节。普通客户端不得使用此协议。可能会在不增加扩展主版本的情况下添加向后不兼容的更改。",
+        "summary": "输出配置表示"
+      },
+      "events": {
+        "geometry": {
+          "description": {
+            "type": "description",
+            "text": "geometry 事件描述输出的几何属性。该事件在绑定到输出对象时以及任何属性更改时发送。",
+            "summary": "输出的几何属性"
+          }
+        },
+        "current_mode": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述此输出头当前使用的模式。仅在输出启用时发送。",
+            "summary": "当前模式"
+          }
+        },
+        "mode": {
+          "description": {
+            "type": "description",
+            "text": "mode 事件描述输出的可用模式。\n\n当客户端绑定到 output_device 对象时，服务器会为 output_device 可以操作的每个可用模式发送一次此事件。\n\n初始绑定时至少会发送一个事件，表示当前模式。\n\n之后如果输出发生变化，其 mode 事件会再次发送，用于最终添加的模式，最后是当前模式。换句话说，当前模式始终由最后发送的带有 current 标志的事件表示。\n\n模式的大小以输出设备的物理硬件单位给出。这不一定与全局合成器空间中的输出大小相同。例如，输出可能被缩放（如 kde_output_device_v2.scale 中所述）或变换（如 kde_output_device_v2.transform 中所述）。",
+            "summary": "公布可用的输出模式及当前模式"
+          }
+        },
+        "done": {
+          "description": {
+            "type": "description",
+            "text": "此事件在绑定到输出对象时所有其他属性发送完毕后，以及之后任何其他输出属性更改应用后发送。这允许将输出属性的更改视为原子操作，即使多个事件连续宣布它们。",
+            "summary": "已发送所有输出信息"
+          }
+        },
+        "scale": {
+          "description": {
+            "type": "description",
+            "text": "此事件包含 geometry 事件中未包含的缩放几何信息。可以在绑定输出对象后或输出缩放稍后更改时发送。如果未发送，客户端应假设缩放比例为 1。\n\n缩放比例大于 1 意味着合成器在渲染时会自动按此倍数缩放表面缓冲区。这用于高分辨率显示器，在这些显示器上应用程序以原生分辨率渲染会太小而难以阅读。\n\n缩放感知客户端应跟踪表面的当前输出，如果它在缩放的输出上，应使用 wl_surface.set_buffer_scale 设置输出的缩放比例。这样合成器可以避免缩放表面，客户端可以提供更高质量的图像。",
+            "summary": "输出缩放属性"
+          }
+        },
+        "edid": {
+          "description": {
+            "type": "description",
+            "text": "edid 事件封装了输出设备的 EDID 数据。\n\n该事件在绑定到输出对象时发送。EDID 数据可能为空，在这种情况下仍会发送此事件。如果 EDID 信息为空，可以回退使用输出设备的 name 等属性。",
+            "summary": "公布输出的 EDID 数据"
+          }
+        },
+        "enabled": {
+          "description": {
+            "type": "description",
+            "text": "enabled 事件通知此输出当前是否已启用并被服务器用于显示内容。该事件在绑定到输出对象时以及输出稍后通过启用或禁用更改状态时发送。",
+            "summary": "输出已启用或禁用"
+          }
+        },
+        "uuid": {
+          "description": {
+            "type": "description",
+            "text": "uuid 可用于标识输出。它完全由服务器控制。服务器应确保 uuid 在重启后保持持久。空的 uuid 被视为无效。",
+            "summary": "此输出设备的唯一标识"
+          }
+        },
+        "serial_number": {
+          "description": {
+            "type": "description",
+            "text": "显示器的序列号，在启动时第一个 done 事件之前发送。",
+            "summary": "序列号"
+          }
+        },
+        "eisa_id": {
+          "description": {
+            "type": "description",
+            "text": "显示器的 EISA ID，在启动时第一个 done 事件之前发送。",
+            "summary": "EISA ID"
+          }
+        },
+        "capabilities": {
+          "description": {
+            "type": "description",
+            "text": "此设备具有哪些功能，在启动时第一个 done 事件之前发送。",
+            "summary": "功能标志"
+          }
+        },
+        "overscan": {
+          "description": {
+            "type": "description",
+            "text": "显示器的过扫描值（百分比），在启动时第一个 done 事件之前发送。",
+            "summary": "过扫描"
+          }
+        },
+        "vrr_policy": {
+          "description": {
+            "type": "description",
+            "text": "合成器在使用可变刷新率方面将采用什么策略。",
+            "summary": "可变刷新率策略"
+          }
+        },
+        "rgb_range": {
+          "description": {
+            "type": "description",
+            "text": "合成器对此输出使用的 RGB 范围",
+            "summary": "RGB 范围"
+          }
+        },
+        "name": {
+          "description": {
+            "type": "description",
+            "text": "输出的名称，可用于交叉引用 zxdg_output_v1 并最终引用 QScreen",
+            "summary": "输出名称"
+          }
+        },
+        "high_dynamic_range": {
+          "description": {
+            "type": "description",
+            "text": "此输出是否启用了高动态范围",
+            "summary": "是否启用 HDR"
+          }
+        },
+        "sdr_brightness": {
+          "description": {
+            "type": "description",
+            "text": "如果使用高动态范围，此值定义标准动态范围格式内容的亮度（以尼特为单位）。请注意，虽然该值以尼特为单位，但这不一定等同于屏幕上的相同亮度。",
+            "summary": "启用 HDR 时 SDR 的亮度"
+          }
+        },
+        "wide_color_gamut": {
+          "description": {
+            "type": "description",
+            "text": "此输出是否启用了广色域",
+            "summary": "是否启用 WCG"
+          }
+        },
+        "auto_rotate_policy": {
+          "description": {
+            "type": "description",
+            "summary": "描述何时使用自动旋转"
+          }
+        },
+        "icc_profile_path": {
+          "description": {
+            "type": "description",
+            "summary": "描述何时使用自动旋转"
+          }
+        },
+        "brightness_metadata": {
+          "description": {
+            "type": "description",
+            "summary": "屏幕亮度限制的元数据"
+          }
+        },
+        "brightness_overrides": {
+          "description": {
+            "type": "description",
+            "summary": "屏幕亮度限制的覆盖值"
+          }
+        },
+        "sdr_gamut_wideness": {
+          "description": {
+            "type": "description",
+            "text": "可用于提供用户认为 sRGB 应用程序应具有的颜色，基于许多现代 sRGB 屏幕上的默认体验。",
+            "summary": "描述 sRGB 应用程序假定使用的色域"
+          }
+        },
+        "color_profile_source": {
+          "description": {
+            "type": "description",
+            "summary": "描述合成器用于输出颜色配置文件的来源"
+          }
+        },
+        "brightness": {
+          "description": {
+            "type": "description",
+            "text": "这是输出的亮度调节器。它不指定任何绝对值，而只是在其他亮度值（如 sdr_brightness 和 brightness_metadata）之上的乘数。0 是最小亮度（不是完全黑暗），10000 是最大亮度。\n目前仅在 HDR 激活时支持/有意义。",
+            "summary": "亮度乘数"
+          }
+        },
+        "color_power_tradeoff": {
+          "description": {
+            "type": "description",
+            "summary": "首选的颜色/功耗权衡"
+          }
+        },
+        "dimming": {
+          "description": {
+            "type": "description",
+            "text": "这是输出的调光乘数。这与亮度设置类似，但它只是临时设置，不是持久的，并且可能根据显示器的不同以不同方式实现。0 是最小调光系数（不是完全黑暗），10000 表示输出未被调光。",
+            "summary": "调光乘数"
+          }
+        },
+        "replication_source": {
+          "description": {
+            "type": "description",
+            "summary": "镜像的源输出"
+          }
+        },
+        "ddc_ci_allowed": {
+          "description": {
+            "type": "description",
+            "text": "如果存在 ddc_ci 功能，这决定了是否应使用 DDC/CI 设置亮度、对比度等。",
+            "summary": "是否应使用 DDC/CI 控制亮度等"
+          }
+        },
+        "max_bits_per_color": {
+          "description": {
+            "type": "description",
+            "text": "这限制了发送到显示器的每颜色位数。",
+            "summary": "覆盖最大每颜色位数"
+          }
+        },
+        "max_bits_per_color_range": {
+          "description": {
+            "type": "description",
+            "summary": "最大每颜色位数值的范围"
+          }
+        },
+        "automatic_max_bits_per_color_limit": {
+          "description": {
+            "type": "description",
+            "summary": "自动最大每颜色位数是否受限及其限制值"
+          }
+        },
+        "edr_policy": {
+          "description": {
+            "type": "description",
+            "text": "当 EDR 启用时，合成器可能会将背光提高到用户指定的设置之上，以便在没有原生 HDR 支持的显示器上呈现 HDR 内容。这通常会带来更好的视觉效果，但也会增加电池消耗。",
+            "summary": "合成器何时可以应用 EDR"
+          }
+        },
+        "sharpness": {
+          "description": {
+            "type": "description",
+            "text": "这是输出的锐度调节器。0 表示禁用锐度，10000 表示最大锐度",
+            "summary": "锐度强度"
+          }
+        },
+        "priority": {
+          "description": {
+            "type": "description",
+            "text": "描述输出在输出顺序列表中的位置，值较小的在列表中靠前。列表没有特定的起始值，此值仅用于排序输出。\n\n请注意，输出顺序协议对此不够充分，因为如果输出被禁用或正在镜像另一个屏幕，它可能不在输出顺序中。",
+            "summary": "输出优先级"
+          }
+        },
+        "auto_brightness": {
+          "description": {
+            "type": "description",
+            "summary": "是否启用自动亮度"
+          }
+        }
+      },
+      "enums": {
+        "subpixel": {
+          "description": {
+            "type": "description",
+            "text": "此枚举描述输出上物理像素的排列方式。",
+            "summary": "子像素几何信息"
+          },
+          "entries": {}
+        },
+        "transform": {
+          "description": {
+            "type": "description",
+            "text": "这描述了合成器将应用于表面的变换，以补偿输出设备的旋转或镜像。\n\n翻转值对应于围绕垂直轴的初始翻转，然后是旋转。\n\n其目的主要是允许客户端相应地渲染并通知合成器，以便对于全屏表面，合成器仍然可以直接扫描客户端表面。",
+            "summary": "从帧缓冲到输出的变换"
+          },
+          "entries": {}
+        },
+        "capability": {
+          "description": {
+            "type": "description",
+            "text": "描述此设备具有哪些功能。",
+            "summary": "描述输出设备的功能"
+          },
+          "entries": {
+            "overscan": {
+              "summary": "此 output_device 是否支持过扫描"
+            },
+            "vrr": {
+              "summary": "此 outputdevice 是否支持可变刷新率"
+            },
+            "rgb_range": {
+              "summary": "是否可以设置 RGB 范围"
+            },
+            "high_dynamic_range": {
+              "summary": "此 outputdevice 是否支持高动态范围"
+            },
+            "wide_color_gamut": {
+              "summary": "此 outputdevice 是否支持广色域"
+            },
+            "auto_rotate": {
+              "summary": "此 outputdevice 是否支持自动旋转"
+            },
+            "icc_profile": {
+              "summary": "此 outputdevice 是否支持 ICC 配置文件"
+            },
+            "brightness": {
+              "summary": "此 outputdevice 是否支持亮度设置"
+            },
+            "built_in_color": {
+              "summary": "此 outputdevice 是否支持内置颜色配置文件"
+            },
+            "ddc_ci": {
+              "summary": "此 outputdevice 是否支持 DDC/CI"
+            },
+            "max_bits_per_color": {
+              "summary": "此 outputdevice 是否支持设置最大每颜色位数"
+            },
+            "edr": {
+              "summary": "此 outputdevice 是否支持 EDR"
+            },
+            "sharpness": {
+              "summary": "此 outputdevice 是否支持锐度设置"
+            },
+            "custom_modes": {
+              "summary": "此 outputdevice 是否支持自定义模式"
+            }
+          }
+        },
+        "vrr_policy": {
+          "description": {
+            "type": "description",
+            "text": "描述合成器何时可以使用可变刷新率",
+            "summary": "描述 VRR 策略"
+          },
+          "entries": {}
+        },
+        "rgb_range": {
+          "description": {
+            "type": "description",
+            "text": "应使用全范围还是有限范围颜色",
+            "summary": "描述 RGB 范围策略"
+          },
+          "entries": {}
+        },
+        "auto_rotate_policy": {
+          "description": {
+            "type": "description",
+            "summary": "描述何时应使用自动旋转"
+          },
+          "entries": {}
+        },
+        "color_profile_source": {
+          "description": {
+            "type": "description",
+            "summary": "合成器应使用哪个来源作为输出的颜色配置文件"
+          },
+          "entries": {}
+        },
+        "color_power_tradeoff": {
+          "description": {
+            "type": "description",
+            "text": "合成器可以做很多事情来权衡性能、功耗和颜色准确性。此设置描述了用户关于应在哪个方向进行权衡的高级偏好。",
+            "summary": "功耗与准确性之间的权衡"
+          },
+          "entries": {
+            "efficiency": {
+              "summary": "优先考虑效率和性能"
+            },
+            "accuracy": {
+              "summary": "优先考虑准确性"
+            }
+          }
+        },
+        "edr_policy": {
+          "description": {
+            "type": "description",
+            "summary": "合成器何时可以使用 EDR"
+          },
+          "entries": {}
+        }
+      }
+    },
+    "kde_output_device_mode_v2": {
+      "description": {
+        "type": "description",
+        "text": "此对象描述输出模式。\n\n某些输出头不支持输出模式，在这种情况下不会公布模式。\n\n通过此接口发送的属性通过 kde_output_device.done 事件原子性地应用。不保证属性的发送顺序。",
+        "summary": "输出模式"
+      },
+      "events": {
+        "size": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述模式大小。大小以输出设备的物理硬件单位给出。这不一定与全局合成器空间中的输出大小相同。例如，输出可能被缩放或变换。",
+            "summary": "模式大小"
+          }
+        },
+        "refresh": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述模式的固定垂直刷新率。仅在模式具有固定刷新率时发送。",
+            "summary": "模式刷新率"
+          }
+        },
+        "preferred": {
+          "description": {
+            "type": "description",
+            "text": "此事件将此模式标记为首选模式。",
+            "summary": "首选模式"
+          }
+        },
+        "removed": {
+          "description": {
+            "type": "description",
+            "text": "合成器将在发送此事件后立即销毁对象，因此它将变为无效，客户端应释放与其关联的任何资源。",
+            "summary": "模式已被销毁"
+          }
+        },
+        "flags": {
+          "description": {
+            "type": "description",
+            "text": "此事件描述模式的标志。",
+            "summary": "模式标志"
+          }
+        }
+      },
+      "enums": {
+        "flags": {
+          "description": {
+            "type": "description",
+            "summary": "模式标志"
+          },
+          "entries": {}
+        }
+      }
+    }
+  }
+}
