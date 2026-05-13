@@ -22,6 +22,15 @@
             "text": "为 wl_surface 创建一个附加对象，以让 compositor 请求分数级缩放。如果给定的 wl_surface 已经关联了一个 wp_fractional_scale_v1 对象，则会引发 fractional_scale_exists 协议错误。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "fractional_scale_exists": {
+              "summary": "该 surface 已经关联了一个 fractional_scale 对象"
+            }
+          }
+        }
       }
     },
     "wp_fractional_scale_v1": {

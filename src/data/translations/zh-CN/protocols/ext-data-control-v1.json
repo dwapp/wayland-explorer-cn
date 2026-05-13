@@ -80,6 +80,15 @@
             "text": "primary_selection 事件发出以通知客户端有关此设备的 primary selection 的新 ext_data_control_offer。在发送此事件之前，会立即发出 ext_data_control_device.data_offer 和 ext_data_control_offer.offer 事件以引入 data offer 对象。当设置新的 primary selection 时，会将 primary_selection 事件发送给客户端。在收到新的 ext_data_control_offer 或 NULL 之前，ext_data_control_offer 始终有效。收到此事件时，客户端必须销毁以前的 primary selection ext_data_control_offer（如果有）。无论如何，一旦收到新的 primary selection ext_data_control_offer，以前的 primary selection 都将被忽略。\n\n如果 compositor 支持 primary selection，则在绑定 ext_data_control_device 对象时发送第一个 primary_selection 事件。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "used_source": {
+              "summary": "传给 set_selection 或 set_primary_selection 的 source 之前已被使用"
+            }
+          }
+        }
       }
     },
     "ext_data_control_source_v1": {
@@ -112,6 +121,15 @@
           "description": {
             "summary": "selection 被取消",
             "text": "此 data source 不再有效。该 data source 已被另一个 data source 替换。\n\n客户端应清理并销毁此 data source。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_offer": {
+              "summary": "在 ext_data_control_device.set_selection 之后发送了 offer"
+            }
           }
         }
       }

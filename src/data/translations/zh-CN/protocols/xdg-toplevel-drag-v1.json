@@ -19,7 +19,16 @@
           }
         }
       },
-      "events": {}
+      "events": {},
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_source": {
+              "summary": "data_source 已被用于顶层拖拽"
+            }
+          }
+        }
+      }
     },
     "xdg_toplevel_drag_v1": {
       "description": {
@@ -40,7 +49,19 @@
           }
         }
       },
-      "events": {}
+      "events": {},
+      "enums": {
+        "error": {
+          "entries": {
+            "toplevel_attached": {
+              "summary": "已附加有效的顶层"
+            },
+            "ongoing_drag": {
+              "summary": "拖拽尚未结束"
+            }
+          }
+        }
+      }
     }
   }
 }

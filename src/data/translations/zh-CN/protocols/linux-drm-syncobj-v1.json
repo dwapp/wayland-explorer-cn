@@ -33,14 +33,10 @@
         "error": {
           "entries": {
             "surface_exists": {
-              "description": {
-                "summary": "显式同步对象已经与表面关联"
-              }
+              "summary": "显式同步对象已经与表面关联"
             },
             "invalid_timeline": {
-              "description": {
-                "summary": "给定的对象不是一个有效的 DRM 同步对象时间线"
-              }
+              "summary": "给定的对象不是一个有效的 DRM 同步对象时间线"
             }
           }
         }
@@ -100,19 +96,25 @@
         "error": {
           "entries": {
             "conflicting_point": {
-              "description": {
-                "summary": "同一类型的点已经被设置"
-              }
+              "summary": "同一类型的点已经被设置"
             },
             "no_buffer": {
-              "description": {
-                "summary": "对于一个包含显式同步请求的提交，没有附加 buffer"
-              }
+              "summary": "对于一个包含显式同步请求的提交，没有附加 buffer"
             },
             "unsupported_buffer": {
-              "description": {
-                "summary": "buffer 类型不支持显式同步"
-              }
+              "summary": "buffer 类型不支持显式同步"
+            },
+            "no_surface": {
+              "summary": "关联的 wl_surface 已被销毁"
+            },
+            "no_acquire_point": {
+              "summary": "未设置 acquire 时间线点"
+            },
+            "no_release_point": {
+              "summary": "未设置 release 时间线点"
+            },
+            "conflicting_points": {
+              "summary": "acquire 和 release 时间线点冲突"
             }
           }
         }

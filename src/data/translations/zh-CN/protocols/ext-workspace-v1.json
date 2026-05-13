@@ -79,6 +79,15 @@
             "text": "此事件意味着该工作区组已被销毁。客户端应发送一个 destory 请求并响应其放弃与该组相关的所有状态。\n\ncompositor 应该在触发此事件之前销毁组中的所有工作区。"
           }
         }
+      },
+      "enums": {
+        "group_capabilities": {
+          "entries": {
+            "create_workspace": {
+              "summary": "create_workspace 请求可用"
+            }
+          }
+        }
       }
     },
     "ext_workspace_handle_v1": {
@@ -140,14 +149,14 @@
           },
           "entries": {
             "active": {
+              "summary": "工作区是处于活动状态的",
               "description": {
-                "summary": "工作区是处于活动状态的",
                 "text": "该工作区当前已激活并且其内容正在被渲染。"
               }
             },
             "urgent": {
+              "summary": "工作区需要引起关注",
               "description": {
-                "summary": "工作区需要引起关注",
                 "text": "此工作区中的某个 surface 已请求获取注意力（例如，有新消息或警报），但该工作区当前并未被激活。"
               }
             },
@@ -156,6 +165,22 @@
                 "summary": "工作区是隐藏的",
                 "text": "此工作区处于隐藏状态，它不会出现在通常的显示中，例如，它不应该显示在工作区切换器中。客户端不需要支持隐藏的工作区，或者可以以不同的方式展示它们。"
               }
+            }
+          }
+        },
+        "workspace_capabilities": {
+          "entries": {
+            "activate": {
+              "summary": "activate 请求可用"
+            },
+            "deactivate": {
+              "summary": "deactivate 请求可用"
+            },
+            "remove": {
+              "summary": "remove 请求可用"
+            },
+            "assign": {
+              "summary": "assign 请求可用"
             }
           }
         }

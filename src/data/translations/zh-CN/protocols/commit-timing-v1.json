@@ -56,6 +56,12 @@
                         },
                         "no_update": {
                             "summary": "没有内容更新"
+                        },
+                        "timestamp_exists": {
+                            "summary": "时间戳已存在"
+                        },
+                        "surface_destroyed": {
+                            "summary": "关联的 surface 已不存在"
                         }
                     }
                 }

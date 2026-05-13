@@ -67,6 +67,18 @@
             "text": "销毁 xwayland_surface_v1 对象。\n\n与该对象相关联的 wl_surface 及其拥有的其他关联状态不再关联。\n只要没有对 wl_surface 进行其他修改，此请求就不会引起任何进一步的改变。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_associated": {
+              "summary": "给定的 wl_surface 已关联到 X11 窗口"
+            },
+            "invalid_serial": {
+              "summary": "序列号无效"
+            }
+          }
+        }
       }
     }
   }

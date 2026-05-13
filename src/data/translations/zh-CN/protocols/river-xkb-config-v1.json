@@ -42,6 +42,18 @@
             "text": "已创建一个新的 xkbcommon 键盘。并非每个 river_input_device_v1 都一定是 xkbcommon 键盘。"
           }
         }
+      },
+      "enums": {
+        "keymap_format": {
+          "entries": {
+            "text_v1": {
+              "summary": "XKB_KEYMAP_FORMAT_TEXT_V1"
+            },
+            "text_v2": {
+              "summary": "XKB_KEYMAP_FORMAT_TEXT_V2"
+            }
+          }
+        }
       }
     },
     "river_xkb_keymap_v1": {

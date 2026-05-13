@@ -123,14 +123,13 @@
               }
             },
             "empty_lease": {
-              "description": {
-                "summary": "空租赁"
-              }
+              "summary": "空租赁"
             },
             "wrong_device": {
-              "description": {
-                "summary": "错误设备"
-              }
+              "summary": "错误设备"
+            },
+            "duplicate_connector": {
+              "summary": "重复请求了同一个 connector"
             }
           }
         }

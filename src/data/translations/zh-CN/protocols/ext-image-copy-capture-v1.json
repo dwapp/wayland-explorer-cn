@@ -28,6 +28,22 @@
             "text": "销毁 manager 对象。\n\n通过此接口创建的其他对象不受影响。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_option": {
+              "summary": "无效的选项标志"
+            }
+          }
+        },
+        "options": {
+          "entries": {
+            "paint_cursors": {
+              "summary": "将光标绘制到捕获的帧上"
+            }
+          }
+        }
       }
     },
     "ext_image_copy_capture_session_v1": {
@@ -84,6 +100,15 @@
           "description": {
             "summary": "session 不再可用",
             "text": "This event indicates that the capture session has stopped and is no\nlonger available. This can happen in a number of cases, e.g. when the\nunderlying source is destroyed, if the user decides to end the image\ncapture, or if an unrecoverable runtime error has occurred.\n\nThe client should destroy the session after receiving this event."
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "duplicate_frame": {
+              "summary": "在销毁前一个 frame 之前发送了 create_frame"
+            }
           }
         }
       }
@@ -152,6 +177,19 @@
         }
       },
       "enums": {
+        "error": {
+          "entries": {
+            "no_buffer": {
+              "summary": "未附加 buffer 就发送了 capture"
+            },
+            "invalid_buffer_damage": {
+              "summary": "无效的 buffer 损坏区域"
+            },
+            "already_captured": {
+              "summary": "capture 请求已发送"
+            }
+          }
+        },
         "failure_reason": {
           "entries": {
             "unknown": {
@@ -218,6 +256,15 @@
           "description": {
             "summary": "hotspot 更改",
             "text": "hotspot 描述了光标图像与输入设备位置之间的偏移量。\n\n给定的坐标是 hotspot 在 buffer 坐标中相对于原点的偏移量。\n\n客户端不应立即应用 hotspot：hotspot 会在收到下一个 ext_image_copy_capture_frame_v1.ready event 时生效。\n\nCompositor 可能会延迟此 event，直到客户端捕获新 frame。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "duplicate_session": {
+              "summary": "get_capture_session 被发送了两次"
+            }
           }
         }
       }

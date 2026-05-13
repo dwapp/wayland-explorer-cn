@@ -62,6 +62,27 @@
             "text": "此事件表明会话的锁定请求未能满足，或者当前的锁已经被 compositor 终止。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_destroy": {
+              "summary": "在会话锁定期间尝试销毁会话锁"
+            },
+            "invalid_unlock": {
+              "summary": "请求解锁但从未发送过 locked 事件"
+            },
+            "role": {
+              "summary": "给定的 wl_surface 已经具有角色"
+            },
+            "duplicate_output": {
+              "summary": "给定的 output 已经有一个锁表面"
+            },
+            "already_constructed": {
+              "summary": "给定的 wl_surface 已经附加或提交了 buffer"
+            }
+          }
+        }
       }
     },
     "ext_session_lock_surface_v1": {
@@ -88,6 +109,24 @@
           "description": {
             "summary": "建议表面大小配置",
             "text": "compositor 发送此事件以建议表面所需的宽度和高度。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "commit_before_first_ack": {
+              "summary": "在首次 ack_configure 请求之前提交了表面"
+            },
+            "null_buffer": {
+              "summary": "提交了空 buffer 的表面"
+            },
+            "dimensions_mismatch": {
+              "summary": "未能匹配已确认的宽度和高度"
+            },
+            "invalid_serial": {
+              "summary": "ack_configure 中提供的 serial 无效"
+            }
           }
         }
       }

@@ -42,6 +42,15 @@
             "text": "已创建新的 libinput 设备。并非每个 river_input_device_v1\n都必定是 libinput 设备。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_arg": {
+              "summary": "无效的枚举值或类似参数"
+            }
+          }
+        }
       }
     },
     "river_libinput_device_v1": {
@@ -514,6 +523,25 @@
             "text": "当前旋转角度。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_arg": {
+              "summary": "无效的枚举值或类似参数"
+            }
+          }
+        },
+        "tap_button_map": {
+          "entries": {
+            "lrm": {
+              "summary": "1/2/3 指轻触分别映射为左键/右键/中键"
+            },
+            "lmr": {
+              "summary": "1/2/3 指轻触分别映射为左键/中键/右键"
+            }
+          }
+        }
       }
     },
     "river_libinput_accel_config_v1": {
@@ -535,7 +563,16 @@
           }
         }
       },
-      "events": {}
+      "events": {},
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_arg": {
+              "summary": "无效的枚举值或类似参数"
+            }
+          }
+        }
+      }
     },
     "river_libinput_result_v1": {
       "description": {

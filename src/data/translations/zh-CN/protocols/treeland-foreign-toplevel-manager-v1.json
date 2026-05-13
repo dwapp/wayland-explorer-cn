@@ -230,6 +230,20 @@
                 "direction": {
                     "description": {
                         "summary": "dock 预览的方向类型"
+                    },
+                    "entries": {
+                        "top": {
+                            "summary": "顶部"
+                        },
+                        "right": {
+                            "summary": "右侧"
+                        },
+                        "bottom": {
+                            "summary": "底部"
+                        },
+                        "left": {
+                            "summary": "左侧"
+                        }
                     }
                 }
             }

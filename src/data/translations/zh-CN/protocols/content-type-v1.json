@@ -18,6 +18,15 @@
             "text": "创建与给定 surface 关联的新内容类型对象。\n\n从已附加内容类型对象的 wl_surface 创建 wp_content_type_v1 会导致客户端错误：already_constructed。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_constructed": {
+              "summary": "wl_surface 已经拥有内容类型对象"
+            }
+          }
+        }
       }
     },
     "wp_content_type_v1": {

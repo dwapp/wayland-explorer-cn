@@ -244,6 +244,21 @@
             },
             "unsupported_color_representation": {
               "summary": "设置了不支持的颜色表示"
+            },
+            "alpha_mode": {
+              "summary": "不支持的 alpha 模式"
+            },
+            "coefficients": {
+              "summary": "不支持的矩阵系数"
+            },
+            "pixel_format": {
+              "summary": "像素格式与已设置的值不兼容"
+            },
+            "inert": {
+              "summary": "对无效对象的禁止请求"
+            },
+            "chroma_location": {
+              "summary": "无效的色度位置"
             }
           }
         }

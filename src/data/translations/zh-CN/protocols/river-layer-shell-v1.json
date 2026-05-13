@@ -28,6 +28,15 @@
             "text": "对给定的 river_seat_v1 对象多次发出此请求属于协议错误。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "object_already_created": {
+              "summary": "layer_shell_output/seat 对象已被创建"
+            }
+          }
+        }
       }
     },
     "river_layer_shell_output_v1": {
