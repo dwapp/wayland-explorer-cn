@@ -87,3 +87,49 @@ Only translate **natural language descriptions** — prose that explains what so
 6. **Translation Structure**: Follow the `TranslationData` interface in `src/lib/i18n.ts` exactly. Only translate `summary` and `text` fields within `description` objects.
 7. **Build Verification**: After creating or modifying translation files, run `bun run build` to verify the project compiles correctly.
 8. **Terminology**: Never translate protocol names (Wayland, wlroots), technical concepts (compositor, surface, buffer), code identifiers (`wl_display`), or protocol status labels (Stable, Staging, Unstable, Experimental, Core, External). Translate only natural language descriptions and unambiguous UI labels.
+
+## Large File Translation Workflow
+
+For large protocol files (>700 lines) or batch translation tasks, use the **parallel subagent workflow** to ensure quality and avoid context window limits.
+
+### Workflow Steps
+
+1. **Analyze**: Use Python to extract all translatable fields from the source protocol and identify missing translations.
+
+2. **Batch**: Group interfaces into batches of ~60-150 fields each. Balance batch sizes for parallel execution.
+
+3. **Extract**: Write each batch to a temporary file in `.tmp/` directory:
+   ```bash
+   mkdir -p .tmp
+   # Write batch files: .tmp/wayland_batch{N}.json
+   ```
+
+4. **Dispatch**: Launch parallel subagents (one per batch) using the Task tool:
+   - Each subagent reads its batch file
+   - Translates all `summary` and `text` fields
+   - Writes result to `.tmp/wayland_batch{N}_zh.json`
+   - Validates JSON syntax
+
+5. **Merge**: After all subagents complete, merge all patches into the target translation file using Python.
+
+6. **Verify**: Run `bun run build` to ensure the merged translation compiles correctly.
+
+7. **Cleanup**: Remove temporary files in `.tmp/` after successful merge.
+
+### Example Dispatch Pattern
+
+```
+# Parallel dispatch (6 subagents)
+task(category="deep", prompt="Read .tmp/wayland_batch1.json, translate, write to .tmp/wayland_batch1_zh.json")
+task(category="deep", prompt="Read .tmp/wayland_batch2.json, translate, write to .tmp/wayland_batch2_zh.json")
+# ... etc
+
+# After all complete, merge with Python
+python3 merge_translations.py
+```
+
+### Temporary File Location
+
+- Use `.tmp/` directory in the project root for all temporary files
+- Never use `/tmp/` as it may require elevated permissions
+- Clean up `.tmp/` files after successful merge
