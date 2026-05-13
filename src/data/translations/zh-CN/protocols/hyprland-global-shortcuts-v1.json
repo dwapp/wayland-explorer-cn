@@ -1,0 +1,65 @@
+{
+  "description": {
+    "summary": "注册全局快捷键",
+    "text": "此协议允许客户端注册可触发的操作，用作全局快捷键。"
+  },
+  "interfaces": {
+    "hyprland_global_shortcuts_manager_v1": {
+      "description": {
+        "summary": "全局快捷键注册管理器",
+        "text": "此对象是一个管理器，提供创建全局快捷键的请求接口。"
+      },
+      "requests": {
+        "register_shortcut": {
+          "description": {
+            "summary": "注册快捷键",
+            "text": "注册一个新的全局快捷键。\n\n全局快捷键是匿名的，即应用不知道哪个按键会触发它。\n\n快捷键的按键绑定由合成器处理。\n\n如果 app_id + id 组合重复，将触发 already_taken 协议错误。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "由管理器创建的所有对象在调用其相应的销毁请求之前仍然有效。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "already_taken": {
+              "summary": "app_id + id 组合已被注册"
+            }
+          }
+        }
+      }
+    },
+    "hyprland_global_shortcut_v1": {
+      "description": {
+        "summary": "单个快捷键",
+        "text": "此对象表示一个单独的快捷键。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁此对象，无论是否已使用",
+            "text": "销毁快捷键。客户端可随时发送此请求。"
+          }
+        }
+      },
+      "events": {
+        "pressed": {
+          "description": {
+            "summary": "按键已按下",
+            "text": "按键已按下。\n\ntv_ 值保存事件发生的时间戳。"
+          }
+        },
+        "released": {
+          "description": {
+            "summary": "按键已释放",
+            "text": "按键已释放。\n\ntv_ 值保存事件发生的时间戳。"
+          }
+        }
+      }
+    }
+  }
+}

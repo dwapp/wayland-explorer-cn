@@ -969,6 +969,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.HyprlandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/hyprland-global-shortcuts-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/hyprland-global-shortcuts-v1.json'),
+        },
     },
     {
         id: 'hyprland-surface-v1',
@@ -1150,6 +1153,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WestonProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/text-cursor-position.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/text-cursor-position.json'),
+        },
     },
     {
         id: 'weston-content-protection',
