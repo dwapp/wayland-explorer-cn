@@ -42,6 +42,20 @@
           "description": {
             "summary": "全局错误值",
             "text": "这些错误是全局性的，可以响应任何服务器请求而发出。"
+          },
+          "entries": {
+            "invalid_object": {
+              "summary": "server 无法找到对象"
+            },
+            "invalid_method": {
+              "summary": "指定接口上不存在该方法，或请求格式错误"
+            },
+            "no_memory": {
+              "summary": "server 内存不足"
+            },
+            "implementation": {
+              "summary": "compositor 实现错误"
+            }
           }
         }
       }
@@ -105,6 +119,12 @@
             "summary": "创建新区域",
             "text": "请求合成器创建一个新区域。"
           }
+        },
+        "release": {
+          "description": {
+            "summary": "销毁 wl_compositor",
+            "text": "此请求销毁 wl_compositor。不会影响任何其他对象。"
+          }
         }
       }
     },
@@ -145,6 +165,12 @@
             "summary": "创建内存池",
             "text": "创建一个共享内存池。"
           }
+        },
+        "release": {
+          "description": {
+            "summary": "释放 shm 对象",
+            "text": "客户端可通过此请求告知服务器不再使用该 shm 对象。\n\n通过此接口创建的对象不受影响。"
+          }
         }
       },
       "events": {
@@ -160,12 +186,418 @@
           "description": {
             "summary": "wl_shm 错误值",
             "text": "这些错误可以在响应 wl_shm 请求时发出。"
+          },
+          "entries": {
+            "invalid_format": {
+              "summary": "buffer 格式未知"
+            },
+            "invalid_stride": {
+              "summary": "创建 pool 或 buffer 时大小或 stride 无效"
+            },
+            "invalid_fd": {
+              "summary": "对文件描述符进行 mmap 映射失败"
+            }
           }
         },
         "format": {
           "description": {
             "summary": "像素格式",
             "text": "此枚举描述了缓冲区的像素格式。"
+          },
+          "entries": {
+            "argb8888": {
+              "summary": "32 位 ARGB 格式, [31:0] A:R:G:B 8:8:8:8 little endian"
+            },
+            "xrgb8888": {
+              "summary": "32 位 RGB 格式, [31:0] x:R:G:B 8:8:8:8 little endian"
+            },
+            "c8": {
+              "summary": "8 位颜色索引格式, [7:0] C"
+            },
+            "rgb332": {
+              "summary": "8 位 RGB 格式, [7:0] R:G:B 3:3:2"
+            },
+            "bgr233": {
+              "summary": "8 位 BGR 格式, [7:0] B:G:R 2:3:3"
+            },
+            "xrgb4444": {
+              "summary": "16 位 xRGB 格式, [15:0] x:R:G:B 4:4:4:4 little endian"
+            },
+            "xbgr4444": {
+              "summary": "16 位 xBGR 格式, [15:0] x:B:G:R 4:4:4:4 little endian"
+            },
+            "rgbx4444": {
+              "summary": "16 位 RGBx 格式, [15:0] R:G:B:x 4:4:4:4 little endian"
+            },
+            "bgrx4444": {
+              "summary": "16 位 BGRx 格式, [15:0] B:G:R:x 4:4:4:4 little endian"
+            },
+            "argb4444": {
+              "summary": "16 位 ARGB 格式, [15:0] A:R:G:B 4:4:4:4 little endian"
+            },
+            "abgr4444": {
+              "summary": "16 位 ABGR 格式, [15:0] A:B:G:R 4:4:4:4 little endian"
+            },
+            "rgba4444": {
+              "summary": "16 位 RBGA 格式, [15:0] R:G:B:A 4:4:4:4 little endian"
+            },
+            "bgra4444": {
+              "summary": "16 位 BGRA 格式, [15:0] B:G:R:A 4:4:4:4 little endian"
+            },
+            "xrgb1555": {
+              "summary": "16 位 xRGB 格式, [15:0] x:R:G:B 1:5:5:5 little endian"
+            },
+            "xbgr1555": {
+              "summary": "16 位 xBGR 1555 格式, [15:0] x:B:G:R 1:5:5:5 little endian"
+            },
+            "rgbx5551": {
+              "summary": "16 位 RGBx 5551 格式, [15:0] R:G:B:x 5:5:5:1 little endian"
+            },
+            "bgrx5551": {
+              "summary": "16 位 BGRx 5551 格式, [15:0] B:G:R:x 5:5:5:1 little endian"
+            },
+            "argb1555": {
+              "summary": "16 位 ARGB 1555 格式, [15:0] A:R:G:B 1:5:5:5 little endian"
+            },
+            "abgr1555": {
+              "summary": "16 位 ABGR 1555 格式, [15:0] A:B:G:R 1:5:5:5 little endian"
+            },
+            "rgba5551": {
+              "summary": "16 位 RGBA 5551 格式, [15:0] R:G:B:A 5:5:5:1 little endian"
+            },
+            "bgra5551": {
+              "summary": "16 位 BGRA 5551 格式, [15:0] B:G:R:A 5:5:5:1 little endian"
+            },
+            "rgb565": {
+              "summary": "16 位 RGB 565 格式, [15:0] R:G:B 5:6:5 little endian"
+            },
+            "bgr565": {
+              "summary": "16 位 BGR 565 格式, [15:0] B:G:R 5:6:5 little endian"
+            },
+            "rgb888": {
+              "summary": "24 位 RGB 格式, [23:0] R:G:B little endian"
+            },
+            "bgr888": {
+              "summary": "24 位 BGR 格式, [23:0] B:G:R little endian"
+            },
+            "xbgr8888": {
+              "summary": "32 位 xBGR 格式, [31:0] x:B:G:R 8:8:8:8 little endian"
+            },
+            "rgbx8888": {
+              "summary": "32 位 RGBx 格式, [31:0] R:G:B:x 8:8:8:8 little endian"
+            },
+            "bgrx8888": {
+              "summary": "32 位 BGRx 格式, [31:0] B:G:R:x 8:8:8:8 little endian"
+            },
+            "abgr8888": {
+              "summary": "32 位 ABGR 格式, [31:0] A:B:G:R 8:8:8:8 little endian"
+            },
+            "rgba8888": {
+              "summary": "32 位 RGBA 格式, [31:0] R:G:B:A 8:8:8:8 little endian"
+            },
+            "bgra8888": {
+              "summary": "32 位 BGRA 格式, [31:0] B:G:R:A 8:8:8:8 little endian"
+            },
+            "xrgb2101010": {
+              "summary": "32 位 xRGB 格式, [31:0] x:R:G:B 2:10:10:10 little endian"
+            },
+            "xbgr2101010": {
+              "summary": "32 位 xBGR 格式, [31:0] x:B:G:R 2:10:10:10 little endian"
+            },
+            "rgbx1010102": {
+              "summary": "32 位 RGBx 格式, [31:0] R:G:B:x 10:10:10:2 little endian"
+            },
+            "bgrx1010102": {
+              "summary": "32 位 BGRx 格式, [31:0] B:G:R:x 10:10:10:2 little endian"
+            },
+            "argb2101010": {
+              "summary": "32 位 ARGB 格式, [31:0] A:R:G:B 2:10:10:10 little endian"
+            },
+            "abgr2101010": {
+              "summary": "32 位 ABGR 格式, [31:0] A:B:G:R 2:10:10:10 little endian"
+            },
+            "rgba1010102": {
+              "summary": "32 位 RGBA 格式, [31:0] R:G:B:A 10:10:10:2 little endian"
+            },
+            "bgra1010102": {
+              "summary": "32 位 BGRA 格式, [31:0] B:G:R:A 10:10:10:2 little endian"
+            },
+            "yuyv": {
+              "summary": "packed YCbCr 格式, [31:0] Cr0:Y1:Cb0:Y0 8:8:8:8 little endian"
+            },
+            "yvyu": {
+              "summary": "packed YCbCr 格式, [31:0] Cb0:Y1:Cr0:Y0 8:8:8:8 little endian"
+            },
+            "uyvy": {
+              "summary": "packed YCbCr 格式, [31:0] Y1:Cr0:Y0:Cb0 8:8:8:8 little endian"
+            },
+            "vyuy": {
+              "summary": "packed YCbCr 格式, [31:0] Y1:Cb0:Y0:Cr0 8:8:8:8 little endian"
+            },
+            "ayuv": {
+              "summary": "packed AYCbCr 格式, [31:0] A:Y:Cb:Cr 8:8:8:8 little endian"
+            },
+            "nv12": {
+              "summary": "2 平面 YCbCr Cr:Cb 格式, 2x2 子采样 Cr:Cb 平面"
+            },
+            "nv21": {
+              "summary": "2 平面 YCbCr Cb:Cr 格式, 2x2 子采样 Cb:Cr 平面"
+            },
+            "nv16": {
+              "summary": "2 平面 YCbCr Cr:Cb 格式, 2x1 子采样 Cr:Cb 平面"
+            },
+            "nv61": {
+              "summary": "2 平面 YCbCr Cb:Cr 格式, 2x1 子采样 Cb:Cr 平面"
+            },
+            "yuv410": {
+              "summary": "3 平面 YCbCr 格式, 4x4 子采样 Cb (1) 和 Cr (2) 平面"
+            },
+            "yvu410": {
+              "summary": "3 平面 YCbCr 格式, 4x4 子采样 Cr (1) 和 Cb (2) 平面"
+            },
+            "yuv411": {
+              "summary": "3 平面 YCbCr 格式, 4x1 子采样 Cb (1) 和 Cr (2) 平面"
+            },
+            "yvu411": {
+              "summary": "3 平面 YCbCr 格式, 4x1 子采样 Cr (1) 和 Cb (2) 平面"
+            },
+            "yuv420": {
+              "summary": "3 平面 YCbCr 格式, 2x2 子采样 Cb (1) 和 Cr (2) 平面"
+            },
+            "yvu420": {
+              "summary": "3 平面 YCbCr 格式, 2x2 子采样 Cr (1) 和 Cb (2) 平面"
+            },
+            "yuv422": {
+              "summary": "3 平面 YCbCr 格式, 2x1 子采样 Cb (1) 和 Cr (2) 平面"
+            },
+            "yvu422": {
+              "summary": "3 平面 YCbCr 格式, 2x1 子采样 Cr (1) 和 Cb (2) 平面"
+            },
+            "yuv444": {
+              "summary": "3 平面 YCbCr 格式, 无子采样 Cb (1) 和 Cr (2) 平面"
+            },
+            "yvu444": {
+              "summary": "3 平面 YCbCr 格式, 无子采样 Cr (1) 和 Cb (2) 平面"
+            },
+            "r8": {
+              "summary": "[7:0] R"
+            },
+            "r16": {
+              "summary": "[15:0] R little endian"
+            },
+            "rg88": {
+              "summary": "[15:0] R:G 8:8 little endian"
+            },
+            "gr88": {
+              "summary": "[15:0] G:R 8:8 little endian"
+            },
+            "rg1616": {
+              "summary": "[31:0] R:G 16:16 little endian"
+            },
+            "gr1616": {
+              "summary": "[31:0] G:R 16:16 little endian"
+            },
+            "xrgb16161616f": {
+              "summary": "[63:0] x:R:G:B 16:16:16:16 little endian"
+            },
+            "xbgr16161616f": {
+              "summary": "[63:0] x:B:G:R 16:16:16:16 little endian"
+            },
+            "argb16161616f": {
+              "summary": "[63:0] A:R:G:B 16:16:16:16 little endian"
+            },
+            "abgr16161616f": {
+              "summary": "[63:0] A:B:G:R 16:16:16:16 little endian"
+            },
+            "xyuv8888": {
+              "summary": "[31:0] X:Y:Cb:Cr 8:8:8:8 little endian"
+            },
+            "vuy888": {
+              "summary": "[23:0] Cr:Cb:Y 8:8:8 little endian"
+            },
+            "vuy101010": {
+              "summary": "Y 后跟 U 然后 V, 10:10:10. 仅限非线性修饰符"
+            },
+            "y210": {
+              "summary": "[63:0] Cr0:0:Y1:0:Cb0:0:Y0:0 10:6:10:6:10:6:10:6 little endian, 每 2 个 Y 像素"
+            },
+            "y212": {
+              "summary": "[63:0] Cr0:0:Y1:0:Cb0:0:Y0:0 12:4:12:4:12:4:12:4 little endian, 每 2 个 Y 像素"
+            },
+            "y216": {
+              "summary": "[63:0] Cr0:Y1:Cb0:Y0 16:16:16:16 little endian, 每 2 个 Y 像素"
+            },
+            "y410": {
+              "summary": "[31:0] A:Cr:Y:Cb 2:10:10:10 little endian"
+            },
+            "y412": {
+              "summary": "[63:0] A:0:Cr:0:Y:0:Cb:0 12:4:12:4:12:4:12:4 little endian"
+            },
+            "y416": {
+              "summary": "[63:0] A:Cr:Y:Cb 16:16:16:16 little endian"
+            },
+            "xvyu2101010": {
+              "summary": "[31:0] X:Cr:Y:Cb 2:10:10:10 little endian"
+            },
+            "xvyu12_16161616": {
+              "summary": "[63:0] X:0:Cr:0:Y:0:Cb:0 12:4:12:4:12:4:12:4 little endian"
+            },
+            "xvyu16161616": {
+              "summary": "[63:0] X:Cr:Y:Cb 16:16:16:16 little endian"
+            },
+            "y0l0": {
+              "summary": "[63:0]   A3:A2:Y3:0:Cr0:0:Y2:0:A1:A0:Y1:0:Cb0:0:Y0:0  1:1:8:2:8:2:8:2:1:1:8:2:8:2:8:2 little endian"
+            },
+            "x0l0": {
+              "summary": "[63:0]   X3:X2:Y3:0:Cr0:0:Y2:0:X1:X0:Y1:0:Cb0:0:Y0:0  1:1:8:2:8:2:8:2:1:1:8:2:8:2:8:2 little endian"
+            },
+            "y0l2": {
+              "summary": "[63:0]   A3:A2:Y3:Cr0:Y2:A1:A0:Y1:Cb0:Y0  1:1:10:10:10:1:1:10:10:10 little endian"
+            },
+            "x0l2": {
+              "summary": "[63:0]   X3:X2:Y3:Cr0:Y2:X1:X0:Y1:Cb0:Y0  1:1:10:10:10:1:1:10:10:10 little endian"
+            },
+            "nv24": {
+              "summary": "无子采样 Cr:Cb 平面"
+            },
+            "nv42": {
+              "summary": "无子采样 Cb:Cr 平面"
+            },
+            "p210": {
+              "summary": "2x1 子采样 Cr:Cb 平面, 每通道 10 位"
+            },
+            "p010": {
+              "summary": "2x2 子采样 Cr:Cb 平面, 每通道 10 位"
+            },
+            "p012": {
+              "summary": "2x2 子采样 Cr:Cb 平面, 每通道 12 位"
+            },
+            "p016": {
+              "summary": "2x2 子采样 Cr:Cb 平面, 每通道 16 位"
+            },
+            "axbxgxrx106106106106": {
+              "summary": "[63:0] A:x:B:x:G:x:R:x 10:6:10:6:10:6:10:6 little endian"
+            },
+            "nv15": {
+              "summary": "2x2 子采样 Cr:Cb 平面"
+            },
+            "xrgb16161616": {
+              "summary": "[63:0] x:R:G:B 16:16:16:16 little endian"
+            },
+            "xbgr16161616": {
+              "summary": "[63:0] x:B:G:R 16:16:16:16 little endian"
+            },
+            "argb16161616": {
+              "summary": "[63:0] A:R:G:B 16:16:16:16 little endian"
+            },
+            "abgr16161616": {
+              "summary": "[63:0] A:B:G:R 16:16:16:16 little endian"
+            },
+            "c1": {
+              "summary": "[7:0] C0:C1:C2:C3:C4:C5:C6:C7 1:1:1:1:1:1:1:1 每字节 8 像素"
+            },
+            "c2": {
+              "summary": "[7:0] C0:C1:C2:C3 2:2:2:2 每字节 4 像素"
+            },
+            "c4": {
+              "summary": "[7:0] C0:C1 4:4 每字节 2 像素"
+            },
+            "d1": {
+              "summary": "[7:0] D0:D1:D2:D3:D4:D5:D6:D7 1:1:1:1:1:1:1:1 每字节 8 像素"
+            },
+            "d2": {
+              "summary": "[7:0] D0:D1:D2:D3 2:2:2:2 每字节 4 像素"
+            },
+            "d4": {
+              "summary": "[7:0] D0:D1 4:4 每字节 2 像素"
+            },
+            "d8": {
+              "summary": "[7:0] D"
+            },
+            "r1": {
+              "summary": "[7:0] R0:R1:R2:R3:R4:R5:R6:R7 1:1:1:1:1:1:1:1 每字节 8 像素"
+            },
+            "r2": {
+              "summary": "[7:0] R0:R1:R2:R3 2:2:2:2 每字节 4 像素"
+            },
+            "r4": {
+              "summary": "[7:0] R0:R1 4:4 每字节 2 像素"
+            },
+            "r10": {
+              "summary": "[15:0] x:R 6:10 little endian"
+            },
+            "r12": {
+              "summary": "[15:0] x:R 4:12 little endian"
+            },
+            "avuy8888": {
+              "summary": "[31:0] A:Cr:Cb:Y 8:8:8:8 little endian"
+            },
+            "xvuy8888": {
+              "summary": "[31:0] X:Cr:Cb:Y 8:8:8:8 little endian"
+            },
+            "p030": {
+              "summary": "2x2 子采样 Cr:Cb 平面, 每通道 10 位 packed"
+            },
+            "rgb161616": {
+              "summary": "[47:0] R:G:B 16:16:16 little endian"
+            },
+            "bgr161616": {
+              "summary": "[47:0] B:G:R 16:16:16 little endian"
+            },
+            "r16f": {
+              "summary": "[15:0] R 16 little endian"
+            },
+            "gr1616f": {
+              "summary": "[31:0] G:R 16:16 little endian"
+            },
+            "bgr161616f": {
+              "summary": "[47:0] B:G:R 16:16:16 little endian"
+            },
+            "r32f": {
+              "summary": "[31:0] R 32 little endian"
+            },
+            "gr3232f": {
+              "summary": "[63:0] R:G 32:32 little endian"
+            },
+            "bgr323232f": {
+              "summary": "[95:0] R:G:B 32:32:32 little endian"
+            },
+            "abgr32323232f": {
+              "summary": "[127:0] R:G:B:A 32:32:32:32 little endian"
+            },
+            "nv20": {
+              "summary": "2x1 子采样 Cr:Cb 平面"
+            },
+            "nv30": {
+              "summary": "无子采样 Cr:Cb 平面"
+            },
+            "s010": {
+              "summary": "2x2 子采样 Cb (1) 和 Cr (2) 平面, 每通道 10 位"
+            },
+            "s210": {
+              "summary": "2x1 子采样 Cb (1) 和 Cr (2) 平面, 每通道 10 位"
+            },
+            "s410": {
+              "summary": "无子采样 Cb (1) 和 Cr (2) 平面, 每通道 10 位"
+            },
+            "s012": {
+              "summary": "2x2 子采样 Cb (1) 和 Cr (2) 平面, 每通道 12 位"
+            },
+            "s212": {
+              "summary": "2x1 子采样 Cb (1) 和 Cr (2) 平面, 每通道 12 位"
+            },
+            "s412": {
+              "summary": "无子采样 Cb (1) 和 Cr (2) 平面, 每通道 12 位"
+            },
+            "s016": {
+              "summary": "2x2 子采样 Cb (1) 和 Cr (2) 平面, 每通道 16 位"
+            },
+            "s216": {
+              "summary": "2x1 子采样 Cb (1) 和 Cr (2) 平面, 每通道 16 位"
+            },
+            "s416": {
+              "summary": "无子采样 Cb (1) 和 Cr (2) 平面, 每通道 16 位"
+            }
           }
         }
       }
@@ -248,6 +680,24 @@
             "text": "通知最终选择的操作。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_finish": {
+              "summary": "finish 请求调用时机不当"
+            },
+            "invalid_action_mask": {
+              "summary": "action mask 包含无效值"
+            },
+            "invalid_action": {
+              "summary": "action 参数值无效"
+            },
+            "invalid_offer": {
+              "summary": "offer 不接受此请求"
+            }
+          }
+        }
       }
     },
     "wl_data_source": {
@@ -310,6 +760,18 @@
           "description": {
             "summary": "通知所选操作",
             "text": "通知最终选择的操作。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_action_mask": {
+              "summary": "action mask 包含无效值"
+            },
+            "invalid_source": {
+              "summary": "source 不接受此请求"
+            }
           }
         }
       }
@@ -376,6 +838,18 @@
             "text": "通知客户端剪贴板内容已更改。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "role": {
+              "summary": "给定的 wl_surface 已有其他 role"
+            },
+            "used_source": {
+              "summary": "source 已被使用"
+            }
+          }
+        }
       }
     },
     "wl_data_device_manager": {
@@ -395,6 +869,12 @@
             "summary": "获取数据设备",
             "text": "获取指定席位的数据设备。"
           }
+        },
+        "release": {
+          "description": {
+            "summary": "销毁 wl_data_device_manager",
+            "text": "此请求销毁 wl_data_device_manager。不会影响任何其他对象。"
+          }
         }
       },
       "enums": {
@@ -402,6 +882,20 @@
           "description": {
             "summary": "拖放操作类型",
             "text": "描述支持的拖放操作。"
+          },
+          "entries": {
+            "none": {
+              "summary": "无操作"
+            },
+            "copy": {
+              "summary": "复制操作"
+            },
+            "move": {
+              "summary": "移动操作"
+            },
+            "ask": {
+              "summary": "询问操作"
+            }
           }
         }
       }
@@ -416,6 +910,15 @@
           "description": {
             "summary": "创建外壳表面",
             "text": "将普通表面转换为外壳表面。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "role": {
+              "summary": "给定的 wl_surface 已有其他 role"
+            }
           }
         }
       }
@@ -506,6 +1009,74 @@
             "text": "通知客户端弹出窗口已关闭。"
           }
         }
+      },
+      "enums": {
+        "resize": {
+          "description": {
+            "summary": "用于调整大小的边缘值",
+            "text": "这些值用于指示在调整大小操作中正在拖动 surface 的哪条边缘。服务器可以使用此信息来调整其行为，例如选择合适的光标图像。"
+          },
+          "entries": {
+            "none": {
+              "summary": "无边缘"
+            },
+            "top": {
+              "summary": "上边缘"
+            },
+            "bottom": {
+              "summary": "下边缘"
+            },
+            "left": {
+              "summary": "左边缘"
+            },
+            "top_left": {
+              "summary": "上边缘和左边缘"
+            },
+            "bottom_left": {
+              "summary": "下边缘和左边缘"
+            },
+            "right": {
+              "summary": "右边缘"
+            },
+            "top_right": {
+              "summary": "上边缘和右边缘"
+            },
+            "bottom_right": {
+              "summary": "下边缘和右边缘"
+            }
+          }
+        },
+        "transient": {
+          "description": {
+            "summary": "临时行为的详细信息",
+            "text": "这些标志指定临时 surface 预期行为的详细信息。用于 set_transient 请求。"
+          },
+          "entries": {
+            "inactive": {
+              "summary": "不设置键盘焦点"
+            }
+          }
+        },
+        "fullscreen_method": {
+          "description": {
+            "summary": "设置 surface 全屏的不同方法",
+            "text": "提示 compositor 如何处理 surface 尺寸与 output 尺寸之间的冲突。compositor 可以自由忽略此参数。"
+          },
+          "entries": {
+            "default": {
+              "summary": "无偏好，应用默认策略"
+            },
+            "scale": {
+              "summary": "缩放，保持 surface 的宽高比并在 output 上居中"
+            },
+            "driver": {
+              "summary": "切换 output 模式到能容纳 surface 的最小模式，添加黑色边框以补偿尺寸不匹配"
+            },
+            "fill": {
+              "summary": "不放大，在 output 上居中并添加黑色边框以补偿尺寸不匹配"
+            }
+          }
+        }
       }
     },
     "wl_surface": {
@@ -579,6 +1150,12 @@
             "summary": "设置表面偏移",
             "text": "设置相对于上一个缓冲区的偏移量。"
           }
+        },
+        "get_release": {
+          "description": {
+            "summary": "获取释放回调",
+            "text": "为客户端通过 wl_surface.attach 附加的 buffer 的释放创建回调。\n\ncompositor 在完成对相关提交的底层存储的使用后将释放 buffer。一旦客户端收到此事件，并且假设关联的 buffer 没有待处理的来自其他 wl_surface.commit 请求的释放，客户端可以安全地重新使用该 buffer。\n\n释放回调是双缓冲状态，将在 wl_surface.commit 时与待处理的 buffer 关联。\n\nwl_callback.done 事件中传递的 callback_data 未使用，始终为零。\n\n在同一内容更新中发送此请求而未附加非空 buffer 是协议错误。compositor 将在这种情况下发送 no_buffer 错误。"
+          }
         }
       },
       "events": {
@@ -612,6 +1189,26 @@
           "description": {
             "summary": "wl_surface 错误",
             "text": "表面相关的错误值。"
+          },
+          "entries": {
+            "invalid_scale": {
+              "summary": "buffer 缩放值无效"
+            },
+            "invalid_transform": {
+              "summary": "buffer 变换值无效"
+            },
+            "invalid_size": {
+              "summary": "buffer 尺寸无效"
+            },
+            "invalid_offset": {
+              "summary": "buffer 偏移量无效"
+            },
+            "defunct_role_object": {
+              "summary": "surface 在其角色对象之前被销毁"
+            },
+            "no_buffer": {
+              "summary": "未附加 buffer"
+            }
           }
         }
       }
@@ -666,6 +1263,28 @@
           "description": {
             "summary": "能力掩码",
             "text": "席位能力的位字段。"
+          },
+          "entries": {
+            "pointer": {
+              "summary": "seat 具有指针设备"
+            },
+            "keyboard": {
+              "summary": "seat 具有一个或多个键盘"
+            },
+            "touch": {
+              "summary": "seat 具有触摸设备"
+            }
+          }
+        },
+        "error": {
+          "description": {
+            "summary": "wl_seat 错误值",
+            "text": "这些错误可在响应 wl_seat 请求时发出。"
+          },
+          "entries": {
+            "missing_capability": {
+              "summary": "在不具备相应能力的 seat 上调用了 get_pointer、get_keyboard 或 get_touch"
+            }
           }
         }
       }
@@ -743,6 +1362,18 @@
             "summary": "离散轴步长",
             "text": "提供轴滚动的离散步数（如滚轮格数）。"
           }
+        },
+        "axis_value120": {
+          "description": {
+            "summary": "axis 高分辨率滚动事件",
+            "text": "离散的高分辨率滚动信息。\n\n此事件携带高分辨率滚轮滚动信息，每 120 的倍数代表一个逻辑滚动步进（滚轮卡位）。例如，axis_value120 为 30 表示正方向上的四分之一个逻辑滚动步进，value120 为 -240 表示在同一硬件事件中负方向上的两个逻辑滚动步进。\n依赖离散滚动的客户端应在处理事件前将 value120 累积到 120 的倍数。\n\nvalue120 不得为零。\n\n此事件在支持 wl_pointer 版本 8 或更高版本的客户端中取代 wl_pointer.axis_discrete 事件。\n\n当同一 wl_pointer.frame 中出现 wl_pointer.axis_source 事件时，该 axis 来源适用于此事件。\n\nwl_pointer.axis_value120 和 wl_pointer.axis_source 的顺序不作保证。"
+          }
+        },
+        "axis_relative_direction": {
+          "description": {
+            "summary": "axis 相对物理方向事件",
+            "text": "导致 axis 运动的实体的相对方向信息。\n\n对于 wl_pointer.axis 事件，wl_pointer.axis_relative_direction 事件指定了导致 wl_pointer.axis 事件的实体的运动方向。例如：\n- 如果用户在触摸板上的手指向下滑动，导致 wl_pointer.axis vertical_scroll 向下事件，则物理方向为 identical（一致）\n- 如果用户在触摸板上的手指向下滑动，导致 wl_pointer.axis vertical_scroll 向上事件（自然滚动），则物理方向为 inverted（反转）。\n\n客户端可使用此信息调整组件的滚动运动。具体而言，启用自然滚动会导致内容相对于传统滚动改变方向。某些控件（如音量控制滑块）通常应匹配物理方向，无论是否启用了自然滚动。此事件使客户端能够将控件的滚动方向与物理方向匹配。\n\n此事件不会单独出现，它与代表该 axis 值的 wl_pointer.axis 事件配对。协议保证每个 axis_relative_direction 事件在同一 wl_pointer.frame 内总是紧随一个具有相同 axis 编号的 axis 事件。注意，协议允许 axis_relative_direction 及其配对 axis 事件之间出现其他事件。\n\naxis 编号与关联的 axis 事件中的 axis 编号相同。\n\nwl_pointer.axis_relative_direction、wl_pointer.axis_discrete 和 wl_pointer.axis_source 的顺序不作保证。"
+          }
         }
       },
       "enums": {
@@ -750,24 +1381,73 @@
           "description": {
             "summary": "指针错误",
             "text": "指针相关的错误值。"
+          },
+          "entries": {
+            "role": {
+              "summary": "给定的 wl_surface 已有其他角色"
+            }
           }
         },
         "button_state": {
           "description": {
             "summary": "物理按钮状态",
             "text": "按钮是按下还是释放。"
+          },
+          "entries": {
+            "released": {
+              "summary": "按钮未按下"
+            },
+            "pressed": {
+              "summary": "按钮已按下"
+            }
           }
         },
         "axis": {
           "description": {
             "summary": "滚动轴方向",
             "text": "水平轴或垂直轴。"
+          },
+          "entries": {
+            "vertical_scroll": {
+              "summary": "垂直轴"
+            },
+            "horizontal_scroll": {
+              "summary": "水平轴"
+            }
           }
         },
         "axis_source": {
           "description": {
             "summary": "轴事件来源类型",
             "text": "描述事件是由什么设备产生的。"
+          },
+          "entries": {
+            "wheel": {
+              "summary": "物理滚轮转动"
+            },
+            "finger": {
+              "summary": "触摸表面上的手指"
+            },
+            "continuous": {
+              "summary": "连续坐标空间"
+            },
+            "wheel_tilt": {
+              "summary": "物理滚轮倾斜"
+            }
+          }
+        },
+        "axis_relative_direction": {
+          "description": {
+            "summary": "axis 相对方向",
+            "text": "指定导致 wl_pointer.axis 事件的物理运动方向，相对于 wl_pointer.axis 方向。"
+          },
+          "entries": {
+            "identical": {
+              "summary": "物理运动与 axis 方向一致"
+            },
+            "inverted": {
+              "summary": "物理运动与 axis 方向相反"
+            }
           }
         }
       }
@@ -828,12 +1508,31 @@
           "description": {
             "summary": "键盘映射格式",
             "text": "键盘映射数据的格式。"
+          },
+          "entries": {
+            "no_keymap": {
+              "summary": "无 keymap；客户端必须自行理解如何解释原始 keycode"
+            },
+            "xkb_v1": {
+              "summary": "兼容 libxkbcommon 的空终止字符串；为确定 xkb keycode，客户端必须将按键事件的 keycode 加 8"
+            }
           }
         },
         "key_state": {
           "description": {
             "summary": "按键物理状态",
             "text": "按键是按下、释放还是重复。"
+          },
+          "entries": {
+            "released": {
+              "summary": "按键未按下"
+            },
+            "pressed": {
+              "summary": "按键已按下"
+            },
+            "repeated": {
+              "summary": "按键已重复"
+            }
           }
         }
       }
@@ -952,12 +1651,72 @@
           "description": {
             "summary": "次像素排列信息",
             "text": "描述物理像素的排列方式。"
+          },
+          "entries": {
+            "unknown": {
+              "summary": "未知几何排列"
+            },
+            "none": {
+              "summary": "无几何排列"
+            },
+            "horizontal_rgb": {
+              "summary": "水平 RGB"
+            },
+            "horizontal_bgr": {
+              "summary": "水平 BGR"
+            },
+            "vertical_rgb": {
+              "summary": "垂直 RGB"
+            },
+            "vertical_bgr": {
+              "summary": "垂直 BGR"
+            }
           }
         },
         "transform": {
           "description": {
             "summary": "应用到缓冲区的变换",
             "text": "描述旋转和翻转操作。"
+          },
+          "entries": {
+            "normal": {
+              "summary": "无变换"
+            },
+            "90": {
+              "summary": "逆时针旋转 90 度"
+            },
+            "180": {
+              "summary": "逆时针旋转 180 度"
+            },
+            "270": {
+              "summary": "逆时针旋转 270 度"
+            },
+            "flipped": {
+              "summary": "绕垂直轴翻转 180 度"
+            },
+            "flipped_90": {
+              "summary": "翻转并逆时针旋转 90 度"
+            },
+            "flipped_180": {
+              "summary": "翻转并逆时针旋转 180 度"
+            },
+            "flipped_270": {
+              "summary": "翻转并逆时针旋转 270 度"
+            }
+          }
+        },
+        "mode": {
+          "description": {
+            "summary": "模式信息",
+            "text": "这些标志描述输出模式的属性，用于 mode 事件的 flags 位域中。"
+          },
+          "entries": {
+            "current": {
+              "summary": "表示这是当前模式"
+            },
+            "preferred": {
+              "summary": "表示这是首选模式"
+            }
           }
         }
       }
@@ -1006,6 +1765,18 @@
             "text": "将普通表面转换为子表面，并关联到父表面。"
           }
         }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "bad_surface": {
+              "summary": "待设为子 surface 的对象无效"
+            },
+            "bad_parent": {
+              "summary": "待设为子 surface 的父对象无效"
+            }
+          }
+        }
       }
     },
     "wl_subsurface": {
@@ -1048,6 +1819,15 @@
           "description": {
             "summary": "设置为异步模式",
             "text": "子表面的提交将独立于父表面运行。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "bad_surface": {
+              "summary": "wl_surface 不是同级或父级"
+            }
           }
         }
       }
