@@ -6,55 +6,61 @@
   "interfaces": {
     "wl_display": {
       "description": {
-        "summary": "核心全局对象",
-        "text": "核心全局对象。这是一个特殊的单例对象，用于内部 Wayland 协议功能。"
+        "type": "description",
+        "text": "核心全局对象。这是一个特殊的单例对象，用于内部 Wayland 协议功能。",
+        "summary": "核心全局对象"
       },
       "requests": {
         "sync": {
           "description": {
-            "summary": "异步回送",
-            "text": "sync 请求要求服务器在返回的 wl_callback 对象上发出 'done' 事件。由于请求和事件都是按顺序处理和交付的，因此这可以用作屏障，以确保之前所有的请求和产生的事件都已处理完毕。\n\n此请求返回的对象将在回调触发后被合成器销毁，因此客户端在此时点后不得尝试使用它。\n\n回调中传递的 callback_data 未定义，应忽略。"
+            "type": "description",
+            "text": "sync 请求要求服务器在返回的 wl_callback 对象上发出 'done' 事件。由于请求按顺序处理，事件按顺序传递，这可以用作屏障以确保所有先前的请求和由此产生的事件都已被处理。\n\n此请求返回的对象将在回调触发后由 compositor 销毁，因此客户端不得在该时间点之后尝试使用它。\n\n回调中传递的 callback_data 是未定义的，应被忽略。",
+            "summary": "异步往返"
           }
         },
         "get_registry": {
           "description": {
-            "summary": "获取全局注册表对象",
-            "text": "此请求创建一个注册表对象，允许客户端列出并绑定合成器提供的全局对象。\n\n需要注意的是，响应 get_registry 请求所消耗的服务器端资源只能在客户端断开连接时释放，而不是在客户端代理销毁时释放。因此，客户端应尽可能少地调用 get_registry，以避免浪费内存。"
+            "type": "description",
+            "text": "此请求创建一个 registry 对象，允许客户端列出并绑定 compositor 提供的全局对象。\n\n应注意，响应 get_registry 请求所消耗的服务器端资源只能在客户端断开连接时释放，而不是在客户端侧代理被销毁时释放。因此，客户端应尽可能少地调用 get_registry 以避免浪费内存。",
+            "summary": "获取全局 registry 对象"
           }
         }
       },
       "events": {
         "error": {
           "description": {
-            "summary": "致命错误事件",
-            "text": "当发生致命（不可恢复）错误时发出错误事件。object_id 参数是发生错误的位点，通常是响应对该对象的请求。code 标识错误，由对象接口定义。因此，每个接口都定义了自己的错误代码集。message 是错误的简短描述，用于（调试）方便。"
+            "type": "description",
+            "text": "当发生致命（不可恢复）错误时发送 error 事件。object_id 参数是发生错误的对象，通常是对该对象的请求的响应。code 标识错误并由对象接口定义。因此，每个接口定义自己的错误码集合。message 是错误的简要描述，方便调试。",
+            "summary": "致命错误事件"
           }
         },
         "delete_id": {
           "description": {
-            "summary": "确认对象 ID 删除",
-            "text": "此事件由对象 ID 管理逻辑内部使用。当客户端删除其创建的对象时，服务器将发送此事件以确认已看到删除请求。当客户端收到此事件时，它将知道可以安全地重用该对象 ID。"
+            "type": "description",
+            "text": "此事件由对象 ID 管理逻辑内部使用。当客户端删除其创建的对象时，服务器将发送此事件以确认已看到删除请求。当客户端收到此事件时，它将知道可以安全地重用该对象 ID。",
+            "summary": "确认对象 ID 删除"
           }
         }
       },
       "enums": {
         "error": {
           "description": {
-            "summary": "全局错误值",
-            "text": "这些错误是全局性的，可以响应任何服务器请求而发出。"
+            "type": "description",
+            "text": "这些错误是全局的，可以在响应任何服务器请求时发出。",
+            "summary": "全局错误值"
           },
           "entries": {
             "invalid_object": {
-              "summary": "server 无法找到对象"
+              "summary": "服务器找不到对象"
             },
             "invalid_method": {
-              "summary": "指定接口上不存在该方法，或请求格式错误"
+              "summary": "方法在指定接口上不存在或请求格式错误"
             },
             "no_memory": {
-              "summary": "server 内存不足"
+              "summary": "服务器内存不足"
             },
             "implementation": {
-              "summary": "compositor 实现错误"
+              "summary": "compositor 中的实现错误"
             }
           }
         }
@@ -62,322 +68,342 @@
     },
     "wl_registry": {
       "description": {
-        "summary": "全局注册表对象",
-        "text": "单例全局注册表对象。服务器拥有许多对所有客户端都可用的全局对象。这些对象通常代表服务器中的实际对象（例如输入设备），或者是提供扩展功能的单例对象。\n\n当客户端创建注册表对象时，注册表对象会为当前注册表中的每个全局对象发出一个 global 事件。全局对象会因设备或显示器的热插拔、重新配置或其他事件而出现或消失，注册表将发送 global 和 global_remove 事件，以使客户端了解最新的更改。为了标记初始事件迸发的结束，客户端可以在调用 wl_display.get_registry 后立即使用 wl_display.sync 请求。\n\n客户端可以使用 bind 请求绑定到全局对象。这将创建一个客户端句柄，让对象向客户端发送事件，并允许客户端对该对象调用请求。"
+        "type": "description",
+        "text": "单例全局 registry 对象。服务器有多个对所有客户端可用的全局对象。这些对象通常代表服务器中的实际对象（例如输入设备），或者是提供扩展功能的单例对象。\n\n当客户端创建 registry 对象时，registry 对象将为当前注册表中的每个全局对象发出 global 事件。全局对象会因设备或显示器热插拔、重新配置或其他事件而出现和消失，registry 将发送 global 和 global_remove 事件以使客户端了解更改。为了标记初始事件突发的结束，客户端可以在调用 wl_display.get_registry 后立即使用 wl_display.sync 请求。\n\n客户端可以使用 bind 请求绑定到全局对象。这将创建一个客户端侧句柄，使对象可以向客户端发出事件，并允许客户端在对象上调用请求。",
+        "summary": "全局 registry 对象"
       },
       "requests": {
         "bind": {
           "description": {
-            "summary": "将对象绑定到显示器",
-            "text": "使用指定的名称作为标识符，将客户端创建的新对象绑定到服务器。"
+            "type": "description",
+            "text": "使用指定的名称作为标识符，将新的客户端创建的对象绑定到服务器。",
+            "summary": "将对象绑定到 display"
           }
         }
       },
       "events": {
         "global": {
           "description": {
-            "summary": "宣告全局对象",
-            "text": "通知客户端全局对象的信息。\n\n此事件通知客户端，具有给定名称的全局对象现在可用，并且它实现了给定接口的给定版本。"
+            "type": "description",
+            "text": "通知客户端全局对象。\n\n此事件通知客户端具有给定名称的全局对象现在可用，并且它实现了给定接口的给定版本。",
+            "summary": "通告全局对象"
           }
         },
         "global_remove": {
           "description": {
-            "summary": "宣告移除全局对象",
-            "text": "通知客户端已移除全局对象。\n\n此事件通知客户端，由名称标识的全局对象不再可用。如果客户端使用 bind 请求绑定到了该全局对象，则客户端现在应该销毁该对象。\n\n在客户端销毁该对象之前，该对象仍然有效，并且对该对象的请求将被忽略，以避免全局对象消失与客户端向其发送请求之间的竞争。"
+            "type": "description",
+            "text": "通知客户端已移除的全局对象。\n\n此事件通知客户端由 name 标识的全局对象不再可用。如果客户端使用 bind 请求绑定了该全局对象，则客户端现在应销毁该对象。\n\n该对象仍然有效，在客户端销毁它之前，对该对象的请求将被忽略，以避免全局对象消失和客户端向其发送请求之间的竞争。",
+            "summary": "通告全局对象的移除"
           }
         }
       }
     },
     "wl_callback": {
       "description": {
-        "summary": "回调对象",
-        "text": "客户端可以处理 'done' 事件，以便在相关请求完成时得到通知。\n\n注意，由于 wl_callback 对象是从多个独立的工厂接口创建的，因此 wl_callback 接口被冻结在版本 1。"
+        "type": "description",
+        "text": "客户端可以处理 'done' 事件以在相关请求完成时获得通知。\n\n注意，由于 wl_callback 对象是从多个独立的工厂接口创建的，wl_callback 接口冻结在版本 1。",
+        "summary": "回调对象"
       },
       "events": {
         "done": {
           "description": {
-            "summary": "完成事件",
-            "text": "在相关请求完成时通知客户端。"
+            "type": "description",
+            "text": "在相关请求完成时通知客户端。",
+            "summary": "完成事件"
           }
         }
       }
     },
     "wl_compositor": {
       "description": {
-        "summary": "合成器单例",
-        "text": "合成器。此对象是一个全局单例。合成器负责将多个表面的内容组合成一个可显示的输出。"
+        "type": "description",
+        "text": "Compositor。此对象是单例全局对象。compositor 负责将多个 surface 的内容组合成一个可显示的输出。",
+        "summary": "compositor 单例"
       },
       "requests": {
         "create_surface": {
           "description": {
-            "summary": "创建新表面",
-            "text": "请求合成器创建一个新表面。"
+            "type": "description",
+            "text": "请求 compositor 创建新的 surface。",
+            "summary": "创建新 surface"
           }
         },
         "create_region": {
           "description": {
-            "summary": "创建新区域",
-            "text": "请求合成器创建一个新区域。"
+            "type": "description",
+            "text": "请求 compositor 创建新的 region。",
+            "summary": "创建新 region"
           }
         },
         "release": {
           "description": {
-            "summary": "销毁 wl_compositor",
-            "text": "此请求销毁 wl_compositor。不会影响任何其他对象。"
+            "type": "description",
+            "text": "此请求销毁 wl_compositor。这对任何其他对象没有影响。",
+            "summary": "销毁 wl_compositor"
           }
         }
       }
     },
     "wl_shm_pool": {
       "description": {
-        "summary": "共享内存池",
-        "text": "wl_shm_pool 对象封装了一块由文件描述符支持的共享内存，客户端可以从中分配 wl_buffer 对象。池中的所有缓冲区共享相同的文件描述符，并在合成器中被映射到同一内存块中。"
+        "type": "description",
+        "text": "wl_shm_pool 对象封装了 compositor 和客户端之间共享的一段内存。通过 wl_shm_pool 对象，客户端可以分配共享内存 wl_buffer 对象。通过同一池创建的所有对象共享相同的底层映射内存。重用映射内存避免了设置/拆卸开销，在交互式调整 surface 大小或用于许多小 buffer 时很有用。",
+        "summary": "共享内存池"
       },
       "requests": {
         "create_buffer": {
           "description": {
-            "summary": "从池中创建缓冲区",
-            "text": "从池中创建一个 wl_buffer 对象。"
+            "type": "description",
+            "text": "从池中创建 wl_buffer 对象。\n\nbuffer 在池中 offset 字节处创建，具有指定的 width 和 height。stride 参数指定从一行开头到下一行开头的字节数。format 是 buffer 的像素格式，必须是通过 wl_shm.format 事件公布的格式之一。\n\nbuffer 将保持对创建它的池的引用，因此在从中创建 buffer 后立即销毁池是有效的。",
+            "summary": "从池中创建 buffer"
           }
         },
         "destroy": {
           "description": {
-            "summary": "销毁池",
-            "text": "销毁共享内存池。"
+            "type": "description",
+            "text": "销毁共享内存池。\n\n当从此池创建的所有 buffer 消失时，映射的内存将被释放。",
+            "summary": "销毁池"
           }
         },
         "resize": {
           "description": {
-            "summary": "调整池大小",
-            "text": "调整共享内存池的大小。"
+            "type": "description",
+            "text": "此请求将导致服务器从创建池时传递的文件描述符重新映射池的后备内存，但使用新的大小。此请求只能用于使池变大。\n\n此请求仅更改服务器映射的字节数，不会触及创建时传递的文件描述符对应的文件。客户端有责任确保文件至少与新的池大小一样大。",
+            "summary": "更改池映射的大小"
           }
         }
       }
     },
     "wl_shm": {
       "description": {
-        "summary": "共享内存支持",
-        "text": "一个允许客户端分配共享内存缓冲区的全局单例。"
+        "type": "description",
+        "text": "一个提供共享内存支持的单例全局对象。\n\n客户端可以使用 create_pool 请求创建 wl_shm_pool 对象。\n\n绑定 wl_shm 对象时，会发出一个或多个 format 事件，通知客户端可用于 buffer 的有效像素格式。",
+        "summary": "共享内存支持"
       },
       "requests": {
         "create_pool": {
           "description": {
-            "summary": "创建内存池",
-            "text": "创建一个共享内存池。"
+            "type": "description",
+            "text": "创建一个新的 wl_shm_pool 对象。\n\n该池可用于创建基于共享内存的 buffer 对象。服务器将对传入的文件描述符 mmap size 字节，作为该池的后备内存。",
+            "summary": "创建一个 shm 池"
           }
         },
         "release": {
           "description": {
-            "summary": "释放 shm 对象",
-            "text": "客户端可通过此请求告知服务器不再使用该 shm 对象。\n\n通过此接口创建的对象不受影响。"
+            "type": "description",
+            "text": "客户端可以使用此请求告知服务器不再使用该 shm 对象。\n\n通过此接口创建的对象不受影响。",
+            "summary": "释放 shm 对象"
           }
         }
       },
       "events": {
         "format": {
           "description": {
-            "summary": "支持的像素格式",
-            "text": "在绑定时，此事件会告知客户端支持哪些像素格式。"
+            "type": "description",
+            "text": "通知客户端可用于 buffer 的有效像素格式。已知格式包括 argb8888 和 xrgb8888。\n\ndrm_fourcc.h（或 format 枚举）的扩展不需要增加 wl_shm 版本；因此客户端可能会收到在客户端创建时列表中不存在的格式代码。",
+            "summary": "像素格式描述"
           }
         }
       },
       "enums": {
         "error": {
           "description": {
-            "summary": "wl_shm 错误值",
-            "text": "这些错误可以在响应 wl_shm 请求时发出。"
+            "type": "description",
+            "text": "这些错误可能在响应 wl_shm 请求时被发出。",
+            "summary": "wl_shm 错误值"
           },
           "entries": {
             "invalid_format": {
               "summary": "buffer 格式未知"
             },
             "invalid_stride": {
-              "summary": "创建 pool 或 buffer 时大小或 stride 无效"
+              "summary": "在创建池或 buffer 时大小或 stride 无效"
             },
             "invalid_fd": {
-              "summary": "对文件描述符进行 mmap 映射失败"
+              "summary": "对文件描述符 mmap 失败"
             }
           }
         },
         "format": {
           "description": {
-            "summary": "像素格式",
-            "text": "此枚举描述了缓冲区的像素格式。"
+            "type": "description",
+            "text": "描述单个像素的内存布局。\n\n所有渲染器都应支持 argb8888 和 xrgb8888，但其他格式是可选的，可能不被当前使用的特定渲染器支持。\n\ndrm 格式代码与 drm_fourcc.h 中定义的宏匹配，argb8888 和 xrgb8888 除外。compositor 实际支持的格式将通过 format 事件报告。更详细的格式描述请参见 drm_fourcc.h。\n\n对于所有 wl_shm 格式，除非在其他协议扩展中另有说明，否则像素值使用预乘 alpha。",
+            "summary": "像素格式"
           },
           "entries": {
             "argb8888": {
-              "summary": "32 位 ARGB 格式, [31:0] A:R:G:B 8:8:8:8 little endian"
+              "summary": "32 位 ARGB 格式，[31:0] A:R:G:B 8:8:8:8 little endian"
             },
             "xrgb8888": {
-              "summary": "32 位 RGB 格式, [31:0] x:R:G:B 8:8:8:8 little endian"
+              "summary": "32 位 RGB 格式，[31:0] x:R:G:B 8:8:8:8 little endian"
             },
             "c8": {
-              "summary": "8 位颜色索引格式, [7:0] C"
+              "summary": "8 位颜色索引格式，[7:0] C"
             },
             "rgb332": {
-              "summary": "8 位 RGB 格式, [7:0] R:G:B 3:3:2"
+              "summary": "8 位 RGB 格式，[7:0] R:G:B 3:3:2"
             },
             "bgr233": {
-              "summary": "8 位 BGR 格式, [7:0] B:G:R 2:3:3"
+              "summary": "8 位 BGR 格式，[7:0] B:G:R 2:3:3"
             },
             "xrgb4444": {
-              "summary": "16 位 xRGB 格式, [15:0] x:R:G:B 4:4:4:4 little endian"
+              "summary": "16 位 xRGB 格式，[15:0] x:R:G:B 4:4:4:4 little endian"
             },
             "xbgr4444": {
-              "summary": "16 位 xBGR 格式, [15:0] x:B:G:R 4:4:4:4 little endian"
+              "summary": "16 位 xBGR 格式，[15:0] x:B:G:R 4:4:4:4 little endian"
             },
             "rgbx4444": {
-              "summary": "16 位 RGBx 格式, [15:0] R:G:B:x 4:4:4:4 little endian"
+              "summary": "16 位 RGBx 格式，[15:0] R:G:B:x 4:4:4:4 little endian"
             },
             "bgrx4444": {
-              "summary": "16 位 BGRx 格式, [15:0] B:G:R:x 4:4:4:4 little endian"
+              "summary": "16 位 BGRx 格式，[15:0] B:G:R:x 4:4:4:4 little endian"
             },
             "argb4444": {
-              "summary": "16 位 ARGB 格式, [15:0] A:R:G:B 4:4:4:4 little endian"
+              "summary": "16 位 ARGB 格式，[15:0] A:R:G:B 4:4:4:4 little endian"
             },
             "abgr4444": {
-              "summary": "16 位 ABGR 格式, [15:0] A:B:G:R 4:4:4:4 little endian"
+              "summary": "16 位 ABGR 格式，[15:0] A:B:G:R 4:4:4:4 little endian"
             },
             "rgba4444": {
-              "summary": "16 位 RBGA 格式, [15:0] R:G:B:A 4:4:4:4 little endian"
+              "summary": "16 位 RBGA 格式，[15:0] R:G:B:A 4:4:4:4 little endian"
             },
             "bgra4444": {
-              "summary": "16 位 BGRA 格式, [15:0] B:G:R:A 4:4:4:4 little endian"
+              "summary": "16 位 BGRA 格式，[15:0] B:G:R:A 4:4:4:4 little endian"
             },
             "xrgb1555": {
-              "summary": "16 位 xRGB 格式, [15:0] x:R:G:B 1:5:5:5 little endian"
+              "summary": "16 位 xRGB 格式，[15:0] x:R:G:B 1:5:5:5 little endian"
             },
             "xbgr1555": {
-              "summary": "16 位 xBGR 1555 格式, [15:0] x:B:G:R 1:5:5:5 little endian"
+              "summary": "16 位 xBGR 1555 格式，[15:0] x:B:G:R 1:5:5:5 little endian"
             },
             "rgbx5551": {
-              "summary": "16 位 RGBx 5551 格式, [15:0] R:G:B:x 5:5:5:1 little endian"
+              "summary": "16 位 RGBx 5551 格式，[15:0] R:G:B:x 5:5:5:1 little endian"
             },
             "bgrx5551": {
-              "summary": "16 位 BGRx 5551 格式, [15:0] B:G:R:x 5:5:5:1 little endian"
+              "summary": "16 位 BGRx 5551 格式，[15:0] B:G:R:x 5:5:5:1 little endian"
             },
             "argb1555": {
-              "summary": "16 位 ARGB 1555 格式, [15:0] A:R:G:B 1:5:5:5 little endian"
+              "summary": "16 位 ARGB 1555 格式，[15:0] A:R:G:B 1:5:5:5 little endian"
             },
             "abgr1555": {
-              "summary": "16 位 ABGR 1555 格式, [15:0] A:B:G:R 1:5:5:5 little endian"
+              "summary": "16 位 ABGR 1555 格式，[15:0] A:B:G:R 1:5:5:5 little endian"
             },
             "rgba5551": {
-              "summary": "16 位 RGBA 5551 格式, [15:0] R:G:B:A 5:5:5:1 little endian"
+              "summary": "16 位 RGBA 5551 格式，[15:0] R:G:B:A 5:5:5:1 little endian"
             },
             "bgra5551": {
-              "summary": "16 位 BGRA 5551 格式, [15:0] B:G:R:A 5:5:5:1 little endian"
+              "summary": "16 位 BGRA 5551 格式，[15:0] B:G:R:A 5:5:5:1 little endian"
             },
             "rgb565": {
-              "summary": "16 位 RGB 565 格式, [15:0] R:G:B 5:6:5 little endian"
+              "summary": "16 位 RGB 565 格式，[15:0] R:G:B 5:6:5 little endian"
             },
             "bgr565": {
-              "summary": "16 位 BGR 565 格式, [15:0] B:G:R 5:6:5 little endian"
+              "summary": "16 位 BGR 565 格式，[15:0] B:G:R 5:6:5 little endian"
             },
             "rgb888": {
-              "summary": "24 位 RGB 格式, [23:0] R:G:B little endian"
+              "summary": "24 位 RGB 格式，[23:0] R:G:B little endian"
             },
             "bgr888": {
-              "summary": "24 位 BGR 格式, [23:0] B:G:R little endian"
+              "summary": "24 位 BGR 格式，[23:0] B:G:R little endian"
             },
             "xbgr8888": {
-              "summary": "32 位 xBGR 格式, [31:0] x:B:G:R 8:8:8:8 little endian"
+              "summary": "32 位 xBGR 格式，[31:0] x:B:G:R 8:8:8:8 little endian"
             },
             "rgbx8888": {
-              "summary": "32 位 RGBx 格式, [31:0] R:G:B:x 8:8:8:8 little endian"
+              "summary": "32 位 RGBx 格式，[31:0] R:G:B:x 8:8:8:8 little endian"
             },
             "bgrx8888": {
-              "summary": "32 位 BGRx 格式, [31:0] B:G:R:x 8:8:8:8 little endian"
+              "summary": "32 位 BGRx 格式，[31:0] B:G:R:x 8:8:8:8 little endian"
             },
             "abgr8888": {
-              "summary": "32 位 ABGR 格式, [31:0] A:B:G:R 8:8:8:8 little endian"
+              "summary": "32 位 ABGR 格式，[31:0] A:B:G:R 8:8:8:8 little endian"
             },
             "rgba8888": {
-              "summary": "32 位 RGBA 格式, [31:0] R:G:B:A 8:8:8:8 little endian"
+              "summary": "32 位 RGBA 格式，[31:0] R:G:B:A 8:8:8:8 little endian"
             },
             "bgra8888": {
-              "summary": "32 位 BGRA 格式, [31:0] B:G:R:A 8:8:8:8 little endian"
+              "summary": "32 位 BGRA 格式，[31:0] B:G:R:A 8:8:8:8 little endian"
             },
             "xrgb2101010": {
-              "summary": "32 位 xRGB 格式, [31:0] x:R:G:B 2:10:10:10 little endian"
+              "summary": "32 位 xRGB 格式，[31:0] x:R:G:B 2:10:10:10 little endian"
             },
             "xbgr2101010": {
-              "summary": "32 位 xBGR 格式, [31:0] x:B:G:R 2:10:10:10 little endian"
+              "summary": "32 位 xBGR 格式，[31:0] x:B:G:R 2:10:10:10 little endian"
             },
             "rgbx1010102": {
-              "summary": "32 位 RGBx 格式, [31:0] R:G:B:x 10:10:10:2 little endian"
+              "summary": "32 位 RGBx 格式，[31:0] R:G:B:x 10:10:10:2 little endian"
             },
             "bgrx1010102": {
-              "summary": "32 位 BGRx 格式, [31:0] B:G:R:x 10:10:10:2 little endian"
+              "summary": "32 位 BGRx 格式，[31:0] B:G:R:x 10:10:10:2 little endian"
             },
             "argb2101010": {
-              "summary": "32 位 ARGB 格式, [31:0] A:R:G:B 2:10:10:10 little endian"
+              "summary": "32 位 ARGB 格式，[31:0] A:R:G:B 2:10:10:10 little endian"
             },
             "abgr2101010": {
-              "summary": "32 位 ABGR 格式, [31:0] A:B:G:R 2:10:10:10 little endian"
+              "summary": "32 位 ABGR 格式，[31:0] A:B:G:R 2:10:10:10 little endian"
             },
             "rgba1010102": {
-              "summary": "32 位 RGBA 格式, [31:0] R:G:B:A 10:10:10:2 little endian"
+              "summary": "32 位 RGBA 格式，[31:0] R:G:B:A 10:10:10:2 little endian"
             },
             "bgra1010102": {
-              "summary": "32 位 BGRA 格式, [31:0] B:G:R:A 10:10:10:2 little endian"
+              "summary": "32 位 BGRA 格式，[31:0] B:G:R:A 10:10:10:2 little endian"
             },
             "yuyv": {
-              "summary": "packed YCbCr 格式, [31:0] Cr0:Y1:Cb0:Y0 8:8:8:8 little endian"
+              "summary": "packed YCbCr 格式，[31:0] Cr0:Y1:Cb0:Y0 8:8:8:8 little endian"
             },
             "yvyu": {
-              "summary": "packed YCbCr 格式, [31:0] Cb0:Y1:Cr0:Y0 8:8:8:8 little endian"
+              "summary": "packed YCbCr 格式，[31:0] Cb0:Y1:Cr0:Y0 8:8:8:8 little endian"
             },
             "uyvy": {
-              "summary": "packed YCbCr 格式, [31:0] Y1:Cr0:Y0:Cb0 8:8:8:8 little endian"
+              "summary": "packed YCbCr 格式，[31:0] Y1:Cr0:Y0:Cb0 8:8:8:8 little endian"
             },
             "vyuy": {
-              "summary": "packed YCbCr 格式, [31:0] Y1:Cb0:Y0:Cr0 8:8:8:8 little endian"
+              "summary": "packed YCbCr 格式，[31:0] Y1:Cb0:Y0:Cr0 8:8:8:8 little endian"
             },
             "ayuv": {
-              "summary": "packed AYCbCr 格式, [31:0] A:Y:Cb:Cr 8:8:8:8 little endian"
+              "summary": "packed AYCbCr 格式，[31:0] A:Y:Cb:Cr 8:8:8:8 little endian"
             },
             "nv12": {
-              "summary": "2 平面 YCbCr Cr:Cb 格式, 2x2 子采样 Cr:Cb 平面"
+              "summary": "2 平面 YCbCr Cr:Cb 格式，2x2 子采样 Cr:Cb 平面"
             },
             "nv21": {
-              "summary": "2 平面 YCbCr Cb:Cr 格式, 2x2 子采样 Cb:Cr 平面"
+              "summary": "2 平面 YCbCr Cb:Cr 格式，2x2 子采样 Cb:Cr 平面"
             },
             "nv16": {
-              "summary": "2 平面 YCbCr Cr:Cb 格式, 2x1 子采样 Cr:Cb 平面"
+              "summary": "2 平面 YCbCr Cr:Cb 格式，2x1 子采样 Cr:Cb 平面"
             },
             "nv61": {
-              "summary": "2 平面 YCbCr Cb:Cr 格式, 2x1 子采样 Cb:Cr 平面"
+              "summary": "2 平面 YCbCr Cb:Cr 格式，2x1 子采样 Cb:Cr 平面"
             },
             "yuv410": {
-              "summary": "3 平面 YCbCr 格式, 4x4 子采样 Cb (1) 和 Cr (2) 平面"
+              "summary": "3 平面 YCbCr 格式，4x4 子采样 Cb (1) 和 Cr (2) 平面"
             },
             "yvu410": {
-              "summary": "3 平面 YCbCr 格式, 4x4 子采样 Cr (1) 和 Cb (2) 平面"
+              "summary": "3 平面 YCbCr 格式，4x4 子采样 Cr (1) 和 Cb (2) 平面"
             },
             "yuv411": {
-              "summary": "3 平面 YCbCr 格式, 4x1 子采样 Cb (1) 和 Cr (2) 平面"
+              "summary": "3 平面 YCbCr 格式，4x1 子采样 Cb (1) 和 Cr (2) 平面"
             },
             "yvu411": {
-              "summary": "3 平面 YCbCr 格式, 4x1 子采样 Cr (1) 和 Cb (2) 平面"
+              "summary": "3 平面 YCbCr 格式，4x1 子采样 Cr (1) 和 Cb (2) 平面"
             },
             "yuv420": {
-              "summary": "3 平面 YCbCr 格式, 2x2 子采样 Cb (1) 和 Cr (2) 平面"
+              "summary": "3 平面 YCbCr 格式，2x2 子采样 Cb (1) 和 Cr (2) 平面"
             },
             "yvu420": {
-              "summary": "3 平面 YCbCr 格式, 2x2 子采样 Cr (1) 和 Cb (2) 平面"
+              "summary": "3 平面 YCbCr 格式，2x2 子采样 Cr (1) 和 Cb (2) 平面"
             },
             "yuv422": {
-              "summary": "3 平面 YCbCr 格式, 2x1 子采样 Cb (1) 和 Cr (2) 平面"
+              "summary": "3 平面 YCbCr 格式，2x1 子采样 Cb (1) 和 Cr (2) 平面"
             },
             "yvu422": {
-              "summary": "3 平面 YCbCr 格式, 2x1 子采样 Cr (1) 和 Cb (2) 平面"
+              "summary": "3 平面 YCbCr 格式，2x1 子采样 Cr (1) 和 Cb (2) 平面"
             },
             "yuv444": {
-              "summary": "3 平面 YCbCr 格式, 无子采样 Cb (1) 和 Cr (2) 平面"
+              "summary": "3 平面 YCbCr 格式，无子采样 Cb (1) 和 Cr (2) 平面"
             },
             "yvu444": {
-              "summary": "3 平面 YCbCr 格式, 无子采样 Cr (1) 和 Cb (2) 平面"
+              "summary": "3 平面 YCbCr 格式，无子采样 Cr (1) 和 Cb (2) 平面"
             },
             "r8": {
               "summary": "[7:0] R"
@@ -416,16 +442,16 @@
               "summary": "[23:0] Cr:Cb:Y 8:8:8 little endian"
             },
             "vuy101010": {
-              "summary": "Y 后跟 U 然后 V, 10:10:10. 仅限非线性修饰符"
+              "summary": "Y 后跟 U 然后 V，10:10:10。仅限非线性修饰符"
             },
             "y210": {
-              "summary": "[63:0] Cr0:0:Y1:0:Cb0:0:Y0:0 10:6:10:6:10:6:10:6 little endian, 每 2 个 Y 像素"
+              "summary": "[63:0] Cr0:0:Y1:0:Cb0:0:Y0:0 10:6:10:6:10:6:10:6 little endian，每 2 个 Y 像素"
             },
             "y212": {
-              "summary": "[63:0] Cr0:0:Y1:0:Cb0:0:Y0:0 12:4:12:4:12:4:12:4 little endian, 每 2 个 Y 像素"
+              "summary": "[63:0] Cr0:0:Y1:0:Cb0:0:Y0:0 12:4:12:4:12:4:12:4 little endian，每 2 个 Y 像素"
             },
             "y216": {
-              "summary": "[63:0] Cr0:Y1:Cb0:Y0 16:16:16:16 little endian, 每 2 个 Y 像素"
+              "summary": "[63:0] Cr0:Y1:Cb0:Y0 16:16:16:16 little endian，每 2 个 Y 像素"
             },
             "y410": {
               "summary": "[31:0] A:Cr:Y:Cb 2:10:10:10 little endian"
@@ -464,16 +490,16 @@
               "summary": "无子采样 Cb:Cr 平面"
             },
             "p210": {
-              "summary": "2x1 子采样 Cr:Cb 平面, 每通道 10 位"
+              "summary": "2x1 子采样 Cr:Cb 平面，每通道 10 位"
             },
             "p010": {
-              "summary": "2x2 子采样 Cr:Cb 平面, 每通道 10 位"
+              "summary": "2x2 子采样 Cr:Cb 平面，每通道 10 位"
             },
             "p012": {
-              "summary": "2x2 子采样 Cr:Cb 平面, 每通道 12 位"
+              "summary": "2x2 子采样 Cr:Cb 平面，每通道 12 位"
             },
             "p016": {
-              "summary": "2x2 子采样 Cr:Cb 平面, 每通道 16 位"
+              "summary": "2x2 子采样 Cr:Cb 平面，每通道 16 位"
             },
             "axbxgxrx106106106106": {
               "summary": "[63:0] A:x:B:x:G:x:R:x 10:6:10:6:10:6:10:6 little endian"
@@ -494,34 +520,34 @@
               "summary": "[63:0] A:B:G:R 16:16:16:16 little endian"
             },
             "c1": {
-              "summary": "[7:0] C0:C1:C2:C3:C4:C5:C6:C7 1:1:1:1:1:1:1:1 每字节 8 像素"
+              "summary": "[7:0] C0:C1:C2:C3:C4:C5:C6:C7 1:1:1:1:1:1:1:1，每字节 8 像素"
             },
             "c2": {
-              "summary": "[7:0] C0:C1:C2:C3 2:2:2:2 每字节 4 像素"
+              "summary": "[7:0] C0:C1:C2:C3 2:2:2:2，每字节 4 像素"
             },
             "c4": {
-              "summary": "[7:0] C0:C1 4:4 每字节 2 像素"
+              "summary": "[7:0] C0:C1 4:4，每字节 2 像素"
             },
             "d1": {
-              "summary": "[7:0] D0:D1:D2:D3:D4:D5:D6:D7 1:1:1:1:1:1:1:1 每字节 8 像素"
+              "summary": "[7:0] D0:D1:D2:D3:D4:D5:D6:D7 1:1:1:1:1:1:1:1，每字节 8 像素"
             },
             "d2": {
-              "summary": "[7:0] D0:D1:D2:D3 2:2:2:2 每字节 4 像素"
+              "summary": "[7:0] D0:D1:D2:D3 2:2:2:2，每字节 4 像素"
             },
             "d4": {
-              "summary": "[7:0] D0:D1 4:4 每字节 2 像素"
+              "summary": "[7:0] D0:D1 4:4，每字节 2 像素"
             },
             "d8": {
               "summary": "[7:0] D"
             },
             "r1": {
-              "summary": "[7:0] R0:R1:R2:R3:R4:R5:R6:R7 1:1:1:1:1:1:1:1 每字节 8 像素"
+              "summary": "[7:0] R0:R1:R2:R3:R4:R5:R6:R7 1:1:1:1:1:1:1:1，每字节 8 像素"
             },
             "r2": {
-              "summary": "[7:0] R0:R1:R2:R3 2:2:2:2 每字节 4 像素"
+              "summary": "[7:0] R0:R1:R2:R3 2:2:2:2，每字节 4 像素"
             },
             "r4": {
-              "summary": "[7:0] R0:R1 4:4 每字节 2 像素"
+              "summary": "[7:0] R0:R1 4:4，每字节 2 像素"
             },
             "r10": {
               "summary": "[15:0] x:R 6:10 little endian"
@@ -536,7 +562,7 @@
               "summary": "[31:0] X:Cr:Cb:Y 8:8:8:8 little endian"
             },
             "p030": {
-              "summary": "2x2 子采样 Cr:Cb 平面, 每通道 10 位 packed"
+              "summary": "2x2 子采样 Cr:Cb 平面，每通道 10 位 packed"
             },
             "rgb161616": {
               "summary": "[47:0] R:G:B 16:16:16 little endian"
@@ -572,31 +598,31 @@
               "summary": "无子采样 Cr:Cb 平面"
             },
             "s010": {
-              "summary": "2x2 子采样 Cb (1) 和 Cr (2) 平面, 每通道 10 位"
+              "summary": "2x2 子采样 Cb (1) 和 Cr (2) 平面，每通道 10 位"
             },
             "s210": {
-              "summary": "2x1 子采样 Cb (1) 和 Cr (2) 平面, 每通道 10 位"
+              "summary": "2x1 子采样 Cb (1) 和 Cr (2) 平面，每通道 10 位"
             },
             "s410": {
-              "summary": "无子采样 Cb (1) 和 Cr (2) 平面, 每通道 10 位"
+              "summary": "无子采样 Cb (1) 和 Cr (2) 平面，每通道 10 位"
             },
             "s012": {
-              "summary": "2x2 子采样 Cb (1) 和 Cr (2) 平面, 每通道 12 位"
+              "summary": "2x2 子采样 Cb (1) 和 Cr (2) 平面，每通道 12 位"
             },
             "s212": {
-              "summary": "2x1 子采样 Cb (1) 和 Cr (2) 平面, 每通道 12 位"
+              "summary": "2x1 子采样 Cb (1) 和 Cr (2) 平面，每通道 12 位"
             },
             "s412": {
-              "summary": "无子采样 Cb (1) 和 Cr (2) 平面, 每通道 12 位"
+              "summary": "无子采样 Cb (1) 和 Cr (2) 平面，每通道 12 位"
             },
             "s016": {
-              "summary": "2x2 子采样 Cb (1) 和 Cr (2) 平面, 每通道 16 位"
+              "summary": "2x2 子采样 Cb (1) 和 Cr (2) 平面，每通道 16 位"
             },
             "s216": {
-              "summary": "2x1 子采样 Cb (1) 和 Cr (2) 平面, 每通道 16 位"
+              "summary": "2x1 子采样 Cb (1) 和 Cr (2) 平面，每通道 16 位"
             },
             "s416": {
-              "summary": "无子采样 Cb (1) 和 Cr (2) 平面, 每通道 16 位"
+              "summary": "无子采样 Cb (1) 和 Cr (2) 平面，每通道 16 位"
             }
           }
         }
@@ -604,80 +630,92 @@
     },
     "wl_buffer": {
       "description": {
-        "summary": "内容缓冲区",
-        "text": "缓冲区提供表面的内容。典型的缓冲区具有由一系列像素组成的数据，这些像素可以读取并组合到显示输出中。也可以存在其他类型的缓冲区，其实现由协议扩展定义。"
+        "type": "description",
+        "text": "buffer 为 wl_surface 提供内容。buffer 通过工厂接口（如 wl_shm、wp_linux_buffer_params（来自 linux-dmabuf 协议扩展）或类似接口）创建。它有宽度和高度，可以附加到 wl_surface，但客户端提供和更新内容的机制由 buffer 工厂接口定义。\n\n除非另有说明，颜色通道被假定为电学而非光学（换句话说，使用传递函数编码）。如果 buffer 使用具有 alpha 通道的格式，则 alpha 通道被假定为已预乘到电学颜色通道值中（在传递函数编码之后），除非另有说明。\n\n注意，由于 wl_buffer 对象是从多个独立的工厂接口创建的，wl_buffer 接口冻结在版本 1。",
+        "summary": "wl_surface 的内容"
       },
       "requests": {
         "destroy": {
           "description": {
-            "summary": "销毁缓冲区",
-            "text": "销毁缓冲区。"
+            "type": "description",
+            "text": "销毁 buffer。是否以及如何释放后备存储由 buffer 工厂接口定义。\n\n有关对 surface 的可能副作用，请参阅 wl_surface.attach。",
+            "summary": "销毁 buffer"
           }
         }
       },
       "events": {
         "release": {
           "description": {
-            "summary": "释放缓冲区",
-            "text": "合成器发出此事件，表示它不再使用此缓冲区的内容，客户端现在可以重用它或销毁它。"
+            "type": "description",
+            "text": "当此 wl_buffer 不再被 compositor 使用时发送。\n\n有关何时可能发送或不发送 release 事件及其后果的更多信息，请参阅 wl_surface.attach 的描述。\n\n如果客户端在将此 wl_buffer 附加到 surface 的同一 wl_surface.commit 中请求的帧回调之前收到 release 事件，则客户端可以立即自由重用该 buffer 及其后备存储，并且不需要第二个 buffer 用于下一个 surface 内容更新。通常当 compositor 维护 wl_surface 内容的副本时（例如作为 GL 纹理），这是可能的。这是对使用 wl_shm 客户端的 GL(ES) compositor 的重要优化。",
+            "summary": "compositor 释放 buffer"
           }
         }
       }
     },
     "wl_data_offer": {
       "description": {
-        "summary": "提供 drag-and-drop 或 clipboard 数据",
-        "text": "wl_data_offer 接口代表客户端可以接收的数据。"
+        "type": "description",
+        "text": "wl_data_offer 表示由另一个客户端（源客户端）提供的用于传输的数据。\n它用于复制粘贴和拖放机制。\n该 offer 描述了数据可以转换为的不同 MIME 类型，\n并提供了直接从源客户端传输数据的机制。",
+        "summary": "传输数据的 offer"
       },
       "requests": {
         "accept": {
           "description": {
-            "summary": "接受 MIME 类型",
-            "text": "表示客户端可以接受指定 MIME 类型的数据。"
+            "type": "description",
+            "text": "指示客户端可以接受给定的 MIME 类型，\n或传入 NULL 表示不接受。\n\n对于版本 2 或更早的对象，\n此请求用于客户端反馈是否可以接收给定的 MIME 类型，\n或传入 NULL 表示不接受任何类型；\n该反馈不会决定拖放操作是否成功。\n\n对于版本 3 或更新的对象，\n此请求决定拖放操作的最终结果。\n如果最终结果是没有接受任何 MIME 类型，\n拖放操作将被取消，\n相应的拖放源将收到 wl_data_source.cancelled。\n客户端仍可将此事件与 wl_data_source.action 结合使用以提供反馈。",
+            "summary": "接受提供的 MIME 类型之一"
           }
         },
         "receive": {
           "description": {
-            "summary": "接收数据",
-            "text": "请求通过文件描述符接收数据。"
+            "type": "description",
+            "text": "要传输已提供的数据，客户端发出此请求\n并指明它想要接收的 MIME 类型。\n传输通过传入的文件描述符进行（通常使用 pipe 系统调用创建）。\n源客户端以请求的 MIME 类型格式写入数据，\n然后关闭文件描述符。\n\n接收客户端从管道的读取端读取数据直到 EOF，\n然后关闭其端，此时传输完成。\n\n此请求可以针对不同的 MIME 类型多次发生，\n无论是在 wl_data_device.drop 之前还是之后。\n拖放目标客户端可以预取数据或更仔细地检查数据\n以决定是否接受。",
+            "summary": "请求传输数据"
           }
         },
         "destroy": {
           "description": {
-            "summary": "销毁数据提供",
-            "text": "销毁该对象。"
+            "type": "description",
+            "text": "销毁 data offer。",
+            "summary": "销毁 data offer"
           }
         },
         "finish": {
           "description": {
-            "summary": "完成操作",
-            "text": "表示客户端已完成对提供的数据的所有处理。"
+            "type": "description",
+            "text": "通知 compositor 拖放目标已成功完成拖放操作。\n\n收到此请求后，compositor 将在拖放源客户端上\n发出 wl_data_source.dnd_finished。\n\n在此请求之后执行除 wl_data_offer.destroy 以外的其他请求是客户端错误。\n在 wl_data_offer.accept 中设置了 NULL MIME 类型之后\n或未通过 wl_data_offer.action 收到任何操作后执行此请求也是错误。\n\n如果为非拖放操作收到 wl_data_offer.finish 请求，\n将引发 invalid_finish 协议错误。",
+            "summary": "该 offer 将不再被使用"
           }
         },
         "set_actions": {
           "description": {
-            "summary": "设置支持的操作",
-            "text": "设置目的地支持的操作。"
+            "type": "description",
+            "text": "设置目标端客户端为此操作支持的操作。\n如果 compositor 需要更改所选操作，\n此请求可能触发发出 wl_data_source.action 和 wl_data_offer.action 事件。\n\n此请求可以在拖放操作过程中多次调用，\n通常是在响应 wl_data_device.enter 或 wl_data_device.motion 事件时。\n\n此请求决定拖放操作的最终结果。\n如果最终结果是没有接受任何操作，\n拖放源将收到 wl_data_source.cancelled。\n\ndnd_actions 参数必须仅包含 wl_data_device_manager.dnd_actions 枚举中表示的值，\npreferred_action 参数必须仅包含其中一个设置的值，\n否则将导致协议错误。\n\n在管理 \"ask\" 操作时，\n目标拖放客户端可以执行进一步的 wl_data_offer.receive 请求，\n并且预计在请求 wl_data_offer.finish 之前执行最后一次\nwl_data_offer.set_actions 请求，preferred_action 设为 \"ask\" 以外的操作\n（以及可选的 wl_data_offer.accept），\n以传达用户选择的操作。\n如果 preferred_action 不在 wl_data_offer.source_actions 掩码中，\n将引发错误。\n\n如果 \"ask\" 操作被取消（例如用户取消），\n客户端应立即执行 wl_data_offer.destroy。\n\n此请求只能在拖放 offer 上执行，否则将引发协议错误。",
+            "summary": "设置可用/首选的拖放操作"
           }
         }
       },
       "events": {
         "offer": {
           "description": {
-            "summary": "宣告 MIME 类型",
-            "text": "宣告提供支持的 MIME 类型。"
+            "type": "description",
+            "text": "在创建 wl_data_offer 对象后立即发送。\n每个提供的 MIME 类型对应一个事件。",
+            "summary": "通告提供的 MIME 类型"
           }
         },
         "source_actions": {
           "description": {
-            "summary": "宣告源操作",
-            "text": "宣告源端支持的操作。"
+            "type": "description",
+            "text": "此事件指示数据源提供的操作。\n它将在创建 wl_data_offer 对象后立即发送，\n或在源端通过 wl_data_source.set_actions\n更改其提供的操作时随时发送。",
+            "summary": "通知源端可用的操作"
           }
         },
         "action": {
           "description": {
-            "summary": "通知所选操作",
-            "text": "通知最终选择的操作。"
+            "type": "description",
+            "text": "此事件指示 compositor 在匹配源端/目标端操作后选择的操作。\n此处只提供一个操作（或没有）。\n\n在拖放操作期间，此事件可以多次发出，\n以响应目标端通过 wl_data_offer.set_actions 进行的操作更改。\n\n在拖放目标上发生 wl_data_device.drop 之后，\n此事件将不再发出，\n客户端必须遵守最后收到的操作，\n或在处理 \"ask\" 操作时遵守通过 wl_data_offer.set_actions 设置的最后一个首选操作。\n\nCompositor 也可能即时更改所选操作，\n主要是在拖放操作期间响应键盘修饰键的变化。\n\n收到的最新操作始终是有效的。\n在收到 wl_data_device.drop 之前，选择的操作可能会更改\n（例如由于按下键盘修饰键）。\n在收到 wl_data_device.drop 时，\n拖放目标必须遵守最后收到的操作。\n\n操作更改仍可能在 wl_data_device.drop 之后发生，\n特别是在 \"ask\" 操作中，\n拖放目标可能会在之后选择另一个操作。\n在此阶段发生的操作更改始终是客户端间协商的结果，\ncompositor 将不再能够引发不同的操作。\n\n对于 \"ask\" 操作，\n预计拖放目标可能会选择不同的操作和/或 MIME 类型，\n基于 wl_data_offer.source_actions 并最终由用户选择\n（例如弹出一个包含可用选项的菜单）。\n最终的 wl_data_offer.set_actions 和 wl_data_offer.accept 请求\n必须在调用 wl_data_offer.finish 之前发生。",
+            "summary": "通知所选的操作"
           }
         }
       },
@@ -685,13 +723,13 @@
         "error": {
           "entries": {
             "invalid_finish": {
-              "summary": "finish 请求调用时机不当"
+              "summary": "finish 请求被不合时宜地调用"
             },
             "invalid_action_mask": {
-              "summary": "action mask 包含无效值"
+              "summary": "操作掩码包含无效值"
             },
             "invalid_action": {
-              "summary": "action 参数值无效"
+              "summary": "操作参数值无效"
             },
             "invalid_offer": {
               "summary": "offer 不接受此请求"
@@ -702,64 +740,74 @@
     },
     "wl_data_source": {
       "description": {
-        "summary": "drag-and-drop 或 clipboard 数据的源端",
-        "text": "wl_data_source 接口用于提供数据。"
+        "type": "description",
+        "text": "wl_data_source 对象是 wl_data_offer 的源端。\n它由源客户端在数据传输中创建，\n提供了一种描述所提供数据的方式\n以及响应数据传输请求的方式。",
+        "summary": "传输数据的 offer"
       },
       "requests": {
         "offer": {
           "description": {
-            "summary": "添加 MIME 类型",
-            "text": "添加此源端支持的 MIME 类型。"
+            "type": "description",
+            "text": "此请求向通告给目标的 MIME 类型集合中添加一个 MIME 类型。\n可以多次调用以提供多种类型。",
+            "summary": "添加一个提供的 MIME 类型"
           }
         },
         "destroy": {
           "description": {
-            "summary": "销毁数据源",
-            "text": "销毁该对象。"
+            "type": "description",
+            "text": "销毁 data source。",
+            "summary": "销毁 data source"
           }
         },
         "set_actions": {
           "description": {
-            "summary": "设置支持的操作",
-            "text": "设置源端支持的操作。"
+            "type": "description",
+            "text": "设置源端客户端为此操作支持的操作。\n如果 compositor 需要更改所选操作，\n此请求可能触发 wl_data_source.action 和 wl_data_offer.action 事件。\n\ndnd_actions 参数必须仅包含 wl_data_device_manager.dnd_actions 枚举中表示的值，\n否则将导致协议错误。\n\n此请求必须只执行一次，\n并且只能在拖放中使用的源上执行，\n因此必须在 wl_data_device.start_drag 之前执行。\n尝试将源用于拖放以外的用途将引发协议错误。",
+            "summary": "设置可用的拖放操作"
           }
         }
       },
       "events": {
         "target": {
           "description": {
-            "summary": "接收端接受的 MIME 类型",
-            "text": "通知源端接收端接受的 MIME 类型。"
+            "type": "description",
+            "text": "当目标接受 pointer_focus 或 motion 事件时发送。\n如果目标不接受任何提供的类型，type 为 NULL。\n\n用于拖放期间的反馈。",
+            "summary": "目标接受了提供的 MIME 类型"
           }
         },
         "send": {
           "description": {
-            "summary": "发送数据",
-            "text": "请求源端开始发送数据。"
+            "type": "description",
+            "text": "请求客户端发送数据。\n以指定的 MIME 类型通过传入的文件描述符发送数据，\n然后关闭它。",
+            "summary": "发送数据"
           }
         },
         "cancelled": {
           "description": {
-            "summary": "操作取消",
-            "text": "通知源端操作已被取消。"
+            "type": "description",
+            "text": "此 data source 不再有效。可能有几个原因：\n\n- data source 已被另一个 data source 替换。\n- 拖放操作已执行，但拖放目标\n  未通过 wl_data_source.target 接受任何提供的 MIME 类型。\n- 拖放操作已执行，但拖放目标\n  未选择通过 wl_data_source.action 提供的掩码中的任何操作。\n- 拖放操作已执行但未发生在 surface 上。\n- compositor 取消了拖放操作（例如 compositor\n  相关的超时以避免过时的拖放传输）。\n\n客户端应清理并销毁此 data source。\n\n对于版本 2 或更早的对象，\n仅当 data source 被另一个 data source 替换时\n才会发出 wl_data_source.cancelled。",
+            "summary": "选择被取消"
           }
         },
         "dnd_drop_performed": {
           "description": {
-            "summary": "释放动作已执行",
-            "text": "通知源端释放动作已执行。"
+            "type": "description",
+            "text": "用户执行了放置操作。\n此事件不表示接受，\n如果拖放目标不接受任何 MIME 类型，\n之后仍可能发出 wl_data_source.cancelled。\n\n但是，如果 compositor 在此事件发生之前取消了拖放操作，\n则可能不会收到此事件。\n\n请注意，data_source 将来可能仍会被使用，\n不应在此处销毁。",
+            "summary": "拖放操作物理上完成"
           }
         },
         "dnd_finished": {
           "description": {
-            "summary": "操作结束",
-            "text": "通知源端操作已完全结束。"
+            "type": "description",
+            "text": "拖放目标已完成与此 data source 的交互，\n因此客户端现在可以自由销毁此 data source\n并释放所有相关数据。\n\n如果执行操作使用的操作是 \"move\"，\n源现在可以删除已传输的数据。",
+            "summary": "拖放操作已结束"
           }
         },
         "action": {
           "description": {
-            "summary": "通知所选操作",
-            "text": "通知最终选择的操作。"
+            "type": "description",
+            "text": "此事件指示 compositor 在匹配源端/目标端操作后选择的操作。\n此处只提供一个操作（或没有）。\n\n在拖放操作期间，此事件可以多次发出，\n主要是在响应目标端通过 wl_data_offer.set_actions 进行的更改，\n以及 data device 进入/离开 surface 时。\n\n仅在 wl_data_source.dnd_drop_performed 之后\n才可能收到此事件，\n如果拖放操作以 \"ask\" 操作结束，\n则最终的 wl_data_source.action 事件\n将在 wl_data_source.dnd_finished 之前立即发生。\n\nCompositor 也可能即时更改所选操作，\n主要是在拖放操作期间响应键盘修饰键的变化。\n\n收到的最新操作始终是有效的。\n选择的操作可能会随协商而更改\n（例如 \"ask\" 操作可以变为 \"move\" 操作），\n因此最终操作的效果必须始终在 wl_data_offer.dnd_finished 中应用。\n\n客户端可以从此点开始触发光标 surface 更改，\n以反映当前操作。",
+            "summary": "通知所选的操作"
           }
         }
       },
@@ -767,10 +815,10 @@
         "error": {
           "entries": {
             "invalid_action_mask": {
-              "summary": "action mask 包含无效值"
+              "summary": "操作掩码包含无效值"
             },
             "invalid_source": {
-              "summary": "source 不接受此请求"
+              "summary": "源不接受此请求"
             }
           }
         }
@@ -778,64 +826,74 @@
     },
     "wl_data_device": {
       "description": {
-        "summary": "数据设备（用于 drag-and-drop 和 clipboard）",
-        "text": "wl_data_device 接口代表数据传输设备。"
+        "type": "description",
+        "text": "每个 seat 有一个 wl_data_device，\n可以从全局的 wl_data_device_manager 单例获取。\n\nwl_data_device 提供对客户端间数据传输机制的访问，\n如复制粘贴和拖放。",
+        "summary": "数据传输设备"
       },
       "requests": {
         "start_drag": {
           "description": {
-            "summary": "开始拖放",
-            "text": "开始一个拖放操作。"
+            "type": "description",
+            "text": "此请求要求 compositor 代表客户端启动拖放操作。\n\nsource 参数是为最终数据传输提供数据的 data source。\n如果 source 为 NULL，enter、leave 和 motion 事件\n仅发送给启动拖动的客户端，\n客户端应内部处理数据传递。\n如果 source 被销毁，拖放会话将被取消。\n\norigin surface 是拖动发起的 surface，\n客户端必须有一个与序列号匹配的活动隐式抓取。\n\nicon surface 是一个可选的（可以为 NULL）surface，\n提供一个随光标移动的图标。\n最初，icon surface 的左上角放置在光标热点，\n但后续的 wl_surface.offset 请求可以移动相对位置。\nAttach 请求必须像往常一样用 wl_surface.commit 确认。\nicon surface 被赋予拖放图标的角色。\n如果 icon surface 已经有另一个角色，\n将引发协议错误。\n\n对于具有拖放图标角色的 wl_surface，输入区域将被忽略。\n\n给定的源不能在任何进一步的 set_selection 或 start_drag 请求中使用。\n尝试重用先前使用的源可能会发送 used_source 错误。",
+            "summary": "启动拖放操作"
           }
         },
         "set_selection": {
           "description": {
-            "summary": "设置剪贴板内容",
-            "text": "设置当前剪贴板选中的数据源。"
+            "type": "description",
+            "text": "此请求要求 compositor 将选择设置为来自源的数据。\n\n要取消选择，将 source 设置为 NULL。\n\n给定的源不能在任何进一步的 set_selection 或 start_drag 请求中使用。\n尝试重用先前使用的源可能会发送 used_source 错误。",
+            "summary": "将数据复制到选择"
           }
         },
         "release": {
           "description": {
-            "summary": "释放数据设备",
-            "text": "销毁该对象。"
+            "type": "description",
+            "text": "此请求销毁 data device。",
+            "summary": "销毁 data device"
           }
         }
       },
       "events": {
         "data_offer": {
           "description": {
-            "summary": "引入一个新的数据提供",
-            "text": "在拖放或粘贴操作开始时发出。"
+            "type": "description",
+            "text": "data_offer 事件引入一个新的 wl_data_offer 对象，\n该对象随后将用于 data_device.enter 事件（用于拖放）\n或 data_device.selection 事件（用于选择）。\n紧随 data_device.data_offer 事件之后，\n新的 data_offer 对象将发出 data_offer.offer 事件\n以描述它提供的 MIME 类型。",
+            "summary": "引入新的 wl_data_offer"
           }
         },
         "enter": {
           "description": {
-            "summary": "拖放进入表面",
-            "text": "拖放操作进入了一个表面。"
+            "type": "description",
+            "text": "当活动的拖放指针进入客户端拥有的 surface 时发送此事件。\n进入时指针的位置由 x 和 y 参数提供，\n采用 surface 局部坐标。",
+            "summary": "启动拖放会话"
           }
         },
         "leave": {
           "description": {
-            "summary": "拖放离开表面",
-            "text": "拖放操作离开了一个表面。"
+            "type": "description",
+            "text": "当拖放指针离开 surface 且会话结束时发送此事件。\n客户端此时必须销毁在 enter 时引入的 wl_data_offer。",
+            "summary": "结束拖放会话"
           }
         },
         "motion": {
           "description": {
-            "summary": "拖放移动",
-            "text": "拖放操作在表面内移动。"
+            "type": "description",
+            "text": "当拖放指针在当前聚焦的 surface 内移动时发送此事件。\n指针的新位置由 x 和 y 参数提供，\n采用 surface 局部坐标。",
+            "summary": "拖放会话移动"
           }
         },
         "drop": {
           "description": {
-            "summary": "拖放释放",
-            "text": "拖放操作在表面内执行释放。"
+            "type": "description",
+            "text": "当拖放操作因隐式抓取被移除而结束时发送此事件。\n\n拖放目标应遵守通过 wl_data_offer.action 收到的最后操作，\n如果结果操作是 \"copy\" 或 \"move\"，\n目标仍可执行 wl_data_offer.receive 请求，\n并且预计以 wl_data_offer.finish 请求结束所有传输。\n\n如果结果操作是 \"ask\"，该操作将不被视为最终操作。\n拖放目标应执行最后一次 wl_data_offer.set_actions 请求，\n或执行 wl_data_offer.destroy 以取消操作。",
+            "summary": "成功结束拖放会话"
           }
         },
         "selection": {
           "description": {
-            "summary": "剪贴板内容更改",
-            "text": "通知客户端剪贴板内容已更改。"
+            "type": "description",
+            "text": "selection 事件发出以通知客户端此设备选择的新 wl_data_offer。\ndata_device.data_offer 和 data_offer.offer 事件\n在此事件之前立即发出以引入 data offer 对象。\nselection 事件在客户端接收键盘焦点之前\n以及客户端拥有键盘焦点时设置新选择时发送给客户端。\ndata_offer 有效直到收到新的 data_offer 或 NULL\n或直到客户端失去键盘焦点。\n在同一客户端内切换具有键盘焦点的 surface\n不意味着会发送新的选择。\n客户端在收到此事件时必须销毁先前的 selection data_offer（如果有）。",
+            "summary": "通告新的选择"
           }
         }
       },
@@ -843,10 +901,10 @@
         "error": {
           "entries": {
             "role": {
-              "summary": "给定的 wl_surface 已有其他 role"
+              "summary": "给定的 wl_surface 有另一个角色"
             },
             "used_source": {
-              "summary": "source 已被使用"
+              "summary": "源已被使用"
             }
           }
         }
@@ -854,34 +912,39 @@
     },
     "wl_data_device_manager": {
       "description": {
-        "summary": "数据设备管理器",
-        "text": "用于创建数据源和数据设备的全局对象。"
+        "type": "description",
+        "text": "wl_data_device_manager 是一个全局单例对象，\n提供对客户端间数据传输机制的访问，\n如复制粘贴和拖放。\n这些机制与 wl_seat 关联，\n此接口允许客户端获取与 wl_seat 对应的 wl_data_device。\n\n根据绑定的版本，\n从绑定的 wl_data_device_manager 对象创建的对象\n将有不同的正确运行要求。\n详情请参见 wl_data_source.set_actions、\nwl_data_offer.accept 和 wl_data_offer.finish。",
+        "summary": "数据传输接口"
       },
       "requests": {
         "create_data_source": {
           "description": {
-            "summary": "创建数据源",
-            "text": "创建一个新的数据源。"
+            "type": "description",
+            "text": "创建一个新的 data source。",
+            "summary": "创建新的 data source"
           }
         },
         "get_data_device": {
           "description": {
-            "summary": "获取数据设备",
-            "text": "获取指定席位的数据设备。"
+            "type": "description",
+            "text": "为给定的 seat 创建一个新的 data device。",
+            "summary": "创建新的 data device"
           }
         },
         "release": {
           "description": {
-            "summary": "销毁 wl_data_device_manager",
-            "text": "此请求销毁 wl_data_device_manager。不会影响任何其他对象。"
+            "type": "description",
+            "text": "此请求销毁 wl_data_device_manager。\n这不会影响任何其他对象。",
+            "summary": "销毁 wl_data_device_manager"
           }
         }
       },
       "enums": {
         "dnd_action": {
           "description": {
-            "summary": "拖放操作类型",
-            "text": "描述支持的拖放操作。"
+            "type": "description",
+            "text": "这是拖放操作中可用/首选操作的位掩码。\n\n在 compositor 中，所选操作是匹配源端和目标端提供的操作的结果。\n如果没有匹配，将向源端和目标端发送带有 \"none\" 操作的 \"action\" 事件。\n所有进一步的检查实际上将在（源操作 ∩ 目标操作）上进行。\n\n此外，compositor 也可以根据按下的键修饰符选择不同的操作。\n主要工具包中使用的一个常见设计\n（以及推荐给 compositor 的行为）是：\n\n- 如果未按下修饰符，将使用第一个匹配（按位顺序）。\n- 按住 Shift 选择 \"move\"（如果在掩码中启用）。\n- 按住 Control 选择 \"copy\"（如果在掩码中启用）。\n\n超出此范围的行为被认为是实现相关的。\nCompositor 可以绑定其他修饰符（如 Alt/Meta）\n或使用 BTN_LEFT 以外的其他按钮发起的拖动\n到特定操作（例如 \"ask\"）。",
+            "summary": "拖放操作"
           },
           "entries": {
             "none": {
@@ -902,14 +965,16 @@
     },
     "wl_shell": {
       "description": {
-        "summary": "旧版桌面外壳接口",
-        "text": "这是一个旧的外壳接口，已被 xdg-shell 取代。"
+        "type": "description",
+        "text": "此接口由提供桌面风格用户界面的服务器实现。\n\n它允许客户端将 wl_shell_surface 与基本 surface 关联。\n\n注意！此协议已弃用，不用于生产用途。对于桌面风格的用户界面，请使用 xdg_shell。compositor 和客户端不应实现此接口。",
+        "summary": "创建桌面风格 surface"
       },
       "requests": {
         "get_shell_surface": {
           "description": {
-            "summary": "创建外壳表面",
-            "text": "将普通表面转换为外壳表面。"
+            "type": "description",
+            "text": "为现有 surface 创建 shell surface。这将赋予 wl_surface shell surface 的角色。如果 wl_surface 已有其他角色，则会引发协议错误。\n\n只能将一个 shell surface 与给定 surface 关联。",
+            "summary": "从 surface 创建 shell surface"
           }
         }
       },
@@ -917,7 +982,7 @@
         "error": {
           "entries": {
             "role": {
-              "summary": "给定的 wl_surface 已有其他 role"
+              "summary": "给定的 wl_surface 已有其他角色"
             }
           }
         }
@@ -925,96 +990,111 @@
     },
     "wl_shell_surface": {
       "description": {
-        "summary": "桌面式表面",
-        "text": "控制表面的窗口管理状态。"
+        "type": "description",
+        "text": "可由 wl_surface 实现的接口，用于提供桌面风格用户界面的实现。\n\n它提供了将 surface 视为 toplevel、fullscreen 或 popup 窗口的请求，以及移动、调整大小、最大化它们，关联标题和类别等元数据等功能。\n\n在服务端，当关联的 wl_surface 被销毁时，该对象会自动销毁。在客户端，必须在销毁 wl_surface 对象之前调用 wl_shell_surface_destroy()。",
+        "summary": "桌面风格元数据接口"
       },
       "requests": {
         "pong": {
           "description": {
-            "summary": "响应 ping 事件",
-            "text": "向合成器确认客户端仍然响应。"
+            "type": "description",
+            "text": "客户端必须使用 pong 请求响应 ping 事件，否则客户端可能被视为无响应。",
+            "summary": "响应 ping 事件"
           }
         },
         "move": {
           "description": {
-            "summary": "移动窗口",
-            "text": "启动交互式移动操作。"
+            "type": "description",
+            "text": "开始指针驱动的 surface 移动。\n\n此请求必须在响应按钮按下事件时使用。服务端可能会根据 surface 的状态（例如 fullscreen 或 maximized）忽略移动请求。",
+            "summary": "开始交互式移动"
           }
         },
         "resize": {
           "description": {
-            "summary": "调整窗口大小",
-            "text": "启动交互式调整大小操作。"
+            "type": "description",
+            "text": "开始指针驱动的 surface 调整大小。\n\n此请求必须在响应按钮按下事件时使用。服务端可能会根据 surface 的状态（例如 fullscreen 或 maximized）忽略调整大小请求。",
+            "summary": "开始交互式调整大小"
           }
         },
         "set_toplevel": {
           "description": {
-            "summary": "设置为顶级窗口",
-            "text": "使表面表现为正常的顶级窗口。"
+            "type": "description",
+            "text": "将 surface 映射为 toplevel surface。\n\ntoplevel surface 不是 fullscreen、maximized 或 transient 的。",
+            "summary": "将 surface 设为 toplevel surface"
           }
         },
         "set_transient": {
           "description": {
-            "summary": "设置为临时窗口",
-            "text": "将表面设置为另一个表面的临时（弹出）窗口。"
+            "type": "description",
+            "text": "将 surface 映射为相对于已有 surface 的位置。\n\nx 和 y 参数指定 surface 左上角相对于父 surface 左上角的位置，使用 surface 局部坐标。\n\nflags 参数控制 transient 行为的细节。",
+            "summary": "将 surface 设为 transient surface"
           }
         },
         "set_fullscreen": {
           "description": {
-            "summary": "设置为全屏",
-            "text": "使表面进入全屏模式。"
+            "type": "description",
+            "text": "将 surface 映射为 fullscreen surface。\n\n如果提供了 output 参数，则 surface 将在该 output 上全屏显示。如果客户端未指定 output，compositor 将应用其策略——通常选择 surface 面积最大的 output。\n\n客户端可以指定一种方法来解决 output 大小与 surface 大小之间的冲突——通过 method 参数提供。\n\nframerate 参数仅在 method 设为 \"driver\" 时使用，用于指示首选帧率。值为 0 表示客户端不关心帧率。帧率以 mHz 为单位指定，即 60000 表示 60Hz。\n\n\"scale\" 或 \"driver\" 方法意味着对 surface 进行缩放操作，可以通过直接缩放操作或更改 output 模式来实现。这将覆盖任何类型的 output 缩放，因此将 buffer 大小等于模式大小的 surface 映射时，可以填充整个屏幕而不受 buffer_scale 的影响。\n\n\"fill\" 方法表示不放大 buffer，但会应用任何 output 缩放。这意味着可能会遇到边界情况：应用程序映射了一个与 output 模式大小相同但 buffer_scale 为 1 的 buffer（从而创建了一个比 output 更大的 surface）。在这种情况下，允许缩小结果以适应屏幕。\n\ncompositor 必须使用 configure 事件回复此请求，其中包含 surface 将全屏显示的 output 的尺寸。",
+            "summary": "将 surface 设为 fullscreen surface"
           }
         },
         "set_popup": {
           "description": {
-            "summary": "设置为弹出窗口",
-            "text": "将表面设置为弹出窗口。"
+            "type": "description",
+            "text": "将 surface 映射为 popup。\n\npopup surface 是带有附加指针 grab 的 transient surface。\n\n现有的隐式 grab 将被更改为 owner-events 模式，并且 popup grab 将在隐式 grab 结束后继续（即释放鼠标按钮不会导致 popup 被取消映射）。\n\npopup grab 持续到窗口被销毁或在任何其他客户端的窗口中按下鼠标按钮。在客户端自身的任何 surface 中的点击会正常报告，但在其他客户端 surface 中的点击将被丢弃并触发回调。\n\nx 和 y 参数指定 surface 左上角相对于父 surface 左上角的位置，使用 surface 局部坐标。",
+            "summary": "将 surface 设为 popup surface"
           }
         },
         "set_maximized": {
           "description": {
-            "summary": "设置为最大化",
-            "text": "将表面设置为最大化状态。"
+            "type": "description",
+            "text": "将 surface 映射为 maximized surface。\n\n如果提供了 output 参数，则 surface 将在该 output 上最大化。如果客户端未指定 output，compositor 将应用其策略——通常选择 surface 面积最大的 output。\n\ncompositor 将回复一个 configure 事件，告知预期的新 surface 大小。操作在下一次 buffer 附加到此 surface 时完成。\n\nmaximized surface 通常填满其绑定的整个 output，但桌面元素（如面板）除外。这是 maximized shell surface 和 fullscreen shell surface 之间的主要区别。\n\n具体细节取决于 compositor 的实现。",
+            "summary": "将 surface 设为 maximized surface"
           }
         },
         "set_title": {
           "description": {
-            "summary": "设置窗口标题",
-            "text": "设置表面的标题。"
+            "type": "description",
+            "text": "为 surface 设置简短标题。\n\n此字符串可用于在任务栏、窗口列表或 compositor 提供的其他用户界面元素中标识 surface。\n\n字符串必须使用 UTF-8 编码。",
+            "summary": "设置 surface 标题"
           }
         },
         "set_class": {
           "description": {
-            "summary": "设置窗口类",
-            "text": "设置表面的类名。"
+            "type": "description",
+            "text": "为 surface 设置类别。\n\nsurface 类别标识该 surface 所属的应用程序的一般类别。一个常见的约定是使用应用程序 .desktop 文件的文件名（如果是非标准位置则使用完整路径）作为类别。",
+            "summary": "设置 surface 类别"
           }
         }
       },
       "events": {
         "ping": {
           "description": {
-            "summary": "心跳检测",
-            "text": "检测客户端是否挂起。"
+            "type": "description",
+            "text": "Ping 客户端以检查其是否正在接收事件和发送请求。客户端应以 pong 请求回复。",
+            "summary": "ping 客户端"
           }
         },
         "configure": {
           "description": {
-            "summary": "配置事件",
-            "text": "通知客户端更改其大小或状态。"
+            "type": "description",
+            "text": "configure 事件请求客户端调整其 surface 的大小。\n\n大小是一个提示，客户端可以自由忽略它（如果不调整大小）、选择更小的大小（以满足宽高比或以 NxM 像素为步长调整大小）。\n\nedges 参数提供关于 surface 如何被调整大小的提示。客户端可以使用此信息来决定如何将其内容调整为新的大小（例如，滚动区域可能会调整其内容位置以保持可见内容不动）。\n\n客户端可以自由忽略除最后一个 configure 事件之外的所有事件。\n\nwidth 和 height 参数指定窗口在 surface 局部坐标中的大小。",
+            "summary": "建议调整大小"
           }
         },
         "popup_done": {
           "description": {
-            "summary": "弹出窗口结束",
-            "text": "通知客户端弹出窗口已关闭。"
+            "type": "description",
+            "text": "当 popup grab 被中断时发送 popup_done 事件，即当用户点击了不属于拥有 popup surface 的客户端的 surface 时。",
+            "summary": "popup 交互完成"
           }
         }
       },
       "enums": {
         "resize": {
           "description": {
-            "summary": "用于调整大小的边缘值",
-            "text": "这些值用于指示在调整大小操作中正在拖动 surface 的哪条边缘。服务器可以使用此信息来调整其行为，例如选择合适的光标图像。"
+            "type": "description",
+            "text": "这些值用于指示在调整大小操作中正在拖动 surface 的哪条边缘。服务端可以使用此信息来调整其行为，例如选择适当的光标图像。",
+            "summary": "调整大小的边缘值"
           },
           "entries": {
             "none": {
@@ -1048,8 +1128,9 @@
         },
         "transient": {
           "description": {
-            "summary": "临时行为的详细信息",
-            "text": "这些标志指定临时 surface 预期行为的详细信息。用于 set_transient 请求。"
+            "type": "description",
+            "text": "这些标志指定 transient surface 预期行为的细节。用于 set_transient 请求。",
+            "summary": "transient 行为的细节"
           },
           "entries": {
             "inactive": {
@@ -1059,8 +1140,9 @@
         },
         "fullscreen_method": {
           "description": {
-            "summary": "设置 surface 全屏的不同方法",
-            "text": "提示 compositor 如何处理 surface 尺寸与 output 尺寸之间的冲突。compositor 可以自由忽略此参数。"
+            "type": "description",
+            "text": "向 compositor 提示如何处理 surface 尺寸与 output 尺寸之间的冲突。compositor 可以自由忽略此参数。",
+            "summary": "将 surface 设为全屏的不同方法"
           },
           "entries": {
             "default": {
@@ -1070,10 +1152,10 @@
               "summary": "缩放，保持 surface 的宽高比并在 output 上居中"
             },
             "driver": {
-              "summary": "切换 output 模式到能容纳 surface 的最小模式，添加黑色边框以补偿尺寸不匹配"
+              "summary": "切换 output 模式为能容纳 surface 的最小模式，添加黑色边框以补偿大小不匹配"
             },
             "fill": {
-              "summary": "不放大，在 output 上居中并添加黑色边框以补偿尺寸不匹配"
+              "summary": "不放大，在 output 上居中并添加黑色边框以补偿大小不匹配"
             }
           }
         }
@@ -1081,114 +1163,132 @@
     },
     "wl_surface": {
       "description": {
-        "summary": "屏幕上的矩形区域",
-        "text": "表面是在屏幕上显示的矩形区域。它由一个像素缓冲区、一个待处理的状态和一系列关于该表面如何显示的指令组成。"
+        "type": "description",
+        "text": "surface 是一个矩形区域，可以在零个或多个 output 上显示，并由 compositor 自行决定显示任意次数。它们可以呈现 wl_buffer、接收用户输入，并定义局部坐标系。\n\nsurface 的大小（及其上的相对位置）以 surface 局部坐标描述，当使用 buffer_transform 或 buffer_scale 时，这可能与像素内容的 buffer 坐标不同。\n\n没有\"角色\"的 surface 相当无用：compositor 不知道在哪里、何时或如何呈现它。角色是 wl_surface 的目的。角色的示例包括指针的光标（通过 wl_pointer.set_cursor 设置）、拖动图标（wl_data_device.start_drag）、子 surface（wl_subcompositor.get_subsurface），以及由 shell 协议定义的窗口（例如 wl_shell.get_shell_surface）。\n\nsurface 一次只能有一个角色。最初 wl_surface 没有角色。一旦 wl_surface 被赋予角色，它将在 wl_surface 对象的整个生命周期内永久设置。除非相关接口规范明确禁止，否则允许再次赋予当前角色。\n\nsurface 角色由其他接口中的请求赋予，例如 wl_pointer.set_cursor。该请求应明确说明此请求赋予 wl_surface 一个角色。通常，此请求还会创建一个新的协议对象来表示该角色，并为 wl_surface 添加额外的功能。当客户端想要销毁 wl_surface 时，必须在 wl_surface 之前销毁此角色对象，否则会发送 defunct_role_object 错误。\n\n销毁角色对象不会从 wl_surface 中移除角色，但它可能会阻止 wl_surface\"扮演该角色\"。例如，如果 wl_subsurface 对象被销毁，为其创建的 wl_surface 将被取消映射，并忘记其位置和 z 轴顺序。允许为同一个 wl_surface 创建新的 wl_subsurface 来重新赋予其子 surface 角色。\n\nwl_surface 具有内容（buffer）、位置、输入和不透明区域、附加变换等属性。其他协议可以添加更多属性。",
+        "summary": "屏幕上的 surface"
       },
       "requests": {
         "destroy": {
           "description": {
-            "summary": "销毁表面",
-            "text": "销毁该表面。"
+            "type": "description",
+            "text": "删除 surface 并使其对象 ID 失效。",
+            "summary": "删除 surface"
           }
         },
         "attach": {
           "description": {
-            "summary": "关联缓冲区",
-            "text": "将一个缓冲区关联到该表面。"
+            "type": "description",
+            "text": "设置 buffer 作为此 surface 的内容。\n\nsurface 的新大小根据 buffer 大小经过逆 buffer_transform 和逆 buffer_scale 变换后计算得出。这意味着在提交时，提供的 buffer 大小必须是 buffer_scale 的整数倍。如果不是这种情况，将发送 invalid_size 错误。\n\nx 和 y 参数指定新待处理 buffer 左上角相对于当前 buffer 左上角的位置，使用 surface 局部坐标。换句话说，x 和 y 与新的 surface 大小一起定义了 surface 大小变化的方向。不建议将 x 和 y 参数设置为 0 以外的值，应改用单独的 wl_surface.offset 请求。\n\n当绑定的 wl_surface 版本为 5 或更高时，传递任何非零的 x 或 y 值都是协议违规，将导致引发 \"invalid_offset\" 错误。x 和 y 参数被忽略且不会更改待处理状态。要实现等效语义，请使用 wl_surface.offset。\n\nsurface 内容是双缓冲状态，请参见 wl_surface.commit。\n\n初始 surface 内容为空；没有内容。wl_surface.attach 将给定的 wl_buffer 分配为待处理的 wl_buffer。wl_surface.commit 使待处理的 wl_buffer 成为新的 surface 内容，surface 的大小变为从 wl_buffer 计算的大小，如上所述。提交后，在下一次附加之前没有待处理的 buffer。\n\n提交待处理的 wl_buffer 允许 compositor 读取 wl_buffer 中的像素。compositor 可以在 wl_surface.commit 请求之后的任何时间访问像素。当 compositor 不再访问像素时，它将发送 wl_buffer.release 事件。只有在收到 wl_buffer.release 之后，客户端才能重新使用 wl_buffer。已被附加但随后被另一次附加替换而未提交的 wl_buffer 应被视为已提交，且必须在 composit... (line truncated to 2000 chars)",
+            "summary": "设置 surface 内容"
           }
         },
         "damage": {
           "description": {
-            "summary": "标记损伤区域",
-            "text": "标记表面的哪些区域已更改。"
+            "type": "description",
+            "text": "此请求用于描述待处理 buffer 与当前 surface 内容不同的区域，以及 surface 因此需要重新绘制的区域。compositor 会忽略超出 surface 范围的 damage 部分。\n\nDamage 是双缓冲状态，请参见 wl_surface.commit。\n\ndamage 矩形以 surface 局部坐标指定，其中 x 和 y 指定 damage 矩形的左上角。\n\n待处理 damage 的初始值为空：无 damage。wl_surface.damage 添加待处理 damage：新的待处理 damage 是旧的待处理 damage 与给定矩形的并集。\n\nwl_surface.commit 将待处理 damage 分配为当前 damage，并清除待处理 damage。服务端将在重新绘制 surface 时清除当前 damage。\n\n注意！新客户端不应使用此请求。相反，可以使用 wl_surface.damage_buffer 发布 damage，它使用 buffer 坐标而不是 surface 坐标。",
+            "summary": "标记 surface 的部分区域为 damaged"
           }
         },
         "frame": {
           "description": {
-            "summary": "请求刷新回调",
-            "text": "请求在下一次渲染循环中得到通知。"
+            "type": "description",
+            "text": "通过创建 frame 回调，在适合开始绘制新帧时请求通知。这对于限制重绘操作和驱动动画非常有用。\n\n当客户端在 wl_surface 上进行动画时，可以使用 \"frame\" 请求在适合绘制和提交下一帧动画时获得通知。如果客户端在此之前提交更新，某些更新可能无法显示，客户端因绘制过于频繁而浪费资源。\n\nframe 请求将在下一次 wl_surface.commit 时生效。除非再次请求，否则通知只会为一帧发布。对于 wl_surface，通知按 frame 请求被提交的顺序发布。\n\n服务端必须发送通知，使客户端不会发送过多的更新，同时仍然允许在再次绘制之前等待回复的客户端获得尽可能高的更新速率。服务端应在发送 frame 回调事件后给客户端一些时间来绘制和提交，以使其赶上下一次 output 刷新。\n\n如果 surface 以任何方式不可见（例如 surface 在屏幕外，或完全被其他不透明 surface 遮挡），服务端应避免发出 frame 回调信号。\n\n此请求返回的对象将在回调触发后被 compositor 销毁，因此客户端不得在此之后尝试使用它。\n\n回调中传递的 callback_data 是当前时间（以毫秒为单位），基准未定义。",
+            "summary": "请求帧率限制提示"
           }
         },
         "set_opaque_region": {
           "description": {
-            "summary": "设置不透明区域",
-            "text": "提示合成器表面的哪些部分是不透明的。"
+            "type": "description",
+            "text": "此请求设置 surface 中包含不透明内容的区域。\n\n不透明区域是 compositor 的优化提示，使其能够优化不透明区域后面内容的重绘。设置不透明区域对于正确行为不是必需的，但将透明内容标记为不透明将导致重绘伪影。\n\n不透明区域以 surface 局部坐标指定。\n\ncompositor 会忽略超出 surface 范围的不透明区域部分。\n\n不透明区域是双缓冲状态，请参见 wl_surface.commit。\n\nwl_surface.set_opaque_region 更改待处理的不透明区域。wl_surface.commit 将待处理区域复制到当前区域。除此之外，待处理和当前区域永远不会被更改。\n\n不透明区域的初始值为空。设置待处理不透明区域具有复制语义，wl_region 对象可以立即销毁。NULL wl_region 会导致待处理不透明区域被设为空。",
+            "summary": "设置不透明区域"
           }
         },
         "set_input_region": {
           "description": {
-            "summary": "设置输入区域",
-            "text": "定义表面中可以接收鼠标和触摸事件的部分。"
+            "type": "description",
+            "text": "此请求设置 surface 中可以接收指针和触摸事件的区域。\n\n发生在此区域之外的输入事件将尝试服务端 surface 栈中的下一个 surface。compositor 会忽略超出 surface 范围的输入区域部分。\n\n输入区域以 surface 局部坐标指定。\n\n输入区域是双缓冲状态，请参见 wl_surface.commit。\n\nwl_surface.set_input_region 更改待处理的输入区域。wl_surface.commit 将待处理区域复制到当前区域。除此之外，待处理和当前区域永远不会被更改，但光标和图标 surface 是特殊情况，请参见 wl_pointer.set_cursor 和 wl_data_device.start_drag。\n\n输入区域的初始值为无限大。这意味着整个 surface 将接受输入。设置待处理输入区域具有复制语义，wl_region 对象可以立即销毁。NULL wl_region 会导致输入区域被设为无限大。",
+            "summary": "设置输入区域"
           }
         },
         "commit": {
           "description": {
-            "summary": "提交待处理状态",
-            "text": "将之前发送的所有待处理状态（attach, damage, offset 等）应用到表面。"
+            "type": "description",
+            "text": "surface 状态（输入、不透明和 damage 区域、附加的 buffer 等）是双缓冲的。协议请求修改待处理状态，而不是 compositor 正在使用的活动状态。\n\n所有需要提交才能生效的请求都被记录为影响双缓冲状态。\n\n其他接口可以添加更多双缓冲 surface 状态。\n\ncommit 请求从待处理状态原子地创建内容更新（CU），即使待处理状态未被修改也是如此。内容更新被放置在每个 surface 队列的末尾，直到变为活动状态。提交后，新的待处理状态如每个相关请求所记录的那样。\n\nCU 要么是非同步内容更新（DCU），要么是同步内容更新（SCU）。如果 surface 在 commit 请求时实际上是同步的，则为 SCU，否则为 DCU。\n\n当 surface 从实际上同步转变为实际上非同步时，其队列中所有不被任何 DCU 可达的 SCU 变为 DCU，并且从队列外部到这些 CU 的依赖边被移除。\n\n有关\"实际上同步\"和\"实际上非同步\"的定义，请参见 wl_subsurface。\n\n当 CU 被放入队列时，CU 依赖于其前面的 CU 和每个直接子 surface 队列末尾的 SCU（如果该 SCU 存在且没有其他依赖项）。这可以形成以依赖为边的 CU 有向无环图。\n\n除了 surface 状态外，CU 还可以具有在应用之前必须满足的约束。其他接口可以添加 CU 约束。\n\n所有在其队列前面没有 SCU 的 DCU 都是候选者。如果候选者可达的图没有任何未满足的约束，则整个图必须被原子地应用。\n\n当 CU 被应用时，wl_buffer 在所有其他状态之前应用。这意味着双缓冲状态中的所有坐标都是相对于应用 wl_buffer 的坐标。有关每种状态如何应用的详细信息，请参见每种状态的描述。\n\n如果应用 CU 时有任何约束未满足，则引发约束_not_met 错误。当图中有多个 CU 且至少有一个约束未满足时，引发约束_not_met 错误。",
+            "summary": "提交待处理的 surface 状态"
           }
         },
         "set_buffer_transform": {
           "description": {
-            "summary": "设置缓冲区变换",
-            "text": "设置缓冲区如何旋转或翻转。"
+            "type": "description",
+            "text": "此请求设置客户端已应用于 buffer 内容的变换。transform 参数的可接受值是 wl_output.transform 的值。\n\ncompositor 在使用 buffer 内容时应用此变换的逆变换。\n\nBuffer 变换是双缓冲状态，请参见 wl_surface.commit。\n\n新创建的 surface 的 buffer 变换设置为 normal。\n\nwl_surface.set_buffer_transform 更改待处理的 buffer 变换。wl_surface.commit 将待处理的 buffer 变换复制到当前变换。除此之外，待处理和当前值永远不会被更改。\n\n此请求的目的是允许客户端根据 output 变换呈现内容，从而允许 compositor 即使在显示器旋转时也能使用某些优化。使用硬件叠加和为 fullscreen surface 扫描客户端 buffer 是此类优化的示例。这些优化高度依赖于 compositor 的实现，因此应根据具体情况考虑使用此请求。\n\n请注意，如果变换值包括 90 或 270 度旋转，buffer 的宽度将变为 surface 高度，buffer 的高度将变为 surface 宽度。\n\n如果 transform 不是 wl_output.transform 枚举中的值之一，则引发 invalid_transform 协议错误。",
+            "summary": "设置 buffer 变换"
           }
         },
         "set_buffer_scale": {
           "description": {
-            "summary": "设置缓冲区缩放",
-            "text": "设置缓冲区的缩放因子。"
+            "type": "description",
+            "text": "此请求设置一个可选的缩放因子，用于 compositor 解释附加到窗口的 buffer 内容。\n\nBuffer 缩放是双缓冲状态，请参见 wl_surface.commit。\n\n新创建的 surface 的 buffer 缩放设置为 1。\n\nwl_surface.set_buffer_scale 更改待处理的 buffer 缩放。wl_surface.commit 将待处理的 buffer 缩放复制到当前缩放。除此之外，待处理和当前值永远不会被更改。\n\n此请求的目的是允许客户端为高分辨率 output 提供更高分辨率的 buffer 数据。建议您选择与 surface 显示所在的 output 缩放相同的 buffer 缩放。这意味着 compositor 在该 output 上渲染 surface 时可以避免缩放。\n\n请注意，如果缩放大于 1，则必须附加一个比所需 surface 大小更大（每个维度大 scale 倍）的 buffer。\n\n如果 scale 不大于 0，则引发 invalid_scale 协议错误。",
+            "summary": "设置 buffer 缩放因子"
           }
         },
         "damage_buffer": {
           "description": {
-            "summary": "标记缓冲区损伤",
-            "text": "以缓冲区坐标标记损伤区域。"
+            "type": "description",
+            "text": "此请求用于描述待处理 buffer 与当前 surface 内容不同的区域，以及 surface 因此需要重新绘制的区域。compositor 会忽略超出 surface 范围的 damage 部分。\n\nDamage 是双缓冲状态，请参见 wl_surface.commit。\n\ndamage 矩形以 buffer 坐标指定，其中 x 和 y 指定 damage 矩形的左上角。\n\n待处理 damage 的初始值为空：无 damage。wl_surface.damage_buffer 添加待处理 damage：新的待处理 damage 是旧的待处理 damage 与给定矩形的并集。\n\nwl_surface.commit 将待处理 damage 分配为当前 damage，并清除待处理 damage。服务端将在重新绘制 surface 时清除当前 damage。\n\n此请求与 wl_surface.damage 只有一个区别——它接受 buffer 坐标中的 damage 而不是 surface 局部坐标。虽然这通常比 surface 坐标更直观，但在使用 wp_viewport 或绘图库（如 EGL）不了解 buffer 缩放和 buffer 变换时尤其可取。\n\n注意：由于 buffer 变换更改和 damage 请求可能在协议流中交错，因此在 wl_surface.commit 之前无法确定 surface 和 buffer damage 之间的实际映射。因此，希望考虑两种 damage 的 compositor 将不得不分别累积来自两个请求的 damage，并且只在收到 wl_surface.commit 后才从一种转换为另一种。",
+            "summary": "使用 buffer 坐标标记 surface 的部分区域为 damaged"
           }
         },
         "offset": {
           "description": {
-            "summary": "设置表面偏移",
-            "text": "设置相对于上一个缓冲区的偏移量。"
+            "type": "description",
+            "text": "x 和 y 参数指定新待处理 buffer 左上角相对于当前 buffer 左上角的位置，使用 surface 局部坐标。换句话说，x 和 y 与新的 surface 大小一起定义了 surface 大小变化的方向。\n\nwl_surface.offset 的确切语义是特定于角色的。有关更多信息，请参阅特定角色的文档。\n\nsurface 位置偏移是双缓冲状态，请参见 wl_surface.commit。\n\n此请求在语义上等同于 wl_surface 版本 5 之前 wl_surface.attach 请求中的 x 和 y 参数，并替代了它们。有关详细信息，请参见 wl_surface.attach。",
+            "summary": "设置 surface 内容偏移"
           }
         },
         "get_release": {
           "description": {
-            "summary": "获取释放回调",
-            "text": "为客户端通过 wl_surface.attach 附加的 buffer 的释放创建回调。\n\ncompositor 在完成对相关提交的底层存储的使用后将释放 buffer。一旦客户端收到此事件，并且假设关联的 buffer 没有待处理的来自其他 wl_surface.commit 请求的释放，客户端可以安全地重新使用该 buffer。\n\n释放回调是双缓冲状态，将在 wl_surface.commit 时与待处理的 buffer 关联。\n\nwl_callback.done 事件中传递的 callback_data 未使用，始终为零。\n\n在同一内容更新中发送此请求而未附加非空 buffer 是协议错误。compositor 将在这种情况下发送 no_buffer 错误。"
+            "type": "description",
+            "text": "为客户端通过 wl_surface.attach 附加的 buffer 的释放创建回调。\n\n当 compositor 完成对相关提交的底层存储的使用后，它将释放该 buffer。一旦客户端收到此事件，并且假设关联的 buffer 没有来自其他 wl_surface.commit 请求的待处理释放，客户端就可以安全地重用该 buffer。\n\n释放回调是双缓冲状态，将在 wl_surface.commit 时与待处理 buffer 关联。\n\nwl_callback.done 事件中传递的 callback_data 未使用，始终为零。\n\n在同一内容更新中发送此请求而未附加非空 buffer 是协议错误。compositor 将在这种情况下发送 no_buffer 错误。",
+            "summary": "获取释放回调"
           }
         }
       },
       "events": {
         "enter": {
           "description": {
-            "summary": "表面进入输出设备",
-            "text": "通知表面现在已在指定的输出设备上显示。"
+            "type": "description",
+            "text": "当 surface 的创建、移动或调整大小导致其某部分位于 output 的扫描区域内时，会发出此事件。\n\n请注意，surface 可能与零个或多个 output 重叠。",
+            "summary": "surface 进入 output"
           }
         },
         "leave": {
           "description": {
-            "summary": "表面离开输出设备",
-            "text": "通知表面不再在指定的输出设备上显示。"
+            "type": "description",
+            "text": "当 surface 的创建、移动或调整大小导致其不再有任何部分位于 output 的扫描区域内时，会发出此事件。\n\n客户端不应使用 surface 所在的 output 数量来进行帧率限制。即使未发送 leave 事件，surface 也可能被隐藏；即使未发送 enter 事件，compositor 也可能期望新的 surface 内容更新。应改用 frame 事件。",
+            "summary": "surface 离开 output"
           }
         },
         "preferred_buffer_scale": {
           "description": {
-            "summary": "首选缓冲区缩放",
-            "text": "通知客户端合成器首选的缓冲区缩放因子。"
+            "type": "description",
+            "text": "此事件指示此 surface 的首选 buffer 缩放。每当 compositor 的偏好发生变化时发送。\n\n在收到此事件之前，此 surface 的首选 buffer 缩放为 1。\n\n支持缩放的客户端应使用此事件来缩放其内容，并使用 wl_surface.set_buffer_scale 来指示它们渲染时使用的缩放。这允许客户端提供更高细节的 buffer。\n\ncompositor 应发出大于 0 的缩放值。",
+            "summary": "surface 的首选 buffer 缩放"
           }
         },
         "preferred_buffer_transform": {
           "description": {
-            "summary": "首选缓冲区变换",
-            "text": "通知客户端合成器首选的缓冲区变换。"
+            "type": "description",
+            "text": "此事件指示此 surface 的首选 buffer 变换。每当 compositor 的偏好发生变化时发送。\n\n在收到此事件之前，此 surface 的首选 buffer 变换为 normal。\n\n将此变换应用于 surface buffer 内容并使用 wl_surface.set_buffer_transform 可能使 compositor 更高效地使用 surface buffer。",
+            "summary": "surface 的首选 buffer 变换"
           }
         }
       },
       "enums": {
         "error": {
           "description": {
-            "summary": "wl_surface 错误",
-            "text": "表面相关的错误值。"
+            "type": "description",
+            "text": "这些错误可以在响应 wl_surface 请求时发出。",
+            "summary": "wl_surface 错误值"
           },
           "entries": {
             "invalid_scale": {
@@ -1198,10 +1298,10 @@
               "summary": "buffer 变换值无效"
             },
             "invalid_size": {
-              "summary": "buffer 尺寸无效"
+              "summary": "buffer 大小无效"
             },
             "invalid_offset": {
-              "summary": "buffer 偏移量无效"
+              "summary": "buffer 偏移无效"
             },
             "defunct_role_object": {
               "summary": "surface 在其角色对象之前被销毁"
@@ -1215,71 +1315,80 @@
     },
     "wl_seat": {
       "description": {
-        "summary": "一组输入设备",
-        "text": "席位代表一组输入设备（键盘、鼠标、触摸屏）。一个席位通常对应一名用户。"
+        "type": "description",
+        "text": "seat 是一组键盘、pointer 和 touch 设备。此对象在启动时或热插拔此类设备时作为 global 发布。seat 通常具有一个 pointer，并维护一个键盘焦点和一个 pointer 焦点。",
+        "summary": "输入设备组"
       },
       "requests": {
         "get_pointer": {
           "description": {
-            "summary": "获取指针设备",
-            "text": "获取该席位的指针（鼠标）对象。"
+            "type": "description",
+            "text": "提供的 ID 将被初始化为该 seat 的 wl_pointer 接口。\n\n此请求仅在 seat 具有 pointer 能力或曾经具有 pointer 能力时生效。对从未具有 pointer 能力的 seat 发出此请求属于协议违规。在这种情况下将发送 missing_capability 错误。",
+            "summary": "返回 pointer 对象"
           }
         },
         "get_keyboard": {
           "description": {
-            "summary": "获取键盘设备",
-            "text": "获取该席位的键盘对象。"
+            "type": "description",
+            "text": "提供的 ID 将被初始化为该 seat 的 wl_keyboard 接口。\n\n此请求仅在 seat 具有键盘能力或曾经具有键盘能力时生效。对从未具有键盘能力的 seat 发出此请求属于协议违规。在这种情况下将发送 missing_capability 错误。",
+            "summary": "返回 keyboard 对象"
           }
         },
         "get_touch": {
           "description": {
-            "summary": "获取触摸屏设备",
-            "text": "获取该席位的触摸屏对象。"
+            "type": "description",
+            "text": "提供的 ID 将被初始化为该 seat 的 wl_touch 接口。\n\n此请求仅在 seat 具有 touch 能力或曾经具有 touch 能力时生效。对从未具有 touch 能力的 seat 发出此请求属于协议违规。在这种情况下将发送 missing_capability 错误。",
+            "summary": "返回 touch 对象"
           }
         },
         "release": {
           "description": {
-            "summary": "释放席位",
-            "text": "销毁该对象。"
+            "type": "description",
+            "text": "客户端可以使用此请求告知服务器它将不再使用该 seat 对象。",
+            "summary": "释放 seat 对象"
           }
         }
       },
       "events": {
         "capabilities": {
           "description": {
-            "summary": "输入能力更改",
-            "text": "通知客户端此席位支持哪些输入方式。"
+            "type": "description",
+            "text": "当绑定到 seat global 或当 seat 获得或失去 pointer、keyboard 或 touch 能力时发送此事件。参数是一个能力枚举，包含该 seat 拥有的完整能力集。\n\n当添加 pointer 能力时，客户端可以使用 wl_seat.get_pointer 请求创建 wl_pointer 对象。该对象将持续接收 pointer 事件，直到该能力在未来被移除。\n\n当 pointer 能力被移除时，客户端应使用 wl_pointer.release 请求销毁与该 seat 关联的 wl_pointer 对象。这些对象将不再接收 pointer 事件。\n\n在某些 compositor 中，如果 seat 重新获得 pointer 能力且客户端拥有之前获取的版本 4 或更低版本的 wl_pointer 对象，该对象可能会重新开始发送 pointer 事件。此行为被视为对预期行为的误解，客户端不应依赖此行为。版本 5 及更高版本的 wl_pointer 对象在最近一次通知客户端 pointer 能力已添加的事件之前创建时，不得发送事件。\n\n上述行为同样适用于 wl_keyboard 和 wl_touch 与 keyboard 和 touch 能力的关系。",
+            "summary": "seat 能力已更改"
           }
         },
         "name": {
           "description": {
-            "summary": "席位名称",
-            "text": "宣告该席位的名称（如 'default' 或 'seat0'）。"
+            "type": "description",
+            "text": "在多 seat 配置中，seat 名称可用于客户端识别 seat 代表的物理设备。\n\nseat 名称是一个 UTF-8 字符串，其内容没有约定的格式。每个名称在所有 wl_seat global 中是唯一的。名称仅保证在当前 compositor 实例中唯一。\n\n所有客户端使用相同的 seat 名称。因此，名称可以跨进程共享以引用特定的 wl_seat global。\n\n名称事件在绑定到 seat global 之后发送，且应在发布能力之前发送。此事件每个 seat 对象仅发送一次，且名称在 wl_seat global 的生命周期内不会更改。\n\ncompositor 可以在 wl_seat global 被销毁并稍后重新创建时重用相同的 seat 名称。",
+            "summary": "此 seat 的唯一标识符"
           }
         }
       },
       "enums": {
         "capability": {
           "description": {
-            "summary": "能力掩码",
-            "text": "席位能力的位字段。"
+            "type": "description",
+            "text": "这是该 seat 拥有的能力位掩码；如果设置了某个成员，则表示该 seat 具有此能力。",
+            "summary": "seat 能力位掩码"
           },
           "entries": {
             "pointer": {
-              "summary": "seat 具有指针设备"
+              "summary": "该 seat 具有 pointer 设备"
             },
             "keyboard": {
-              "summary": "seat 具有一个或多个键盘"
+              "summary": "该 seat 具有一个或多个键盘"
             },
             "touch": {
-              "summary": "seat 具有触摸设备"
+              "summary": "该 seat 具有 touch 设备"
             }
           }
         },
         "error": {
           "description": {
-            "summary": "wl_seat 错误值",
-            "text": "这些错误可在响应 wl_seat 请求时发出。"
+            "type": "description",
+            "text": "这些错误可在响应 wl_seat 请求时发出。",
+            "summary": "wl_seat 错误值"
           },
           "entries": {
             "missing_capability": {
@@ -1291,97 +1400,107 @@
     },
     "wl_pointer": {
       "description": {
-        "summary": "指针（鼠标）设备",
-        "text": "wl_pointer 接口代表一个或多个类似于鼠标的输入设备。"
+        "type": "description",
+        "text": "wl_pointer 接口表示一个或多个输入设备（如鼠标），用于控制 seat 的 pointer 位置和 pointer_focus。\n\nwl_pointer 为 pointer 所在的 surface 生成 motion、enter 和 leave 事件，并为按钮按下、释放和滚动生成 button 和 axis 事件。",
+        "summary": "pointer 输入设备"
       },
       "requests": {
         "set_cursor": {
           "description": {
-            "summary": "设置光标图片",
-            "text": "设置指针的光标图片（图标）。"
+            "type": "description",
+            "text": "设置 pointer surface，即包含 pointer 图像（光标）的 surface。此请求赋予该 surface 光标角色。如果该 surface 已有其他角色，将引发协议错误。\n\n仅当该设备的 pointer 焦点为请求客户端的 surface 或 surface 参数为当前 pointer surface 时，光标才会实际更改。如果之前已通过此请求设置了 surface，则会被替换。如果 surface 为 NULL，pointer 图像将被隐藏。\n\n参数 hotspot_x 和 hotspot_y 定义了 pointer surface 相对于 pointer 位置的位置。其左上角始终位于 (x, y) - (hotspot_x, hotspot_y)，其中 (x, y) 是以 surface 局部坐标表示的 pointer 位置坐标。\n\n对 pointer surface 的 wl_surface.offset 请求会将 hotspot_x 和 hotspot_y 分别减去传递给请求的 x 和 y 参数。偏移量必须照常通过 wl_surface.commit 应用。\n\n热点也可以通过将当前设置的 pointer surface 传递给此请求并使用新的 hotspot_x 和 hotspot_y 值来更新。\n\n对于具有光标角色的 wl_surface，输入区域将被忽略。当用作光标结束时，wl_surface 将被取消映射。\n\nserial 参数必须与发送给客户端的最新 wl_pointer.enter 序列号匹配。否则该请求将被忽略。",
+            "summary": "设置 pointer surface"
           }
         },
         "release": {
           "description": {
-            "summary": "释放指针",
-            "text": "销毁该对象。"
+            "type": "description",
+            "text": "客户端可以使用此请求告知服务器它将不再使用该 pointer 对象。\n\n此请求会销毁 pointer 代理对象，因此客户端在使用此请求后不得调用 wl_pointer_destroy()。",
+            "summary": "释放 pointer 对象"
           }
         }
       },
       "events": {
         "enter": {
           "description": {
-            "summary": "指针进入表面",
-            "text": "指针已移动到一个表面内。"
+            "type": "description",
+            "text": "通知该 seat 的 pointer 聚焦于某个 surface。\n\n当 seat 的焦点进入 surface 时，pointer 图像未定义，客户端应通过 set_cursor 请求设置适当的 pointer 图像来响应此事件。",
+            "summary": "进入事件"
           }
         },
         "leave": {
           "description": {
-            "summary": "指针离开表面",
-            "text": "指针已离开一个表面。"
+            "type": "description",
+            "text": "通知该 seat 的 pointer 不再聚焦于某个 surface。\n\n离开通知在新焦点的进入通知之前发送。",
+            "summary": "离开事件"
           }
         },
         "motion": {
           "description": {
-            "summary": "指针移动",
-            "text": "指针在表面内移动。"
+            "type": "description",
+            "text": "pointer 位置变更通知。参数 surface_x 和 surface_y 是相对于聚焦 surface 的位置。",
+            "summary": "pointer 移动事件"
           }
         },
         "button": {
           "description": {
-            "summary": "指针按钮点击",
-            "text": "按下或释放了一个指针按钮。"
+            "type": "description",
+            "text": "鼠标按钮点击和释放通知。\n\nclick 的位置由最后的 motion 或 enter 事件给出。time 参数是以毫秒为单位精度的时间戳，基准未定义。\n\nbutton 是 Linux 内核 linux/input-event-codes.h 头文件中定义的按钮代码，例如 BTN_LEFT。\n\n任何 16 位按钮代码值保留用于内核事件代码列表的未来添加。所有高于 0xFFFF 的其他按钮代码目前未定义，但可能在未来版本的协议中使用。",
+            "summary": "pointer 按钮事件"
           }
         },
         "axis": {
           "description": {
-            "summary": "轴滚动事件",
-            "text": "发生了滚动（轴）事件。"
+            "type": "description",
+            "text": "滚动和其他 axis 通知。\n\n对于滚动事件（垂直和水平滚动 axis），value 参数是指定 axis 上向量的长度，坐标空间与 motion 事件相同，表示沿指定 axis 的相对移动。\n\n对于支持非平行于 axis 移动的设备，将发出多个 axis 事件。\n\n在适用的情况下（例如触控板），服务器可以选择发出滚动事件，其中运动向量等同于 motion 事件向量。\n\n在适用的情况下，客户端可以根据滚动距离变换其内容。",
+            "summary": "axis 事件"
           }
         },
         "frame": {
           "description": {
-            "summary": "指针帧结束",
-            "text": "一组逻辑上属于一起的事件的结束。"
+            "type": "description",
+            "text": "指示逻辑上属于同一组的一组事件的结束。客户端应在继续之前累积该帧中所有事件的数据。\n\n所有 wl_pointer.frame 事件之前的 wl_pointer 事件在逻辑上属于同一组。例如，在对角滚动运动中，compositor 将发送可选的 wl_pointer.axis_source 事件、两个 wl_pointer.axis 事件（水平和垂直）以及最后的 wl_pointer.frame 事件。客户端可以使用此信息计算滚动的对角向量。\n\n当同一帧中出现多个 wl_pointer.axis 事件时，运动向量是所有事件的组合运动。当同一帧中出现 wl_pointer.axis 和 wl_pointer.axis_stop 事件时，表示一个 axis 上的运动已停止，但另一个 axis 上的运动仍在继续。当同一帧中出现多个 wl_pointer.axis_stop 事件时，表示这些 axis 在同一时刻停止。\n\n每个逻辑事件组都会发送 wl_pointer.frame 事件，即使该组仅包含单个 wl_pointer 事件。具体来说，客户端可能会收到如下序列：motion、frame、button、frame、axis、frame、axis_stop、frame。\n\nwl_pointer.enter 和 wl_pointer.leave 事件是由 compositor 生成的逻辑事件，而非硬件生成。这些事件也由 wl_pointer.frame 分组。当 pointer 从一个 surface 移动到另一个 surface 时，compositor 应将 wl_pointer.leave 事件分组在同一 wl_pointer.frame 内。但是，客户端不得依赖 wl_pointer.leave 和 wl_pointer.enter 在同一 wl_pointer.frame 内。compositor 特定的策略可能要求将 wl_pointer.leave 和 wl_pointer.enter 事件分散到多个 wl_pointer.frame 组中。",
+            "summary": "pointer 事件序列的结束"
           }
         },
         "axis_source": {
           "description": {
-            "summary": "轴事件来源",
-            "text": "描述轴事件的物理来源（如滚轮、手指、倾斜）。"
+            "type": "description",
+            "text": "滚动和其他 axis 的源信息。\n\n此事件不会单独出现。它在 wl_pointer.frame 事件之前发送，并携带该帧中所有事件的源信息。\n\n源指定此事件是如何生成的。如果源为 wl_pointer.axis_source.finger，当用户将手指从设备上抬起时将发送 wl_pointer.axis_stop 事件。\n\n如果源为 wl_pointer.axis_source.wheel、wl_pointer.axis_source.wheel_tilt 或 wl_pointer.axis_source.continuous，wl_pointer.axis_stop 事件可能会也可能不会被发送。compositor 是否为这些源发送 axis_stop 事件取决于硬件和具体实现；客户端不得依赖接收这些滚动源的 axis_stop 事件，并应默认将这些滚动源的滚动序列视为未终止。\n\n此事件是可选的。如果特定 axis 事件序列的源未知，则不发送任何事件。每个帧仅允许一个 wl_pointer.axis_source 事件。\n\nwl_pointer.axis_discrete 和 wl_pointer.axis_source 的顺序不保证。",
+            "summary": "axis 源事件"
           }
         },
         "axis_stop": {
           "description": {
-            "summary": "轴滚动停止",
-            "text": "指示一个离散的轴滚动序列已结束。"
+            "type": "description",
+            "text": "滚动和其他 axis 的停止通知。\n\n对于某些 wl_pointer.axis_source 类型，将发送 wl_pointer.axis_stop 事件以通知客户端 axis 序列已终止。这使客户端能够实现动力滚动。有关何时可能生成此事件的信息，请参阅 wl_pointer.axis_source 文档。\n\n此事件之后具有相同 axis_source 的任何 wl_pointer.axis 事件应被视为新 axis 运动的开始。\n\n时间戳的解释与 wl_pointer.axis 事件中的时间戳相同。时间戳值可能与之前的 wl_pointer.axis 事件相同。",
+            "summary": "axis 停止事件"
           }
         },
         "axis_discrete": {
           "description": {
-            "summary": "离散轴步长",
-            "text": "提供轴滚动的离散步数（如滚轮格数）。"
+            "type": "description",
+            "text": "滚动和其他 axis 的离散步进信息。\n\n此事件以离散步进（例如鼠标滚轮的单次拨动）携带 wl_pointer.axis 事件的 axis 值。\n\n此事件自 wl_pointer 版本 8 起已弃用——支持版本 8 或更高版本的客户端不会收到此事件。\n\n此事件不会单独出现，它与 wl_pointer.axis 事件配对，后者在连续尺度上表示此 axis 值。协议保证每个 axis_discrete 事件在同一 wl_pointer.frame 内始终紧随一个具有相同 axis 编号的 axis 事件。请注意，协议允许在 axis_discrete 及其配对的 axis 事件之间发生其他事件，包括其他 axis_discrete 或 axis 事件。每个 wl_pointer.frame 中每个 axis 类型不得超过一个 axis_discrete 事件。\n\n此事件是可选的；连续滚动设备（如触控板上的双指滚动）没有离散步进，不会生成此事件。\n\n离散值携带方向信息。例如，值 -2 表示此 axis 负方向上的两个步进。\n\naxis 编号与关联的 axis 事件中的 axis 编号相同。\n\nwl_pointer.axis_discrete 和 wl_pointer.axis_source 的顺序不保证。",
+            "summary": "axis 点击事件"
           }
         },
         "axis_value120": {
           "description": {
-            "summary": "axis 高分辨率滚动事件",
-            "text": "离散的高分辨率滚动信息。\n\n此事件携带高分辨率滚轮滚动信息，每 120 的倍数代表一个逻辑滚动步进（滚轮卡位）。例如，axis_value120 为 30 表示正方向上的四分之一个逻辑滚动步进，value120 为 -240 表示在同一硬件事件中负方向上的两个逻辑滚动步进。\n依赖离散滚动的客户端应在处理事件前将 value120 累积到 120 的倍数。\n\nvalue120 不得为零。\n\n此事件在支持 wl_pointer 版本 8 或更高版本的客户端中取代 wl_pointer.axis_discrete 事件。\n\n当同一 wl_pointer.frame 中出现 wl_pointer.axis_source 事件时，该 axis 来源适用于此事件。\n\nwl_pointer.axis_value120 和 wl_pointer.axis_source 的顺序不作保证。"
+            "type": "description",
+            "text": "离散高分辨率滚动信息。\n\n此事件携带高分辨率滚轮滚动信息，每 120 的倍数代表一个逻辑滚动步进（一个滚轮卡位）。例如，axis_value120 为 30 表示正方向上逻辑滚动步进的四分之一，value120 为 -240 表示同一硬件事件中负方向上的两个逻辑滚动步进。依赖离散滚动的客户端应在处理事件之前将 value120 累积到 120 的倍数。\n\nvalue120 不得为零。\n\n此事件在支持 wl_pointer 版本 8 或更高版本的客户端中取代 wl_pointer.axis_discrete 事件。\n\n当同一 wl_pointer.frame 中出现 wl_pointer.axis_source 事件时，axis 源适用于此事件。\n\nwl_pointer.axis_value120 和 wl_pointer.axis_source 的顺序不保证。",
+            "summary": "axis 高分辨率滚动事件"
           }
         },
         "axis_relative_direction": {
           "description": {
-            "summary": "axis 相对物理方向事件",
-            "text": "导致 axis 运动的实体的相对方向信息。\n\n对于 wl_pointer.axis 事件，wl_pointer.axis_relative_direction 事件指定了导致 wl_pointer.axis 事件的实体的运动方向。例如：\n- 如果用户在触摸板上的手指向下滑动，导致 wl_pointer.axis vertical_scroll 向下事件，则物理方向为 identical（一致）\n- 如果用户在触摸板上的手指向下滑动，导致 wl_pointer.axis vertical_scroll 向上事件（自然滚动），则物理方向为 inverted（反转）。\n\n客户端可使用此信息调整组件的滚动运动。具体而言，启用自然滚动会导致内容相对于传统滚动改变方向。某些控件（如音量控制滑块）通常应匹配物理方向，无论是否启用了自然滚动。此事件使客户端能够将控件的滚动方向与物理方向匹配。\n\n此事件不会单独出现，它与代表该 axis 值的 wl_pointer.axis 事件配对。协议保证每个 axis_relative_direction 事件在同一 wl_pointer.frame 内总是紧随一个具有相同 axis 编号的 axis 事件。注意，协议允许 axis_relative_direction 及其配对 axis 事件之间出现其他事件。\n\naxis 编号与关联的 axis 事件中的 axis 编号相同。\n\nwl_pointer.axis_relative_direction、wl_pointer.axis_discrete 和 wl_pointer.axis_source 的顺序不作保证。"
+            "type": "description",
+            "text": "导致 axis 运动的实体的相对方向信息。\n\n对于 wl_pointer.axis 事件，wl_pointer.axis_relative_direction 事件指定导致 wl_pointer.axis 事件的实体的运动方向。例如：\n- 如果用户在触控板上的手指向下移动并导致 wl_pointer.axis vertical_scroll down 事件，则物理方向为 identical\n- 如果用户在触控板上的手指向下移动并导致 wl_pointer.axis vertical_scroll up 滚动事件（自然滚动），则物理方向为 inverted\n\n客户端可以使用此信息调整组件的滚动运动。具体来说，启用自然滚动会导致内容相对于传统滚动改变方向。某些控件（如音量控制滑块）通常应与物理方向匹配，无论自然滚动是否启用。此事件使客户端能够将控件的滚动方向与物理方向匹配。\n\n此事件不会单独出现，它与 wl_pointer.axis 事件配对，后者表示此 axis 值。协议保证每个 axis_relative_direction 事件在同一 wl_pointer.frame 内始终紧随一个具有相同 axis 编号的 axis 事件。请注意，协议允许在 axis_relative_direction 及其配对的 axis 事件之间发生其他事件。\n\naxis 编号与关联的 axis 事件中的 axis 编号相同。\n\nwl_pointer.axis_relative_direction、wl_pointer.axis_discrete 和 wl_pointer.axis_source 的顺序不保证。",
+            "summary": "axis 相对物理方向事件"
           }
         }
       },
       "enums": {
         "error": {
-          "description": {
-            "summary": "指针错误",
-            "text": "指针相关的错误值。"
-          },
           "entries": {
             "role": {
               "summary": "给定的 wl_surface 已有其他角色"
@@ -1390,43 +1509,46 @@
         },
         "button_state": {
           "description": {
-            "summary": "物理按钮状态",
-            "text": "按钮是按下还是释放。"
+            "type": "description",
+            "text": "描述产生 button 事件的按钮的物理状态。",
+            "summary": "物理按钮状态"
           },
           "entries": {
             "released": {
-              "summary": "按钮未按下"
+              "summary": "按钮未被按下"
             },
             "pressed": {
-              "summary": "按钮已按下"
+              "summary": "按钮被按下"
             }
           }
         },
         "axis": {
           "description": {
-            "summary": "滚动轴方向",
-            "text": "水平轴或垂直轴。"
+            "type": "description",
+            "text": "描述滚动事件的 axis 类型。",
+            "summary": "axis 类型"
           },
           "entries": {
             "vertical_scroll": {
-              "summary": "垂直轴"
+              "summary": "垂直 axis"
             },
             "horizontal_scroll": {
-              "summary": "水平轴"
+              "summary": "水平 axis"
             }
           }
         },
         "axis_source": {
           "description": {
-            "summary": "轴事件来源类型",
-            "text": "描述事件是由什么设备产生的。"
+            "type": "description",
+            "text": "描述 axis 事件的源类型。这向客户端指示 axis 事件是如何物理生成的；客户端可以相应地调整用户界面。例如，来自 finger 源的滚动事件可能在具有动力滚动的平滑坐标空间中，而 wheel 源可能以若干行为单位的离散步进。\n\ncontinuous axis 源是设备在连续坐标空间中生成事件，但使用手指以外的东西。此源的一个示例是基于按钮的滚动，其中设备的垂直运动在按住按钮时转换为滚动事件。\n\nwheel tilt axis 源表示实际设备是滚轮，但滚动事件不是由旋转而是由滚轮的（通常是侧向）倾斜引起的。",
+            "summary": "axis 源类型"
           },
           "entries": {
             "wheel": {
-              "summary": "物理滚轮转动"
+              "summary": "物理滚轮旋转"
             },
             "finger": {
-              "summary": "触摸表面上的手指"
+              "summary": "触控表面上的手指"
             },
             "continuous": {
               "summary": "连续坐标空间"
@@ -1438,8 +1560,9 @@
         },
         "axis_relative_direction": {
           "description": {
-            "summary": "axis 相对方向",
-            "text": "指定导致 wl_pointer.axis 事件的物理运动方向，相对于 wl_pointer.axis 方向。"
+            "type": "description",
+            "text": "这指定了导致 wl_pointer.axis 事件的物理运动方向，相对于 wl_pointer.axis 方向。",
+            "summary": "axis 相对方向"
           },
           "entries": {
             "identical": {
@@ -1454,84 +1577,93 @@
     },
     "wl_keyboard": {
       "description": {
-        "summary": "键盘设备",
-        "text": "wl_keyboard 接口代表一个键盘设备。"
+        "type": "description",
+        "text": "wl_keyboard 接口表示与 seat 关联的一个或多个键盘。\n\n每个 wl_keyboard 具有以下逻辑状态：\n\n- 活动 surface（可能为 null）\n- 当前逻辑上按下的键\n- 活动修饰键\n- 活动组\n\n默认情况下，活动 surface 为 null，当前逻辑上按下的键为空，活动修饰键和活动组为 0。",
+        "summary": "键盘输入设备"
       },
       "requests": {
         "release": {
           "description": {
-            "summary": "释放键盘",
-            "text": "销毁该对象。"
+            "type": "description",
+            "summary": "释放 keyboard 对象"
           }
         }
       },
       "events": {
         "keymap": {
           "description": {
-            "summary": "键盘映射",
-            "text": "向客户端发送键盘布局映射表。"
+            "type": "description",
+            "text": "此事件向客户端提供一个文件描述符，客户端可以以只读模式进行内存映射以提供键盘映射描述。\n\n从版本 7 开始，fd 必须由接收者以 MAP_PRIVATE 方式映射，因为 MAP_SHARED 可能会失败。",
+            "summary": "键盘映射"
           }
         },
         "enter": {
           "description": {
-            "summary": "键盘焦点进入表面",
-            "text": "此席位的键盘焦点已切换到该表面。"
+            "type": "description",
+            "text": "通知该 seat 的键盘焦点位于某个 surface 上。\n\ncompositor 必须在此事件之后发送 wl_keyboard.modifiers 事件。\n\n在 wl_keyboard 逻辑状态中，此事件将活动 surface 设置为 surface 参数，并将当前逻辑上按下的键设置为 keys 参数中的键。如果 wl_keyboard 在此事件之前已有活动 surface，compositor 不得发送此事件。\n\n客户端不应使用已按键列表来模拟按键事件。列表中按键的顺序未指定。",
+            "summary": "进入事件"
           }
         },
         "leave": {
           "description": {
-            "summary": "键盘焦点离开表面",
-            "text": "此席位的键盘焦点已离开该表面。"
+            "type": "description",
+            "text": "通知该 seat 的键盘焦点不再位于某个 surface 上。\n\n离开通知在新焦点的进入通知之前发送。\n\n在 wl_keyboard 逻辑状态中，此事件将所有值重置为默认值。如果 wl_keyboard 的活动 surface 在此事件之前不等于 surface 参数，compositor 不得发送此事件。",
+            "summary": "离开事件"
           }
         },
         "key": {
           "description": {
-            "summary": "按键事件",
-            "text": "按下了某个键或释放了某个键。"
+            "type": "description",
+            "text": "按键被按下或释放。time 参数是以毫秒为单位精度的时间戳，基准未定义。\n\nkey 是平台相关的键代码，可以通过将其提供给键盘映射（参见 keymap 事件）来解释。\n\n如果此事件导致修饰键更改，则生成的 wl_keyboard.modifiers 事件必须在此事件之后发送。\n\n在 wl_keyboard 逻辑状态中，此事件将 key 添加到当前逻辑上按下的键中（如果 state 参数为 pressed）或从中移除（如果 state 参数为 released）。如果 wl_keyboard 在此事件之前没有活动 surface，compositor 不得发送此事件。如果 state 为 pressed（或 released）且 key 在此事件之前已逻辑上按下（或未逻辑上按下），compositor 不得发送此事件。\n\n自版本 10 起，当接收到 rate 参数为 0 的 wl_keyboard.repeat_info 事件时，compositor 可以发送带有 repeated 键状态的 key 事件。这允许 compositor 承担按键重复的责任。",
+            "summary": "按键事件"
           }
         },
         "modifiers": {
           "description": {
-            "summary": "修饰键和组合状态",
-            "text": "通知客户端修饰键（Ctrl, Alt 等）状态已更改。"
+            "type": "description",
+            "text": "通知客户端修饰键和/或组状态已更改，应更新其本地状态。\n\ncompositor 可以在客户端没有 surface 具有键盘焦点的情况下发送此事件，例如将修饰键信息绑定到 pointer 焦点。如果发送了带有已按下修饰键的修饰键事件而没有先前的 enter 事件，客户端可以假设修饰键状态在收到下一个 wl_keyboard.modifiers 事件之前是有效的。为了重置修饰键状态，compositor 可以发送不带已按下修饰键的 wl_keyboard.modifiers 事件。\n\n在 wl_keyboard 逻辑状态中，此事件更新修饰键和组。",
+            "summary": "修饰键和组状态"
           }
         },
         "repeat_info": {
           "description": {
-            "summary": "按键重复信息",
-            "text": "告知客户端键盘的重复速率和延迟。"
+            "type": "description",
+            "text": "通知客户端键盘的重复速率和延迟。\n\n此事件在 wl_keyboard 对象创建后立即发送，并保证在任何按键事件之前被客户端接收。\n\nrate 或 delay 的负值为非法值。rate 为零将禁用所有重复（无论 delay 的值如何）。\n\n此事件也可以在之后发送新值，因此客户端应在 wl_keyboard 创建后继续监听此事件。",
+            "summary": "重复速率和延迟"
           }
         }
       },
       "enums": {
         "keymap_format": {
           "description": {
-            "summary": "键盘映射格式",
-            "text": "键盘映射数据的格式。"
+            "type": "description",
+            "text": "这指定了通过 wl_keyboard.keymap 事件提供给客户端的键盘映射格式。",
+            "summary": "键盘映射格式"
           },
           "entries": {
             "no_keymap": {
-              "summary": "无 keymap；客户端必须自行理解如何解释原始 keycode"
+              "summary": "无键盘映射；客户端必须了解如何解释原始键码"
             },
             "xkb_v1": {
-              "summary": "兼容 libxkbcommon 的空终止字符串；为确定 xkb keycode，客户端必须将按键事件的 keycode 加 8"
+              "summary": "libxkbcommon 兼容，以 null 结尾的字符串；要确定 xkb 键码，客户端必须将 key 事件键码加 8"
             }
           }
         },
         "key_state": {
           "description": {
-            "summary": "按键物理状态",
-            "text": "按键是按下、释放还是重复。"
+            "type": "description",
+            "text": "描述产生 key 事件的按键的物理状态。\n\n自版本 10 起，按键可以处于 repeated 伪状态，其含义与 pressed 相同，但用于在 key 事件中表示重复。\n\n按键只能在进入 pressed 状态之后、进入 released 状态之前进入 repeated 状态。在按键按下期间，此事件可能被多次生成。",
+            "summary": "物理按键状态"
           },
           "entries": {
             "released": {
-              "summary": "按键未按下"
+              "summary": "按键未被按下"
             },
             "pressed": {
-              "summary": "按键已按下"
+              "summary": "按键被按下"
             },
             "repeated": {
-              "summary": "按键已重复"
+              "summary": "按键被重复"
             }
           }
         }
@@ -1539,125 +1671,142 @@
     },
     "wl_touch": {
       "description": {
-        "summary": "触摸屏输入设备",
-        "text": "wl_touch 接口代表与席位关联的触摸屏。"
+        "type": "description",
+        "text": "wl_touch 接口表示与 seat 关联的触摸屏。\n\n触摸交互可以由一个或多个接触点组成。对于每个接触点，会生成一系列事件，以 down 事件开始， followed by 零或多个 motion 事件，以 up 事件结束。与同一接触点相关的事件可以通过序列的 ID 来识别。",
+        "summary": "触摸屏输入设备"
       },
       "requests": {
         "release": {
           "description": {
-            "summary": "释放触摸对象",
-            "text": "销毁该对象。"
+            "type": "description",
+            "summary": "释放 touch 对象"
           }
         }
       },
       "events": {
         "down": {
           "description": {
-            "summary": "按下事件",
-            "text": "一个新的触摸点出现在表面上。"
+            "type": "description",
+            "text": "一个新的触摸点出现在 surface 上。此触摸点被分配一个唯一 ID。此触摸点的未来事件引用此 ID。该 ID 在 touch up 事件后失效，可以在未来被重用。",
+            "summary": "touch down 事件和触摸序列的开始"
           }
         },
         "up": {
           "description": {
-            "summary": "抬起事件",
-            "text": "触摸点已离开表面。"
+            "type": "description",
+            "text": "触摸点已消失。将不再发送此触摸点的事件，触摸点的 ID 被释放，可以在未来的 touch down 事件中被重用。",
+            "summary": "触摸事件序列的结束"
           }
         },
         "motion": {
           "description": {
-            "summary": "移动事件",
-            "text": "触摸点坐标已更改。"
+            "type": "description",
+            "text": "触摸点已更改坐标。",
+            "summary": "触摸点坐标的更新"
           }
         },
         "frame": {
           "description": {
-            "summary": "触摸帧结束",
-            "text": "一组逻辑上属于一起的事件的结束。"
+            "type": "description",
+            "text": "指示逻辑上属于同一组的一组事件的结束。客户端应在继续之前累积该帧中所有事件的数据。\n\nwl_touch.frame 至少终止一个事件，但除此之外不保证帧中的事件集。客户端必须假设未在帧中更新的任何状态与先前已知的状态相同。",
+            "summary": "touch frame 事件的结束"
           }
         },
         "cancel": {
           "description": {
-            "summary": "触摸序列取消",
-            "text": "由于全局手势或其他原因，取消当前的触摸序列。"
+            "type": "description",
+            "text": "当 compositor 判定触摸流为全局手势时发送。不会再向客户端发送该手势的事件。触摸取消适用于此客户端 surface 上当前活动的所有触摸点。客户端负责终结触摸点，此 surface 上的未来触摸点可以重用触摸点 ID。\n\ncancel 事件之后不需要 frame 事件。",
+            "summary": "触摸会话已取消"
           }
         },
         "shape": {
           "description": {
-            "summary": "更新触摸点形状",
-            "text": "触摸点的接触面积形状已更改。"
+            "type": "description",
+            "text": "当触摸点更改其形状时发送。\n\n此事件不会单独出现。它在 wl_touch.frame 事件之前发送，并携带该帧中任何先前报告的或新触摸点的新形状信息。\n\n描述触摸点的其他事件（如 wl_touch.down、wl_touch.motion 或 wl_touch.orientation）可能在同一 wl_touch.frame 内发送。客户端应将这些事件视为单个逻辑触摸点更新。wl_touch.shape、wl_touch.orientation 和 wl_touch.motion 的顺序不保证。wl_touch.down 事件保证在该触摸 ID 的第一个 wl_touch.shape 事件之前发生，但两个事件可能在同一 wl_touch.frame 内发生。\n\n触摸点形状通过椭圆的长轴和短轴长度近似。长轴长度描述椭圆的较长直径，短轴长度描述较短直径。长轴和短轴是正交的，均以 surface 局部坐标指定。椭圆的中心始终位于 wl_touch.down 或 wl_touch.move 报告的触摸点位置。\n\n此事件仅在触摸设备支持形状报告时由 compositor 发送。如果客户端未收到此事件，则必须对形状进行合理假设。",
+            "summary": "更新触摸点的形状"
           }
         },
         "orientation": {
           "description": {
-            "summary": "更新触摸点方向",
-            "text": "触摸点的方向角度已更改。"
+            "type": "description",
+            "text": "当触摸点更改其方向时发送。\n\n此事件不会单独出现。它在 wl_touch.frame 事件之前发送，并携带该帧中任何先前报告的或新触摸点的新形状信息。\n\n描述触摸点的其他事件（如 wl_touch.down、wl_touch.motion 或 wl_touch.shape）可能在同一 wl_touch.frame 内发送。客户端应将这些事件视为单个逻辑触摸点更新。wl_touch.shape、wl_touch.orientation 和 wl_touch.motion 的顺序不保证。wl_touch.down 事件保证在该触摸 ID 的第一个 wl_touch.orientation 事件之前发生，但两个事件可能在同一 wl_touch.frame 内发生。\n\n方向描述触摸点长轴相对于正 surface y 轴的顺时针角度，并归一化到 -180 到 +180 度范围。方向的粒度取决于触摸设备，某些设备仅支持 0 到 90 度之间的二进制旋转值。\n\n此事件仅在触摸设备支持方向报告时由 compositor 发送。",
+            "summary": "更新触摸点的方向"
           }
         }
       }
     },
     "wl_output": {
       "description": {
-        "summary": "合成器输出区域",
-        "text": "输出描述了合成器几何结构的一部分。输出通常对应一个物理显示器。"
+        "type": "description",
+        "text": "output 描述了 compositor 几何结构的一部分。compositor 在\"compositor 坐标系\"中工作，output 对应于该空间中实际可见的矩形区域。这通常对应于显示 compositor 空间一部分的显示器。此对象在启动时或显示器热插拔时作为全局对象发布。",
+        "summary": "compositor output 区域"
       },
       "requests": {
         "release": {
           "description": {
-            "summary": "释放输出对象",
-            "text": "销毁该对象。"
+            "type": "description",
+            "text": "通过此请求，客户端可以告知服务器它将不再使用该 output 对象。",
+            "summary": "释放 output 对象"
           }
         }
       },
       "events": {
         "geometry": {
           "description": {
-            "summary": "输出属性",
-            "text": "描述输出的几何属性（制造厂商、型号、物理尺寸、位置等）。"
+            "type": "description",
+            "text": "geometry 事件描述 output 的几何属性。该事件在绑定到 output 对象时发送，并在任何属性更改时再次发送。\n\n如果不适用，物理尺寸可以设置为零（例如对于投影仪或虚拟 output）。\n\n从版本 2 开始，geometry 事件之后会跟随 done 事件。\n\n客户端应使用 wl_surface.preferred_buffer_transform 而非此事件提供的 transform 来确定 surface 的首选 buffer transform。\n\n注意：wl_output 仅提供关于 output 位置和标识的部分信息。某些 compositor（例如未实现桌面风格 output 布局或暴露虚拟 output 的 compositor）可能会伪造此信息。客户端应使用 xdg_output.logical_position 而非 x 和 y，使用 name 和 description 而非 make 和 model。",
+            "summary": "output 的属性"
           }
         },
         "mode": {
           "description": {
-            "summary": "通告可用模式",
-            "text": "描述输出支持的分辨率和刷新率。"
+            "type": "description",
+            "text": "mode 事件描述 output 的可用模式。\n\n该事件在绑定到 output 对象时发送，并且始终会有一个模式，即当前模式。如果 output 更改模式，则会再次发送该事件，表示现在当前的模式。换句话说，当前模式始终是最后收到的带有 current 标志的模式。\n\n非当前模式已被弃用。compositor 可以决定仅公布当前模式而不发送其他模式。客户端不应依赖非当前模式。\n\n模式的大小以 output 设备的物理硬件单位给出。这不一定与全局 compositor 空间中的 output 大小相同。例如，output 可能被缩放（如 wl_output.scale 所述）或被变换（如 wl_output.transform 所述）。希望获取全局 compositor 空间中 output 大小的客户端应改用 xdg_output.logical_size。\n\n如果不适用，垂直刷新率可以设置为零（例如对于虚拟 output）。\n\n从版本 2 开始，mode 事件之后会跟随 done 事件。\n\n客户端不应使用刷新率来调度帧。而应使用 wl_surface.frame 事件或 presentation-time 协议。\n\n注意：此信息并非对所有 output 都有意义。某些 compositor（如暴露虚拟 output 的 compositor）可能会伪造刷新率或大小。",
+            "summary": "公布 output 的可用模式"
           }
         },
         "done": {
           "description": {
-            "summary": "输出信息发送完毕",
-            "text": "所有属性信息已发送。"
+            "type": "description",
+            "text": "此事件在绑定到 output 对象后所有其他属性已发送，以及此后完成的任何其他属性更改之后发送。这使得 output 属性的更改可以被视为原子操作，即使它们通过多个事件发生。",
+            "summary": "已发送关于 output 的所有信息"
           }
         },
         "scale": {
           "description": {
-            "summary": "输出缩放属性",
-            "text": "输出的 HiDPI 缩放比例。"
+            "type": "description",
+            "text": "此事件包含 geometry 事件中未包含的缩放几何信息。它可能在绑定 output 对象后或 output 缩放稍后更改时发送。compositor 将发出非零正的 scale 值。如果未发送，客户端应假定 scale 为 1。\n\n大于 1 的 scale 意味着 compositor 在渲染时将自动按此倍数缩放 surface buffer。这用于非常高分辨率的显示器，在原始分辨率下渲染的应用会太小而难以阅读。\n\n客户端应使用 wl_surface.preferred_buffer_scale 而非此事件来确定 surface 的首选 buffer 缩放。\n\nscale 事件之后会跟随 done 事件。",
+            "summary": "output 缩放属性"
           }
         },
         "name": {
           "description": {
-            "summary": "输出名称",
-            "text": "合成器分配给该输出的名称（如 'HDMI-A-1'）。"
+            "type": "description",
+            "text": "许多 compositor 会为其 output 分配用户友好的名称，向用户显示，允许用户引用 output 等。客户端可能也希望知道此名称以为用户提供类似的行为。\n\nname 是一个 UTF-8 字符串，没有为其内容定义约定。每个名称在所有 wl_output 全局对象中是唯一的。名称仅保证在 compositor 实例内唯一。\n\n对于给定的 wl_output 全局对象，所有客户端使用相同的 output 名称。因此，该名称可以在进程间共享以引用特定的 wl_output 全局对象。\n\n名称不保证跨会话持久化，因此不能用于在配置文件中可靠地标识 output。\n\n名称示例包括 'HDMI-A-1'、'WL-1'、'X11-1' 等。但不要假设名称反映了底层的 DRM 连接器、X11 连接等。\n\nname 事件在绑定 output 对象后发送。此事件每个 output 对象仅发送一次，并且名称在 wl_output 全局对象的生命周期内不会更改。\n\n如果 wl_output 全局对象被销毁并稍后重新创建，compositor 可以重用相同的 output 名称。compositor 应尽可能避免重用相同的名称。\n\nname 事件之后会跟随 done 事件。",
+            "summary": "此 output 的名称"
           }
         },
         "description": {
           "description": {
-            "summary": "输出的人类可读描述",
-            "text": "显示器的可读描述字符串。"
+            "type": "description",
+            "text": "许多 compositor 可以生成其 output 的人类可读描述。客户端可能也希望知道此描述，例如用于 output 选择。\n\ndescription 是一个 UTF-8 字符串，没有为其内容定义约定。描述不保证在所有 wl_output 全局对象中唯一。示例可能包括 'Foocorp 11\" Display' 或 'Virtual X11 output via :1'。\n\ndescription 事件在绑定 output 对象后以及描述更改时发送。描述是可选的，可能根本不会发送。\n\ndescription 事件之后会跟随 done 事件。",
+            "summary": "此 output 的人类可读描述"
           }
         }
       },
       "enums": {
         "subpixel": {
           "description": {
-            "summary": "次像素排列信息",
-            "text": "描述物理像素的排列方式。"
+            "type": "description",
+            "text": "此枚举描述 output 上物理像素的布局方式。",
+            "summary": "subpixel 几何信息"
           },
           "entries": {
             "unknown": {
-              "summary": "未知几何排列"
+              "summary": "未知几何"
             },
             "none": {
-              "summary": "无几何排列"
+              "summary": "无几何"
             },
             "horizontal_rgb": {
               "summary": "水平 RGB"
@@ -1675,8 +1824,9 @@
         },
         "transform": {
           "description": {
-            "summary": "应用到缓冲区的变换",
-            "text": "描述旋转和翻转操作。"
+            "type": "description",
+            "text": "此枚举描述客户端和 compositor 应用于 buffer 内容的变换。\n\nflipped 值对应于先绕垂直轴翻转，然后旋转。\n\n其目的主要是允许客户端相应地渲染并告知 compositor，以便对于全屏 surface，compositor 仍然能够直接从客户端 surface 进行扫描输出。",
+            "summary": "应用于 buffer 内容的变换"
           },
           "entries": {
             "normal": {
@@ -1707,15 +1857,16 @@
         },
         "mode": {
           "description": {
-            "summary": "模式信息",
-            "text": "这些标志描述输出模式的属性，用于 mode 事件的 flags 位域中。"
+            "type": "description",
+            "text": "这些标志描述 output 模式的属性。它们用于 mode 事件的 flags 位字段中。",
+            "summary": "模式信息"
           },
           "entries": {
             "current": {
-              "summary": "表示这是当前模式"
+              "summary": "指示这是当前模式"
             },
             "preferred": {
-              "summary": "表示这是首选模式"
+              "summary": "指示这是首选模式"
             }
           }
         }
@@ -1723,46 +1874,53 @@
     },
     "wl_region": {
       "description": {
-        "summary": "区域接口",
-        "text": "区域对象描述一个面积，用于表面不透明区域和输入区域的定义。"
+        "type": "description",
+        "text": "region 对象描述一个区域。\n\nregion 对象用于描述 surface 的不透明区域和输入区域。",
+        "summary": "region 接口"
       },
       "requests": {
         "destroy": {
           "description": {
-            "summary": "销毁区域",
-            "text": "销毁该对象。"
+            "type": "description",
+            "text": "销毁 region。这将使对象 ID 失效。",
+            "summary": "销毁 region"
           }
         },
         "add": {
           "description": {
-            "summary": "添加矩形到区域",
-            "text": "在区域中增加一个矩形。"
+            "type": "description",
+            "text": "向 region 添加指定的矩形。",
+            "summary": "向 region 添加矩形"
           }
         },
         "subtract": {
           "description": {
-            "summary": "从区域中减去矩形",
-            "text": "从区域中移除一个矩形。"
+            "type": "description",
+            "text": "从 region 中减去指定的矩形。",
+            "summary": "从 region 减去矩形"
           }
         }
       }
     },
     "wl_subcompositor": {
       "description": {
-        "summary": "子表面合成能力",
-        "text": "暴露子表面合成功能的全局接口。允许表面拥有嵌套的子表面，形成表面树。"
+        "type": "description",
+        "text": "暴露 sub-surface 合成能力的全局接口。具有关联 sub-surface 的 wl_surface 称为父 surface。sub-surface 可以任意嵌套并创建 sub-surface 树。\n\nsub-surface 树中的根 surface 是主 surface。主 surface 不能是 sub-surface，因为 sub-surface 必须始终有父级。\n\n主 surface 及其 sub-surface 构成一个（复合）窗口。出于窗口管理目的，这组 wl_surface 对象应被视为单个窗口，其行为也应如此。\n\nsub-surface 的目的是将窗口内的部分合成工作从客户端转移到 compositor。一个典型的例子是视频播放器将装饰和视频放在单独的 wl_surface 对象中。这应允许 compositor 在可能时将 YUV 视频 buffer 处理传递给专用的覆盖硬件。",
+        "summary": "sub-surface 合成"
       },
       "requests": {
         "destroy": {
           "description": {
-            "summary": "解除绑定",
-            "text": "销毁该对象。"
+            "type": "description",
+            "text": "通知服务器客户端将不再使用此协议对象。这不会影响任何其他对象，包括 wl_subsurface 对象。",
+            "summary": "从 subcompositor 接口解绑"
           }
         },
         "get_subsurface": {
           "description": {
-            "summary": "赋予表面子表面角色",
-            "text": "将普通表面转换为子表面，并关联到父表面。"
+            "type": "description",
+            "text": "为给定 surface 创建 sub-surface 接口，并将其与给定父 surface 关联。这将普通 wl_surface 转变为 sub-surface。\n\n待设为 sub-surface 的 surface 不能已有其他角色，且不能有现有的 wl_subsurface 对象。否则将引发 bad_surface 协议错误。\n\n向父级添加 sub-surface 是对父级的双缓冲操作（参见 wl_surface.commit）。添加 sub-surface 的效果在父 surface 状态下次应用时生效。\n\n父 surface 不能是子 surface 的后代，且父级必须不同于子 surface，否则将引发 bad_parent 协议错误。\n\n此请求修改 sub-surface 上 wl_surface.commit 请求的行为，详见 wl_subsurface 接口文档。",
+            "summary": "赋予 surface sub-surface 角色"
           }
         }
       },
@@ -1770,10 +1928,10 @@
         "error": {
           "entries": {
             "bad_surface": {
-              "summary": "待设为子 surface 的对象无效"
+              "summary": "待设为 sub-surface 的 surface 无效"
             },
             "bad_parent": {
-              "summary": "待设为子 surface 的父对象无效"
+              "summary": "待设为 sub-surface 的父级无效"
             }
           }
         }
@@ -1781,44 +1939,51 @@
     },
     "wl_subsurface": {
       "description": {
-        "summary": "wl_surface 的子表面接口",
-        "text": "已成为子表面的 wl_surface 的附加接口。子表面具有父表面，其位置相对于父表面定义。"
+        "type": "description",
+        "text": "附加到已被设为 sub-surface 的 wl_surface 对象的接口。sub-surface 有一个父 surface。sub-surface 的大小和位置不限于父级的范围。特别地，sub-surface 不会自动裁剪到父级的区域。\n\n当非 NULL 的 wl_buffer 被应用且父 surface 已映射时，sub-surface 变为已映射。两者发生的顺序无关紧要。如果父级变为隐藏，或应用了 NULL 的 wl_buffer，则 sub-surface 被隐藏。这些规则通过 surface 树递归应用。\n\nsub-surface 可以处于两种模式之一。可能的模式是同步和异步，参见 wl_subsurface.set_sync 和 wl_subsurface.set_desync 方法。\n\n主 surface 可被视为始终处于异步模式，因为它在 sub-surface 意义上没有父级。\n\n即使 sub-surface 处于异步模式，如果其父 surface 表现为同步模式，则该 sub-surface 也将表现为同步模式。此规则通过 surface 树递归应用。这意味着可以将 sub-surface 设为同步模式，然后假定其所有子级和孙级 sub-surface 也是同步的，而无需显式设置它们。\n\n如果 surface 表现为同步模式，则它实际上是同步的，否则实际上是异步的。\n\nsub-surface 最初处于同步模式。\n\nwl_subsurface 接口具有修改父 surface 双缓冲状态的请求（wl_subsurface.set_position、.place_above 和 .place_below）。\n\n销毁 sub-surface 会立即生效。如果需要将 sub-surface 的移除与父 surface 更新同步，请先通过附加 NULL 的 wl_buffer 取消 sub-surface 的映射，更新父级，然后销毁 sub-surface。\n\n如果父 wl_surface 对象被销毁，则 sub-surface 被取消映射。\n\nsub-surface 的生命周期不超出父 wl_surface 的生命周期。当 wl_surface 对象被销毁时，与其关联的 wl_subsurface 对象变为无效，对其发出的任何请求都将导致协议错误。",
+        "summary": "wl_surface 的 sub-surface 接口"
       },
       "requests": {
         "destroy": {
           "description": {
-            "summary": "移除子表面接口",
-            "text": "销毁该对象并将表面恢复为普通表面。"
+            "type": "description",
+            "text": "sub-surface 接口从通过 wl_subcompositor.get_subsurface 请求转变为 sub-surface 的 wl_surface 对象上移除。wl_surface 与父级的关联被删除。wl_surface 立即被取消映射。",
+            "summary": "移除 sub-surface 接口"
           }
         },
         "set_position": {
           "description": {
-            "summary": "重新定位子表面",
-            "text": "设置子表面相对于父表面的位置。"
+            "type": "description",
+            "text": "设置 sub-surface 相对于父 surface 的位置。\n\nsub-surface 将被移动，使其原点（左上角像素）位于父 surface 坐标系中的位置 x, y。坐标不限于父 surface 区域。允许负值。\n\n初始位置为 0, 0。\n\n位置是父 surface 上的双缓冲状态，详见 wl_subsurface 和 wl_surface.commit。",
+            "summary": "重新定位 sub-surface"
           }
         },
         "place_above": {
           "description": {
-            "summary": "调整层级顺序（置于上方）",
-            "text": "在 Z 轴顺序中将子表面置于参考表面上方。"
+            "type": "description",
+            "text": "此 sub-surface 从堆栈中取出，并放回参考 surface 的正上方，更改 sub-surface 的 z 轴顺序。参考 surface 必须是兄弟 surface 之一或父 surface。使用任何其他 surface（包括此 sub-surface）将导致协议错误。\n\n新的 sub-surface 最初作为其兄弟和父级堆栈中最顶层的元素添加。\n\nz 轴顺序是父 surface 上的双缓冲状态，详见 wl_subsurface 和 wl_surface.commit。",
+            "summary": "重新堆叠 sub-surface"
           }
         },
         "place_below": {
           "description": {
-            "summary": "调整层级顺序（置于下方）",
-            "text": "在 Z 轴顺序中将子表面置于参考表面下方。"
+            "type": "description",
+            "text": "sub-surface 被放置在参考 surface 的正下方。\n\n参见 wl_subsurface.place_above。",
+            "summary": "重新堆叠 sub-surface"
           }
         },
         "set_sync": {
           "description": {
-            "summary": "设置为同步模式",
-            "text": "子表面的提交将与父表面的提交同步。"
+            "type": "description",
+            "text": "将 sub-surface 的提交行为更改为同步模式。\n\n详见 wl_subsurface 和 wl_surface.commit。",
+            "summary": "将 sub-surface 设为同步模式"
           }
         },
         "set_desync": {
           "description": {
-            "summary": "设置为异步模式",
-            "text": "子表面的提交将独立于父表面运行。"
+            "type": "description",
+            "text": "将 sub-surface 的提交行为更改为异步模式。\n\n详见 wl_subsurface 和 wl_surface.commit。",
+            "summary": "将 sub-surface 设为异步模式"
           }
         }
       },
@@ -1826,7 +1991,7 @@
         "error": {
           "entries": {
             "bad_surface": {
-              "summary": "wl_surface 不是同级或父级"
+              "summary": "wl_surface 不是兄弟或父级"
             }
           }
         }
@@ -1834,19 +1999,22 @@
     },
     "wl_fixes": {
       "description": {
-        "summary": "Wayland 协议修复",
-        "text": "此全局对象用于修复其他核心协议接口中无法在接口自身修复的问题。"
+        "type": "description",
+        "text": "此全局对象修复了其他核心协议接口中无法在这些接口本身内修复的问题。",
+        "summary": "Wayland 协议修复"
       },
       "requests": {
         "destroy": {
           "description": {
+            "type": "description",
             "summary": "销毁此对象"
           }
         },
         "destroy_registry": {
           "description": {
-            "summary": "销毁一个 wl_registry",
-            "text": "此请求销毁一个 wl_registry 对象。客户端在发出此请求后不应再使用该 wl_registry。"
+            "type": "description",
+            "text": "此请求销毁 wl_registry 对象。\n\n发出此请求后，客户端不应再使用该 wl_registry。\n\ncompositor 将发出带有 registry 对象 ID 的 wl_display.delete_id 事件，并且不再在 registry 上发出任何事件。客户端应在收到 wl_display.delete_id 事件后重用该对象 ID。",
+            "summary": "销毁 wl_registry"
           }
         }
       }
