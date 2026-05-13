@@ -1,0 +1,176 @@
+{
+  "description": {
+    "summary": "在客户端缓冲区上捕获屏幕内容",
+    "text": "此协议允许客户端请求合成器将屏幕内容的一部分复制到客户端缓冲区。\n\n警告！此文件中描述的协议是实验性的，可能会进行向后不兼容的更改。可能会添加向后兼容的更改，并相应地提升接口版本。向后不兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被宣布为稳定，协议和接口名称中的 'z' 前缀和版本号将被移除，接口版本号将被重置。"
+  },
+  "interfaces": {
+    "zcosmic_screencopy_manager_v1": {
+      "description": {
+        "summary": "通知客户端并开始捕获的管理器",
+        "text": "此对象是一个管理器，提供从源开始捕获的请求。"
+      },
+      "requests": {
+        "capture_output": {
+          "description": {
+            "summary": "捕获输出",
+            "text": "为输出创建捕获会话。\n\n请求合成器之前未通过 supported_cursor_mode 事件公布的光标模式是协议错误。"
+          }
+        },
+        "capture_workspace": {
+          "description": {
+            "summary": "捕获工作区",
+            "text": "为整个工作区创建捕获会话。\n\n必须提供一个之前通过 output_enter 事件与给定工作区关联的输出（请参阅 cosmic-workspace-unstable-v1）。\n\n如果在发送此请求时提供的输出未与工作区关联，捕获将失败并显示 invalid_output，直到建立新的关联。\n\n请求合成器之前未通过 supported_cursor_mode 事件公布的光标模式是协议错误。"
+          }
+        },
+        "capture_toplevel": {
+          "description": {
+            "summary": "捕获顶层窗口",
+            "text": "为顶层窗口创建捕获会话。\n\n请求合成器之前未通过 supported_cursor_mode 事件公布的光标模式是协议错误。"
+          }
+        }
+      },
+      "events": {
+        "supported_cursor_mode": {
+          "description": {
+            "summary": "公布的受支持光标模式",
+            "text": "在 zcosmic_screencopy_manager_v1 全局初始化后，它将立即发送 supported_cursor_mode 事件以通知客户端受支持的光标模式。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_cursor_mode": {
+              "summary": "提供的光标模式不受支持"
+            }
+          }
+        },
+        "cursor_mode": {
+          "entries": {
+            "hidden": {
+              "description": {
+                "summary": "光标被隐藏",
+                "text": "光标不被渲染，其内容不会以任何形式由合成器发送。"
+              }
+            },
+            "embedded": {
+              "description": {
+                "summary": "光标被嵌入渲染",
+                "text": "光标被渲染并嵌入到捕获的缓冲区中。"
+              }
+            },
+            "capture": {
+              "description": {
+                "summary": "光标被单独渲染",
+                "text": "光标不被渲染，但可以使用 zcosmic_screencopy_session_v1 接口的 capture_cursor 请求作为额外缓冲区接收。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "zcosmic_screencopy_session_v1": {
+      "description": {
+        "summary": "捕获会话",
+        "text": "此对象表示正在被捕获的会话。\n\n创建屏幕捕获会话后，合成器将发出 buffer_info 事件，告知客户端 surface 支持哪些缓冲区类型和格式进行读取。\n\n当客户端了解所有缓冲区属性后，可以创建缓冲区，使用 \"attach_buffer\" 请求将其附加到屏幕捕获 surface，使用 \"damage_buffer\" 请求设置缓冲区损坏，然后调用 \"commit\" 请求。\n\n调用 \"commit\" 后，下次合成器提交缓冲区时，该缓冲区的内容将被复制到提交到屏幕捕获会话的缓冲区。将生成一系列事件，以 \"ready\" 事件结束，这意味着缓冲区已准备好使用，可以再次向 surface 提交缓冲区。\n\n\"failed\" 事件可以随时发送。发生这种情况时，客户端必须销毁会话。根据失败原因，客户端可以创建新会话来替换它。"
+      },
+      "requests": {
+        "capture_cursor": {
+          "description": {
+            "summary": "创建子会话以捕获光标",
+            "text": "创建用于捕获给定 seat 光标的子会话。\n当服务器未通过值为 capture 的 supported_cursor_mode 事件表示支持时，使用此请求是协议错误。\n\n子会话不会生成 cursor_enter 或 cursor_leave 事件。它将为捕获的 seat 生成单个 cursor_info 事件（如果光标之前已进入会话），或不生成 cursor_info 事件。该事件将与主会话上生成的匹配 cursor_info 事件相同。\n\n合成器提供的 buffer_info 可能与主会话支持的缓冲区不同，也可能对每个捕获的 seat 不同。\n\n子会话永远不会发送 commit_time 或 ready 事件，但被视为就绪并与主会话一起显示。"
+          }
+        },
+        "attach_buffer": {
+          "description": {
+            "summary": "将缓冲区附加到 surface",
+            "text": "将缓冲区附加到 surface。"
+          }
+        },
+        "commit": {
+          "description": {
+            "summary": "提交会话",
+            "text": "提交屏幕捕获会话。\n\n帧将被复制到会话中。缓冲区就绪时会生成 ready 事件。\n\n如果设置了 \"on_damage\" 标志，合成器应等待有损坏时再向客户端发送新帧。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "删除此对象",
+            "text": "销毁 surface。客户端可随时发送此请求。"
+          }
+        }
+      },
+      "events": {
+        "buffer_info": {
+          "description": {
+            "summary": "缓冲区信息",
+            "text": "提供主图像需要使用的缓冲区参数信息。创建会话后，会为每种支持的缓冲区类型发送此事件。\n\nstride 参数对 dmabuf 无效，可设置为 0。"
+          }
+        },
+        "init_done": {
+          "description": {
+            "summary": "会话初始化完成",
+            "text": "当所有缓冲区信息事件发送完毕后发送此事件。"
+          }
+        },
+        "transform": {
+          "description": {
+            "summary": "携带变换信息",
+            "text": "此事件在 ready 事件之前发送，包含源缓冲区的变换。"
+          }
+        },
+        "damage": {
+          "description": {
+            "summary": "携带损坏区域的坐标",
+            "text": "此事件在 ready 事件之前发送。每次提交可以生成多次。\n\n参数描述自上次 ready 事件以来发生变化的区域周围的框。\n\n这些坐标源自缓冲区的左上角。"
+          }
+        },
+        "cursor_enter": {
+          "description": {
+            "summary": "光标进入 surface",
+            "text": "当光标进入捕获的 surface 时发送。当且仅当光标进入 surface 时，应在 cursor_info 事件之前生成。"
+          }
+        },
+        "cursor_leave": {
+          "description": {
+            "summary": "光标离开 surface",
+            "text": "当光标离开捕获的 surface 时发送。不会为给定光标生成 cursor_info 事件。"
+          }
+        },
+        "cursor_info": {
+          "description": {
+            "summary": "光标特定信息",
+            "text": "此事件为附加到会话且当前在会话中获得焦点的每个光标缓冲区生成。在 ready 事件之前为每个光标缓冲区生成一次。\n\nsurface 外部的光标不会被捕获，也不会为其生成事件。\n\n如果光标图像已更改，光标缓冲区将被更新，has_damage 参数将设置为 1；否则为 0。\n\n给定位置是光标热点的位置，它相对于主缓冲区的左上角（以变换后的缓冲区像素坐标表示）。\n\n热点坐标相对于光标缓冲区的左上角。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "提交失败",
+            "text": "此事件表示尝试的帧复制失败。\n\n收到此事件后，客户端必须销毁对象。"
+          }
+        },
+        "commit_time": {
+          "description": {
+            "summary": "指示帧的提交时间",
+            "text": "此事件指示帧在系统单调时间中被提交扫描输出的时间。\n\n时间戳表示为 tv_sec_hi、tv_sec_lo、tv_nsec 三元组，每个分量为无符号 32 位值。整秒在 tv_sec 中，它是 tv_sec_hi 和 tv_sec_lo 组合的 64 位值，附加的分数部分在 tv_nsec 中以纳秒为单位。因此，对于有效时间戳，tv_nsec 必须在 [0, 999999999] 范围内。"
+          }
+        },
+        "ready": {
+          "description": {
+            "summary": "指示帧可供读取",
+            "text": "帧复制完成后立即调用，指示帧可供读取。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_cursor_mode": {
+              "summary": "提供的光标模式不受支持"
+            }
+          }
+        }
+      }
+    }
+  }
+}

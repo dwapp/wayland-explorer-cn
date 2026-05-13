@@ -1,0 +1,287 @@
+{
+  "interfaces": {
+    "treeland_dde_shell_manager_v1": {
+      "description": {
+        "summary": "DDE shell 管理器",
+        "text": "此接口允许 DDE 更改某些 treeland 功能。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会添加向后兼容的更改，并相应地提升接口版本。向后不兼容的更改只能通过创建新的主版本扩展来完成。"
+      },
+      "requests": {
+        "get_shell_surface": {
+          "description": {
+            "summary": "从 surface 创建 shell surface",
+            "text": "为现有 wl_surface 创建 shell surface。\n\n只能将一个 shell surface 与给定 surface 关联。\n\n建议与 xdg_surface 一起使用。"
+          }
+        },
+        "get_treeland_dde_active": {
+          "description": {
+            "summary": "创建新的 dde active",
+            "text": "为给定 seat 创建新的 dde active。"
+          }
+        },
+        "get_treeland_multitaskview": {
+          "description": {
+            "summary": "创建新的多任务视图上下文",
+            "text": "创建新的多任务视图上下文用于切换。"
+          }
+        },
+        "get_treeland_window_picker": {
+          "description": {
+            "summary": "创建新的窗口选择器",
+            "text": "创建新的窗口选择器用于选择窗口。"
+          }
+        },
+        "get_treeland_lockscreen": {
+          "description": {
+            "summary": "创建新的锁屏上下文",
+            "text": "创建新的锁屏上下文用于切换。"
+          }
+        },
+        "set_xwindow_position_relative": {
+          "description": {
+            "summary": "将 XWayland surface 移动到相对于 wl_surface 的位置",
+            "text": "将由 Window ID 指定的 XWayland surface 的左上角移动到相对于 wl_surface 左上角具有 (dx, dy) 偏移量的位置。\n\n服务器处理完成后会向回调发送 \"done\"。回调数据 0 表示没有错误，1 表示出现问题且无法完成移动。"
+          }
+        }
+      }
+    },
+    "treeland_window_overlap_checker": {
+      "description": {
+        "summary": "已打开的顶层窗口",
+        "text": "treeland_dde_shell_handle_v1 对象表示一个已打开的顶层窗口。每个应用程序可以有多个已打开的顶层窗口。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会添加向后兼容的更改，并相应地提升接口版本。向后不兼容的更改只能通过创建新的主版本扩展来完成。"
+      },
+      "requests": {
+        "update": {
+          "description": {
+            "summary": "注册检测的 surface",
+            "text": "此接口用于接收检测到的 surface。当工作区中的 xdgshell 窗口与检测窗口重叠时，将发送事件通知客户端进行处理。\n仅在调用此接口时记录窗口位置。如果窗口移动，需要再次调用此接口。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 treeland_window_overlap_checker 对象",
+            "text": "销毁 treeland_window_overlap_checker 对象。\n\n当客户端不再想使用顶层窗口或在 closed 事件之后最终销毁对象时，应调用此请求。"
+          }
+        }
+      },
+      "events": {
+        "enter": {
+          "description": {
+            "summary": "窗口已重叠",
+            "text": "当窗口重叠时发送此事件。此事件仅发送一次。"
+          }
+        },
+        "leave": {
+          "description": {
+            "summary": "窗口未重叠",
+            "text": "当窗口未重叠时发送此事件。此事件仅发送一次。"
+          }
+        }
+      },
+      "enums": {
+        "anchor": {
+          "description": {
+            "summary": "与 layershell 相同",
+            "text": "与 layershell 相同"
+          },
+          "entries": {
+            "top": {
+              "summary": "锚点矩形的上边缘"
+            },
+            "bottom": {
+              "summary": "锚点矩形的下边缘"
+            },
+            "left": {
+              "summary": "锚点矩形的左边缘"
+            },
+            "right": {
+              "summary": "锚点矩形的右边缘"
+            }
+          }
+        }
+      }
+    },
+    "treeland_dde_shell_surface_v1": {
+      "description": {
+        "summary": "元数据接口",
+        "text": "可由 wl_surface 实现的接口，用于提供 shell 用户界面的实现。\n\n它提供设置 surface 角色、设置跳过、设置位置和在输出坐标中设置自动放置的请求。\n\n在服务器端，当相关的 wl_surface 被销毁时，对象会自动销毁。在客户端，必须在销毁 wl_surface 对象之前调用 treeland_dde_shell_surface_v1.destroy()。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 treeland_dde_shell_surface_v1 对象",
+            "text": "从通过 treeland_shell_v1.get_treeland_dde_shell_surface 请求转换为 shell surface 的 wl_surface 对象中移除 treeland_dde_shell_surface_v1 接口。\n\nshell surface 角色丢失，wl_surface 被取消映射。"
+          }
+        },
+        "set_surface_position": {
+          "description": {
+            "summary": "更改 shell surface 位置",
+            "text": "将 surface 移动到新坐标。\n\n坐标是全局的，例如对于 1920,0+1920x1080 输出，50,50 在全局坐标空间中为 1970,50。"
+          }
+        },
+        "set_role": {
+          "description": {
+            "summary": "为此 surface 分配角色",
+            "text": "为 shell surface 分配角色。"
+          }
+        },
+        "set_auto_placement": {
+          "description": {
+            "summary": "将 surface 放置在光标区域底部",
+            "text": "设置 surface 在光标宽度内的垂直对齐方式。\n\n不要与 set_surface_position 一起使用以避免异常。\n\n发出请求后，surface 的位置将由合成器控制，包括防止其显示在输出边缘之外。"
+          }
+        },
+        "set_skip_switcher": {
+          "description": {
+            "summary": "使窗口不出现在切换器中",
+            "text": "设置此位将指示窗口倾向于不列在切换器中。"
+          }
+        },
+        "set_skip_dock_preview": {
+          "description": {
+            "summary": "使窗口不出现在 dock 预览中",
+            "text": "设置此位将指示窗口倾向于不列在 dock 预览中。"
+          }
+        },
+        "set_skip_muti_task_view": {
+          "description": {
+            "summary": "使窗口不出现在多任务视图中",
+            "text": "设置此位将指示窗口倾向于不列在多任务视图中。"
+          }
+        },
+        "set_accept_keyboard_focus": {
+          "description": {
+            "summary": "控制 surface 是否接受键盘焦点",
+            "text": "设置此选项将决定 surface 是否可以接收键盘焦点。\n设置为 0 时，即使被点击或激活，surface 也不会接收键盘焦点。\n设置为 1（默认）时，surface 将正常接收键盘焦点。"
+          }
+        }
+      },
+      "enums": {
+        "role": {
+          "description": {
+            "summary": "surface 可用的角色",
+            "text": "这些值指示 surface 可以以哪些角色渲染，它们按 z 深度排序。\n\n显示在 wlr-layer-shell 之下，位于工作区的 overlay 级别。\n\n多个 surface 可以共享一个角色，单个角色内的顺序未定义。"
+          }
+        }
+      }
+    },
+    "treeland_dde_active_v1": {
+      "description": {
+        "summary": "元数据接口",
+        "text": "用于监视特殊事件的接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 treeland_dde_active_v1 对象"
+          }
+        }
+      },
+      "events": {
+        "active_in": {
+          "description": {
+            "summary": "activeIn 事件"
+          }
+        },
+        "active_out": {
+          "description": {
+            "summary": "activeOut 事件"
+          }
+        },
+        "start_drag": {
+          "description": {
+            "summary": "合成器开始拖动操作时发送"
+          }
+        },
+        "drop": {
+          "description": {
+            "summary": "合成器放置操作时发送"
+          }
+        }
+      },
+      "enums": {
+        "reason": {
+          "description": {
+            "summary": "事件原因"
+          }
+        }
+      }
+    },
+    "treeland_multitaskview_v1": {
+      "description": {
+        "summary": "多任务视图上下文接口",
+        "text": "用于控制多任务视图的接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 treeland_multitaskview_v1 对象"
+          }
+        },
+        "toggle": {
+          "description": {
+            "summary": "切换多任务视图",
+            "text": "显示或隐藏多任务视图。"
+          }
+        }
+      }
+    },
+    "treeland_window_picker_v1": {
+      "description": {
+        "summary": "窗口选择器接口",
+        "text": "用于选择窗口并返回凭据的接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 treeland_window_picker_v1 对象"
+          }
+        },
+        "pick": {
+          "description": {
+            "summary": "选择窗口",
+            "text": "选择一个窗口以获取信息。"
+          }
+        }
+      },
+      "events": {
+        "window": {
+          "description": {
+            "summary": "窗口已选择",
+            "text": "已选择窗口的信息。"
+          }
+        }
+      }
+    },
+    "treeland_lockscreen_v1": {
+      "description": {
+        "summary": "锁屏接口",
+        "text": "用于操作锁屏的接口。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 treeland_lockscreen_v1 对象"
+          }
+        },
+        "lock": {
+          "description": {
+            "summary": "锁定屏幕",
+            "text": "锁定屏幕。"
+          }
+        },
+        "shutdown": {
+          "description": {
+            "summary": "显示关机",
+            "text": "显示关机界面。"
+          }
+        },
+        "switch_user": {
+          "description": {
+            "summary": "切换用户",
+            "text": "切换用户。"
+          }
+        }
+      }
+    }
+  }
+}

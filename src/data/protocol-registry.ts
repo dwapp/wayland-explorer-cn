@@ -417,6 +417,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Experimental,
         protocol: require('./protocols/xx-text-input-v3.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/xx-text-input-v3.json'),
+        },
     },
     {
         id: 'xx-zones-v1',
@@ -454,6 +457,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.WaylandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/input-method-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/input-method-unstable-v1.json'),
+        },
     },
     {
         id: 'input-timestamps-unstable-v1',
@@ -692,6 +698,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/input-method-unstable-v2.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/input-method-unstable-v2.json'),
+        },
         externalUrl:
             'https://gitlab.freedesktop.org/wlroots/wlroots/-/blob/dc3d1530/protocol/input-method-unstable-v2.xml',
     },
@@ -1079,6 +1088,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-screencopy-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-screencopy-unstable-v1.json'),
+        },
     },
     {
         id: 'cosmic-screencopy-unstable-v2',
@@ -1086,6 +1098,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.CosmicProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/cosmic-screencopy-unstable-v2.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/cosmic-screencopy-unstable-v2.json'),
+        },
     },
     {
         id: 'cosmic-toplevel-info-unstable-v1',
@@ -1233,6 +1248,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-capture-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-capture-unstable-v1.json'),
+        },
     },
     {
         id: 'treeland-dde-shell-v1',
@@ -1240,6 +1258,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-dde-shell-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-dde-shell-v1.json'),
+        },
     },
     {
         id: 'treeland-foreign-toplevel-manager-v1',
@@ -1247,6 +1268,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.TreelandProtocols,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/treeland-foreign-toplevel-manager-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/treeland-foreign-toplevel-manager-v1.json'),
+        },
     },
     {
         id: 'treeland-output-manager-v1',
@@ -1418,6 +1442,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/wayland-drm.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/wayland-drm.json'),
+        },
         externalUrl:
             'https://gitlab.freedesktop.org/mesa/mesa/-/blob/main/src/egl/wayland/wayland-drm/wayland-drm.xml',
     },
@@ -1427,6 +1454,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/agl-shell.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/agl-shell.json'),
+        },
         externalUrl:
             'https://gerrit.automotivelinux.org/gerrit/gitweb?p=src/agl-compositor.git;a=blob;f=protocol/agl-shell.xml;h=8057387a3f2bbd08ff76ec81ad492ae0e25d0832;hb=HEAD',
     },
@@ -1502,6 +1532,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/surface-augmenter.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/surface-augmenter.json'),
+        },
         externalUrl:
             'https://source.chromium.org/chromium/chromium/src/+/master:components/exo/wayland/protocol/surface-augmenter.xml',
     },
@@ -1568,6 +1601,9 @@ const protocols: WaylandProtocolRegistryItem[] = [
         source: WaylandProtocolSource.External,
         stability: WaylandProtocolStability.Unstable,
         protocol: require('./protocols/mir-shell-unstable-v1.json'),
+        translations: {
+            'zh-CN': require('./translations/zh-CN/protocols/mir-shell-unstable-v1.json'),
+        },
         externalUrl:
             'https://github.com/canonical/mir/blob/v2.17.0/wayland-protocols/mir-shell-unstable-v1.xml',
     },

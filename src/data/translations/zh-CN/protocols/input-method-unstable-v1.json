@@ -1,0 +1,122 @@
+{
+    "interfaces": {
+        "zwp_input_method_context_v1": {
+            "description": {
+                "summary": "输入法上下文",
+                "text": "对应于输入法端的文本输入。输入法上下文在输入法端的文本输入激活时创建。它允许通过事件接收来自应用程序的有关文本输入的信息。输入法上下文在停用后不保留状态，应在处理停用后销毁。\n\n文本通常为 UTF-8 编码，索引和长度以字节为单位。\n\n序列号用于同步文本输入和输入法之间的状态。新序列号由文本输入在 commit_state 请求中发送，由输入法用于在 preedit_string、commit_string 和 keysym 等事件中指示已知的文本输入状态。然后，文本输入可以忽略来自输入法的基于过时状态的事件（例如重置之后）。\n\n警告！此文件中描述的实验性协议可能会进行不向后兼容的更改。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被宣布为稳定版本，协议和接口名称中的\"z\"前缀和版本号将被移除，接口版本号将被重置。"
+            },
+            "requests": {
+                "commit_string": {
+                    "description": {
+                        "summary": "提交字符串",
+                        "text": "发送提交字符串文本以插入到应用程序中。\n\n要提交的文本可以是按键后的单个字符，也可以是某些组合（预编辑）的结果。当需要移除某些文本（参见 delete_surrounding_text）或需要移动输入光标（参见 cursor_position）时，也可以是空文本。\n\n之前设置的任何组合文本将被移除。"
+                    }
+                },
+                "preedit_string": {
+                    "description": {
+                        "summary": "预编辑字符串",
+                        "text": "向应用程序文本输入发送预编辑字符串文本。\n\n提交文本可用于在重置时（例如取消焦点时）替换预编辑文本。\n\n之前发送的 preedit_style 和 preedit_cursor 请求也会被 text_input 处理。"
+                    }
+                },
+                "preedit_styling": {
+                    "description": {
+                        "summary": "预编辑样式",
+                        "text": "设置组合文本的样式信息。样式从索引开始以字节为单位应用于组合文本（作为字节偏移量）。可以将多种样式应用于组合文本。\n\n此请求应在发送 preedit_string 请求之前发送。"
+                    }
+                },
+                "preedit_cursor": {
+                    "description": {
+                        "summary": "预编辑光标",
+                        "text": "设置组合文本内的光标位置（作为字节偏移量），相对于组合文本的开头。\n\n当索引为负数时不应显示光标。\n\n此请求应在发送 preedit_string 请求之前发送。"
+                    }
+                },
+                "delete_surrounding_text": {
+                    "description": {
+                        "summary": "删除文本",
+                        "text": "移除周围文本。\n\n此请求将在 text_input 端直接在 commit_string 请求之后处理。"
+                    }
+                },
+                "cursor_position": {
+                    "description": {
+                        "summary": "设置光标到新位置",
+                        "text": "将光标和锚点设置到新位置。索引是新的光标位置（以字节为单位），当 >= 0 时相对于插入文本的末尾，否则相对于插入文本的开头）。锚点是新的锚点位置（以字节为单位），当 >= 0 时相对于插入文本的末尾，否则相对于插入文本的开头）。当不应有选定文本时，锚点应与索引相同。\n\n此请求将在 text_input 端直接在 commit_string 请求之后处理。"
+                    }
+                },
+                "keysym": {
+                    "description": {
+                        "summary": "keysym",
+                        "text": "通知按键事件已发送。按键事件不应用于正常的文本输入操作，这些操作应通过 commit_string、delete_surrounding_text 等完成。按键事件遵循 wl_keyboard 按键事件约定。Sym 是 XKB keysym，state 是 wl_keyboard key_state。"
+                    }
+                },
+                "grab_keyboard": {
+                    "description": {
+                        "summary": "获取硬件键盘",
+                        "text": "允许输入法接收硬件键盘输入并处理按键事件以在线生成文本事件（带预编辑）。这允许多个按键事件组合输入文本的输入法，如 CJK 语言所做的那样。"
+                    }
+                },
+                "key": {
+                    "description": {
+                        "summary": "转发按键事件",
+                        "text": "将输入法本身未处理的 wl_keyboard::key 事件转发给客户端。在使用 grab_keyboard 过滤按键事件时使用。参数应来自 wl_keyboard::key 事件。\n\n要生成自定义按键事件，请改用 keysym 请求。"
+                    }
+                },
+                "modifiers": {
+                    "description": {
+                        "summary": "转发修饰键事件",
+                        "text": "将输入法本身未处理的 wl_keyboard::modifiers 事件转发给客户端。在使用 grab_keyboard 过滤按键事件时使用。参数应来自 wl_keyboard::modifiers 事件。"
+                    }
+                }
+            },
+            "events": {
+                "surrounding_text": {
+                    "description": {
+                        "summary": "周围文本事件",
+                        "text": "输入位置周围的纯文本周围文本。光标是周围文本中相对于文本开头的字节位置。锚点是周围文本中选择锚点相对于文本开头的字节位置。如果没有选定文本，则锚点与光标相同。"
+                    }
+                }
+            }
+        },
+        "zwp_input_method_v1": {
+            "description": {
+                "summary": "输入法",
+                "text": "输入法对象负责响应来自硬件或虚拟键盘的输入来组合文本。每个 seat 有一个输入法对象。激活时会创建一个新的输入法上下文对象，允许输入法与文本输入通信。"
+            },
+            "events": {
+                "activate": {
+                    "description": {
+                        "summary": "激活事件",
+                        "text": "文本输入已激活。创建一个输入法上下文对象，允许与文本输入通信。"
+                    }
+                },
+                "deactivate": {
+                    "description": {
+                        "summary": "停用事件",
+                        "text": "与上下文参数对应的文本输入已停用。输入法上下文应在处理停用后销毁。"
+                    }
+                }
+            }
+        },
+        "zwp_input_panel_v1": {
+            "description": {
+                "summary": "实现键盘的接口",
+                "text": "一次只能有一个客户端绑定此接口。"
+            }
+        },
+        "zwp_input_panel_surface_v1": {
+            "requests": {
+                "set_toplevel": {
+                    "description": {
+                        "summary": "将表面类型设置为键盘",
+                        "text": "将 input_panel_surface 类型设置为键盘。\n\n键盘表面仅在文本输入活动时显示。"
+                    }
+                },
+                "set_overlay_panel": {
+                    "description": {
+                        "summary": "将表面类型设置为覆盖面板",
+                        "text": "将 input_panel_surface 设置为覆盖面板。\n\n当文本输入活动时，此面板显示在应用程序窗口上方的输入光标附近。"
+                    }
+                }
+            }
+        }
+    }
+}

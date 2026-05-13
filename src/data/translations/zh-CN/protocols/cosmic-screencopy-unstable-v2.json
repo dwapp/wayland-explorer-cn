@@ -1,0 +1,264 @@
+{
+  "description": {
+    "summary": "在客户端缓冲区上捕获屏幕内容",
+    "text": "此协议允许客户端请求合成器将屏幕内容捕获到用户提交的缓冲区中。\n\n警告！此文件中描述的协议目前处于测试阶段。可能会添加向后兼容的更改，并相应地提升接口版本。向后不兼容的更改只能通过创建新的主版本扩展来完成。"
+  },
+  "interfaces": {
+    "zcosmic_screencopy_manager_v2": {
+      "description": {
+        "summary": "通知客户端并开始捕获的管理器",
+        "text": "此对象是一个管理器，提供从源开始捕获的请求。"
+      },
+      "requests": {
+        "create_session": {
+          "description": {
+            "summary": "捕获图像源",
+            "text": "为图像源创建捕获会话。\n\n如果设置了 paint_cursors 选项，光标将被合成到捕获的帧上。如果未设置此标志，光标将不会被合成到帧上。"
+          }
+        },
+        "create_pointer_cursor_session": {
+          "description": {
+            "summary": "捕获图像源的指针光标",
+            "text": "为图像源的指针创建光标捕获会话。\n\noptions 参数无效，必须设置为 0。这是为将来可能添加的标志预留的。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁管理器",
+            "text": "销毁管理器对象。\n\n通过此接口创建的其他对象不受影响。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_option": {
+              "summary": "无效的选项标志"
+            }
+          }
+        },
+        "options": {
+          "entries": {
+            "paint_cursors": {
+              "summary": "将光标绘制到捕获的帧上"
+            }
+          }
+        }
+      }
+    },
+    "zcosmic_screencopy_session_v2": {
+      "description": {
+        "summary": "屏幕捕获会话",
+        "text": "此对象表示一个活跃的屏幕捕获会话。\n\n创建屏幕捕获会话后，合成器将发出缓冲区约束事件，告知客户端会话支持哪些缓冲区类型和格式进行读取。合成器可以在约束发生变化时重新发送缓冲区约束事件。\n\n为了公布缓冲区约束，合成器必须以任意顺序发送：零个或多个 shm_format 和 dmabuf_format 事件、零个或一个 dmabuf_device 事件，以及恰好一个 buffer_size 事件。然后合成器必须发送一个 done 事件。\n\n当客户端收到所有缓冲区约束后，可以相应地创建缓冲区，使用 attach_buffer 请求将其附加到屏幕捕获会话，使用 damage_buffer 请求设置缓冲区损坏，然后发送 capture 请求。"
+      },
+      "requests": {
+        "create_frame": {
+          "description": {
+            "summary": "创建帧",
+            "text": "为此会话创建一个捕获帧。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "删除此对象",
+            "text": "销毁会话。客户端可随时发送此请求。\n\n此请求不影响由此对象创建的 zcosmic_screencopy_frame_v2 对象。"
+          }
+        }
+      },
+      "events": {
+        "buffer_size": {
+          "description": {
+            "summary": "图像源尺寸",
+            "text": "提供源图像在缓冲区像素坐标中的尺寸。\n\n客户端必须附加与此尺寸匹配的缓冲区。"
+          }
+        },
+        "shm_format": {
+          "description": {
+            "summary": "shm 缓冲区格式",
+            "text": "提供共享内存缓冲区必须使用的格式。\n\n此事件可能会发出多次，在这种情况下客户端可以选择任何给定的格式。"
+          }
+        },
+        "dmabuf_device": {
+          "description": {
+            "summary": "dma-buf 设备",
+            "text": "此事件公布 dma-buf 缓冲区必须分配在哪个设备上。\n\n通常该设备是 DRM 节点。DRM 节点类型（主节点 vs 渲染节点）未指定。客户端不得依赖合成器发送特定的节点类型。客户端无法通过比较 dev_t 值来检查两个设备是否相等。"
+          }
+        },
+        "dmabuf_format": {
+          "description": {
+            "summary": "dma-buf 格式",
+            "text": "提供 dma-buf 缓冲区必须使用的格式。\n\n客户端可以选择 64 位无符号整数数组中公布的任何修饰符。\n\n此事件可能会发出多次，在这种情况下客户端可以选择任何给定的格式。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "所有约束已发送",
+            "text": "当所有缓冲区约束事件发送完毕后发送此事件。\n\n无论发送的是初始约束还是更新，合成器必须始终以此事件结束一批缓冲区约束事件。"
+          }
+        },
+        "stopped": {
+          "description": {
+            "summary": "会话不再可用",
+            "text": "此事件表示捕获会话已停止且不再可用。这可能发生在多种情况下，例如底层源被销毁、用户决定结束屏幕捕获，或发生了不可恢复的运行时错误。\n\n客户端在收到此事件后应销毁会话。"
+          }
+        }
+      }
+    },
+    "zcosmic_screencopy_frame_v2": {
+      "description": {
+        "summary": "屏幕捕获帧",
+        "text": "此对象表示一个屏幕捕获帧。\n\n客户端应附加缓冲区、损坏缓冲区，然后发送捕获请求。\n\n如果屏幕捕获成功，合成器将发送帧元数据（transform、damage、presentation_time，顺序任意），然后发送 ready 事件。\n\n如果屏幕捕获失败，合成器将发送 failed 事件。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁此对象",
+            "text": "销毁会话。客户端可随时发送此请求。"
+          }
+        },
+        "attach_buffer": {
+          "description": {
+            "summary": "将缓冲区附加到会话",
+            "text": "将缓冲区附加到会话。\n\nwl_buffer.release 请求未使用。\n\n此请求不得在捕获后发送，否则将引发 already_captured 协议错误。"
+          }
+        },
+        "damage_buffer": {
+          "description": {
+            "summary": "损坏缓冲区",
+            "text": "将损坏应用到下一个要捕获的缓冲区。此请求可以多次发送以描述一个区域。\n\n客户端指示自上次捕获此 wl_buffer 以来的累积损坏。在捕获期间，合成器将更新缓冲区，至少更新客户端传递的区域和 zcosmic_screencopy_frame_v2.damage 公布的区域的并集。\n\n当 wl_buffer 首次被捕获时，或客户端不跟踪损坏时，客户端必须损坏整个缓冲区。\n\n这是为了优化目的。合成器可以使用此信息来减少复制。\n\n这些坐标源自缓冲区的左上角。\n\n如果 x 或 y 严格为负，或者 width 或 height 为负或零，将引发 invalid_buffer_damage 协议错误。\n\n此请求不得在捕获后发送，否则将引发 already_captured 协议错误。"
+          }
+        },
+        "capture": {
+          "description": {
+            "summary": "捕获一帧",
+            "text": "捕获一帧。\n\n除非这是此会话中首次成功捕获的帧，否则合成器可能会在执行复制之前等待源内容变化不确定的时间。\n\n此请求只能发送一次，否则将引发 already_captured 协议错误。在此请求发送之前必须附加缓冲区，否则将引发 no_buffer 协议错误。"
+          }
+        }
+      },
+      "events": {
+        "transform": {
+          "description": {
+            "summary": "缓冲区变换",
+            "text": "此事件在 ready 事件之前发送，包含源缓冲区的变换。"
+          }
+        },
+        "damage": {
+          "description": {
+            "summary": "缓冲区损坏区域",
+            "text": "此事件在 ready 事件之前发送。可以多次生成以描述一个区域。\n\n会话中首次捕获的帧将始终携带完整损坏。后续帧的损坏区域描述了自上次 ready 事件以来缓冲区的哪些部分发生了变化。\n\n这些坐标源自缓冲区的左上角。"
+          }
+        },
+        "presentation_time": {
+          "description": {
+            "summary": "帧的呈现时间",
+            "text": "此事件指示帧在系统单调时间中呈现到输出的时间。此事件在 ready 事件之前发送。\n\n时间戳表示为 tv_sec_hi、tv_sec_lo、tv_nsec 三元组，每个分量为无符号 32 位值。整秒在 tv_sec 中，它是 tv_sec_hi 和 tv_sec_lo 组合的 64 位值，附加的分数部分在 tv_nsec 中以纳秒为单位。因此，对于有效时间戳，tv_nsec 必须在 [0, 999999999] 范围内。"
+          }
+        },
+        "ready": {
+          "description": {
+            "summary": "帧可供读取",
+            "text": "帧复制完成后立即调用，指示帧可供读取。\n\n此事件后客户端可以重新使用缓冲区。\n\n收到此事件后，客户端必须销毁对象。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "捕获失败",
+            "text": "此事件表示尝试的帧复制失败。\n\n收到此事件后，客户端必须销毁对象。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "no_buffer": {
+              "summary": "未附加缓冲区就发送了捕获请求"
+            },
+            "invalid_buffer_damage": {
+              "summary": "无效的缓冲区损坏"
+            },
+            "already_captured": {
+              "summary": "捕获请求已发送"
+            }
+          }
+        },
+        "failure_reason": {
+          "entries": {
+            "unknown": {
+              "description": {
+                "summary": "发生未指定的运行时错误",
+                "text": "发生未指定的运行时错误。客户端可以重试。"
+              }
+            },
+            "buffer_constraints": {
+              "description": {
+                "summary": "缓冲区约束不匹配",
+                "text": "客户端提交的缓冲区与最新的会话约束不匹配。客户端应重新分配其缓冲区并重试。"
+              }
+            },
+            "stopped": {
+              "description": {
+                "summary": "会话不再可用",
+                "text": "会话已停止。请参阅 zcosmic_screencopy_session_v2.stopped。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "zcosmic_screencopy_cursor_session_v2": {
+      "description": {
+        "summary": "光标捕获会话",
+        "text": "此对象表示光标捕获会话。它扩展了基础捕获会话，添加了光标特定的元数据。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "删除此对象",
+            "text": "销毁会话。客户端可随时发送此请求。\n\n此请求不影响由此对象创建的 zcosmic_screencopy_frame_v2 对象。"
+          }
+        },
+        "get_screencopy_session": {
+          "description": {
+            "summary": "获取屏幕捕获会话",
+            "text": "获取此光标会话的屏幕捕获会话。\n\n该会话将生成光标图像的帧。当光标离开捕获区域时，合成器可以暂停会话。\n\n此请求不得发送超过一次，否则将引发 duplicate_session 协议错误。"
+          }
+        }
+      },
+      "events": {
+        "enter": {
+          "description": {
+            "summary": "光标进入捕获区域",
+            "text": "当光标进入捕获区域时发送。当且仅当光标进入区域时，应在 \"position\" 和 \"hotspot\" 事件之前生成。\n\n当光标图像与捕获区域相交时，光标进入捕获区域。请注意，这与 wl_pointer.enter 不同。"
+          }
+        },
+        "leave": {
+          "description": {
+            "summary": "光标离开捕获区域",
+            "text": "当光标离开捕获区域时发送。在光标再次进入捕获区域之前，不会为该光标生成 \"position\" 或 \"hotspot\" 事件。"
+          }
+        },
+        "position": {
+          "description": {
+            "summary": "位置已更改",
+            "text": "图像源外部的光标不会被捕获，也不会为其生成事件。\n\n给定位置是光标热点的位置，它相对于主缓冲区的左上角（以变换后的缓冲区像素坐标表示）。\n\n位置坐标相对于主缓冲区的左上角。坐标可能为负或大于主缓冲区大小。"
+          }
+        },
+        "hotspot": {
+          "description": {
+            "summary": "热点已更改",
+            "text": "热点描述了光标图像与输入设备位置之间的偏移量。\n\n给定坐标是热点相对于原点的偏移量（以缓冲区坐标表示）。\n\n客户端不应立即应用热点：热点在收到下一个 zcosmic_screencopy_frame_v2.ready 事件时生效。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "duplicate_session": {
+              "summary": "get_screencopy_session 发送了两次"
+            }
+          }
+        }
+      }
+    }
+  }
+}

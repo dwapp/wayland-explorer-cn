@@ -1,0 +1,236 @@
+{
+  "interfaces": {
+    "mir_shell_v1": {
+      "description": {
+        "summary": "创建桌面可识别的 surface 原型",
+        "text": "客户端可以使用此接口为 wl_surface 分配原型。\n\n原型类似于 wl_surface 角色：一个 surface 最多可以有一个原型，但与 wl_surface 角色不同的是，客户端可以为已经有原型的 surface 分配新的原型。这将原子性地移除旧原型并应用新原型。\n\nwl_surface 的原型会影响应用于它的窗口管理策略。\n\n所有原型状态都是双缓冲的；更改 surface 原型或更新任何原型状态不会立即应用，直到 wl_surface 被 commit。\n\n通常，原型状态用于补充 xdg_toplevel 状态。如果客户端打算使用原型，应在没有附加缓冲区的初始 commit 期间分配初始原型（请参阅 xdg_surface）。\n\n发送到原型对象的任何事件都会锁存并扩展 xdg_surface.configure 事件。任何此类事件都应视为原子配置更改集的一部分（包括任何 xdg_toplevel 事件），xdg_surface.configure 事件提交累积的状态并需要 xdg_surface.ack_configure 调用。\n\n更改原型遵循与初始 xdg_surface commit 类似的序列。首先，必须提交新原型。这必须是 wl_surface.commit 请求中唯一提交的状态。合成器将响应由原型更改引起的任何 surface 状态更改，然后是 xdg_surface.configure 事件。客户端必须确认 configure 事件（正常），随后的 wl_surface.commit 将使新原型完全应用。\n\n某些 wl_surface 角色与此处描述的原型冲突。尝试在 surface 上同时设置原型和此类角色是协议错误。特别是，wl_subsurface、wl_cursor 或 xdg_popup 不能与原型组合使用。"
+      },
+      "requests": {
+        "get_regular_surface": {
+          "description": {
+            "summary": "分配 mir_regular_surface_v1 原型",
+            "text": "为给定 surface 创建 mir_regular_surface_v1 原型。这将 regular_surface 原型分配给 wl_surface，如果已分配另一个原型且不允许转换，则引发协议错误。\n\n先前原型的角色对象变为惰性；客户端应销毁先前的角色对象。对先前原型角色对象的任何进一步调用都是协议错误。"
+          }
+        },
+        "get_floating_regular_surface": {
+          "description": {
+            "summary": "分配 mir_floating_regular_surface_v1 原型",
+            "text": "为给定 surface 创建 mir_floating_regular_surface_v1 原型。这将 floating_regular 原型分配给 wl_surface，如果已分配另一个原型且不允许转换，则引发协议错误。\n\n先前原型的角色对象变为惰性；客户端应销毁先前的角色对象。对先前原型角色对象的任何进一步调用都是协议错误。\n\n浮动常规 surface 始终位于其他应用程序窗口之上，不会被停靠。"
+          }
+        },
+        "get_dialog_surface": {
+          "description": {
+            "summary": "分配 mir_dialog_surface_v1 原型",
+            "text": "为给定 surface 创建 mir_dialog_surface_v1 原型。这将 dialog_surface 原型分配给 wl_surface，如果已分配另一个原型且不允许转换，则引发协议错误。\n\n先前原型的角色对象变为惰性；客户端应销毁先前的角色对象。对先前原型角色对象的任何进一步调用都是协议错误。\n\n对话框通常用于传达必须明确确认或响应的信息（例如报告错误），或获取父窗口中请求的特定信息（例如打印对话框）或来自 shell 功能的信息（例如确认关机）。\n\n对话框在相关时应有父级。但是，它可以没有父级。\n\n如果对话框有父级，则它对父级及其所有卫星窗口是模态的。这意味着：\n(1) 用户应能移动、调整大小或隐藏打开的对话框的父级，但不能关闭或与其内容交互；可以移动、调整大小或关闭父级的卫星窗口，但不能与其内容交互。\n(2) 当父级最小化或以其他方式隐藏时，对话框也应最小化或隐藏。\n(3) 任何将输入焦点给予父级的尝试都应聚焦对话框。因此，对话框及其所有祖先在任何窗口切换器中应呈现为单个实体。\n\n部分由于最后一种行为，一个窗口一次只应有一个对话框子级。如果应用程序尝试打开第二个对话框子级，合成器应先关闭前一个。"
+          }
+        },
+        "get_satellite_surface": {
+          "description": {
+            "summary": "分配 mir_satellite_surface_v1 原型",
+            "text": "为给定 surface 创建 mir_satellite_surface_v1 原型。这将 satellite_surface 原型分配给 wl_surface，如果已分配另一个原型且不允许转换，则引发协议错误。\n\n先前原型的角色对象变为惰性；客户端应销毁先前的角色对象。对先前原型角色对象的任何进一步调用都是协议错误。\n\n卫星窗口是常规、浮动常规或对话框窗口的附属物。它始终有一个父窗口，通常提供对其父级功能的便捷访问：例如工具箱、格式面板或查找/替换窗口。\n\n为了减少父级未使用时的杂乱，卫星窗口应仅在其任何父级处于活动状态时（例如当对话框或其父级的另一个卫星窗口具有输入焦点时）出现在屏幕上。否则，在允许重新设置父级的延迟后，它不应存在——不仅仅是不可见或最小化，也不是关闭，而是在其父级再次变为活动状态（或活动窗口成为其父级）之前不存在。\n\n为了避免短暂出现的对话框造成的闪烁，每当卫星窗口的父级有子对话框时，卫星窗口应保持存在。但与父窗口本身一样，只要对话框打开，它就不应接收输入。"
+          }
+        },
+        "create_positioner": {
+          "description": {
+            "summary": "创建定位器对象",
+            "text": "创建定位器对象。定位器对象用于将 surface 定位在某个父 surface 附近。有关详细信息，请参阅接口描述和 xdg_surface.get_popup。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁 mir_shell 对象",
+            "text": "此请求表示客户端将不再使用 mir_shell 对象。通过此实例创建的对象不受影响。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "archetype": {
+              "summary": "wl_surface 有另一个阻止此分配的原型"
+            }
+          }
+        }
+      }
+    },
+    "mir_regular_surface_v1": {
+      "description": {
+        "summary": "Mir 元数据接口",
+        "text": "可由 wl_surface 实现的接口，用于设计在类桌面环境中渲染的 surface。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁常规 surface 原型",
+            "text": "此请求销毁 mir surface 原型并将其与 surface 取消关联。"
+          }
+        }
+      }
+    },
+    "mir_floating_regular_surface_v1": {
+      "description": {
+        "summary": "Mir 元数据接口",
+        "text": "可由 wl_surface 实现的接口，用于设计在类桌面环境中渲染的 surface。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁浮动常规 surface 原型",
+            "text": "此请求销毁 mir surface 原型并将其与 surface 取消关联。"
+          }
+        }
+      }
+    },
+    "mir_dialog_surface_v1": {
+      "description": {
+        "summary": "Mir 元数据接口",
+        "text": "可由 wl_surface 实现的接口，用于设计在类桌面环境中渲染的 surface。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁对话框 surface 原型",
+            "text": "此请求销毁 mir surface 原型并将其与 surface 取消关联。"
+          }
+        }
+      }
+    },
+    "mir_satellite_surface_v1": {
+      "description": {
+        "summary": "Mir 元数据接口",
+        "text": "可由 wl_surface 实现的接口，用于设计在类桌面环境中渲染的 surface。"
+      },
+      "requests": {
+        "reposition": {
+          "description": {
+            "summary": "重新计算卫星窗口的位置",
+            "text": "重新定位已映射的卫星窗口。卫星窗口将根据传入的 mir_positioner 对象中的详细信息放置，并将发出 mir_satellite_surface_v1.repositioned 和 wl_surface.configure 作为响应。先前定位器设置的任何参数都将被丢弃。\n\n传入的 token 将在相应的 xdg_satellite.repositioned 事件中发送。新的卫星窗口位置在客户端确认相应的 configure 事件之前不会生效。有关详细信息，请参阅 xdg_satellite.repositioned。token 本身是不透明的，没有其他特殊含义。\n\n如果发送多个 reposition 请求，合成器可能会跳过除最后一个之外的所有请求。\n\n如果卫星窗口是响应其父级的 configure 事件而重新定位的，客户端应发送 mir_positioner.set_parent_configure 以及可能的 mir_positioner.set_parent_size 请求，以允许合成器正确约束卫星窗口。\n\n如果卫星窗口与正在调整大小的父级一起重新定位，但不是响应 configure 事件，客户端应发送 mir_positioner.set_parent_size 请求。"
+          }
+        },
+        "destroy": {
+          "description": {
+            "summary": "销毁卫星 surface 原型",
+            "text": "此请求销毁 mir surface 原型并将其与 surface 取消关联。"
+          }
+        }
+      },
+      "events": {
+        "repositioned": {
+          "description": {
+            "summary": "通知重新定位请求完成",
+            "text": "repositioned 事件作为卫星窗口配置序列的一部分发送，与 mir_satellite_surface_v1.configure 和最后的 wl_surface.configure 一起通知重新定位请求的完成。\n\nrepositioned 事件用于通知 mir_satellite_surface_v1.reposition 请求的完成。token 参数是 xdg_satellite.reposition 请求中传入的 token。\n\n在此事件发出后，将立即发送带有更新大小和位置以及新 configure 序列号的 mir_satellite_surface_v1.configure 和 wl_surface.configure。\n\n客户端可以选择更新卫星窗口的内容，但必须确认新的卫星窗口配置才能使新位置生效。有关详细信息，请参阅 mir_satellite_surface_v1.ack_configure。"
+          }
+        }
+      }
+    },
+    "mir_positioner_v1": {
+      "description": {
+        "summary": "子 surface 定位器",
+        "text": "mir_positioner 提供了一组规则，用于将子 surface 相对于父 surface 进行定位。可以定义规则以确保子 surface 保持在可见区域边界内，并指定子 surface 如何更改其位置，例如沿轴滑动或围绕矩形翻转。这些由定位器创建的规则受到子 surface 必须与其父 surface 相交或至少部分相邻的要求的约束。\n\n有关可能规则的详细信息，请参阅各种请求。\n\n在请求时，合成器会复制 mir_positioner 指定的规则。因此，请求完成后，mir_positioner 对象可以被销毁或重用；对对象的进一步更改不会影响先前的用法。\n\n要使 mir_positioner 对象被视为完整，它必须具有通过 set_size 设置的非零大小，以及通过 set_anchor_rect 设置的非零锚点矩形。在定位 surface 时传递不完整的 mir_positioner 对象将引发 invalid_positioner 错误。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 mir_positioner 对象",
+            "text": "通知合成器 mir_positioner 将不再使用。"
+          }
+        },
+        "set_size": {
+          "description": {
+            "summary": "设置待定位矩形的大小",
+            "text": "设置要用定位器对象定位的 surface 的大小。大小以 surface 局部坐标表示，对应于窗口几何形状。请参阅 xdg_surface.set_window_geometry。\n\n如果设置零或负大小，将引发 invalid_input 错误。"
+          }
+        },
+        "set_anchor_rect": {
+          "description": {
+            "summary": "设置父 surface 内的锚点矩形",
+            "text": "指定子 surface 将相对于其定位的父 surface 内的锚点矩形。矩形相对于父 surface 的 xdg_surface.set_window_geometry 定义的窗口几何形状。\n\n当 mir_positioner 对象用于定位子 surface 时，锚点矩形不能延伸到被定位子级的父 surface 的窗口几何形状之外。\n\n如果设置负大小，将引发 invalid_input 错误。"
+          }
+        },
+        "set_anchor": {
+          "description": {
+            "summary": "设置锚点矩形的锚点",
+            "text": "定义锚点矩形的锚点。指定的锚点用于派生子 surface 将相对于其定位的锚点。如果设置了角锚点（例如 'top_left' 或 'bottom_right'），锚点将在指定的角上；否则，派生的锚点将位于指定边缘的中心，或如果未指定边缘则位于锚点矩形的中心。"
+          }
+        },
+        "set_gravity": {
+          "description": {
+            "summary": "设置子 surface 的重力方向",
+            "text": "定义 surface 应相对于父 surface 的锚点在哪个方向上定位。如果指定了角重力（例如 'bottom_right' 或 'top_left'），则子 surface 将放置在指定重力的方向上；否则，子 surface 将在未指定重力的任何轴上居中于锚点。如果重力不在 'gravity' 枚举中，将引发 invalid_input 错误。"
+          }
+        },
+        "set_constraint_adjustment": {
+          "description": {
+            "summary": "设置受约束时要进行的调整",
+            "text": "指定如果原始预期位置导致 surface 受到约束（即至少部分在合成器设置的定位边界之外），应如何定位窗口。调整通过构建位掩码来设置，描述在该轴上受约束时要进行的调整。\n\n如果未为某个轴设置任何位，合成器将假设子 surface 在受约束时不应更改其在该轴上的位置。\n\n如果为某个轴设置了多个位，调整的应用顺序在相应的调整描述中指定。\n\n默认调整为无。"
+          }
+        },
+        "set_offset": {
+          "description": {
+            "summary": "设置 surface 位置偏移量",
+            "text": "指定相对于锚点矩形上锚点和 surface 上锚点位置的 surface 位置偏移量。例如，如果锚点矩形的锚点在 (x, y)，surface 的重力为 bottom_right，偏移量为 (ox, oy)，则计算的 surface 位置将为 (x + ox, y + oy)。surface 的偏移位置是用于约束测试的位置。请参阅 set_constraint_adjustment。"
+          }
+        }
+      },
+      "enums": {
+        "error": {
+          "entries": {
+            "invalid_input": {
+              "summary": "提供了无效的输入"
+            }
+          }
+        },
+        "constraint_adjustment": {
+          "description": {
+            "summary": "约束调整",
+            "text": "约束调整值定义了当未调整的位置会导致 surface 部分受到约束时，合成器调整 surface 位置的方式。\n\n是否将 surface 视为 '受约束的' 由合成器确定。例如，surface 可能部分在合成器定义的 '工作区' 之外，因此需要调整子 surface 的位置直到其完全在工作区内。\n\n可以根据定义的优先级组合调整：1) 翻转，2) 滑动，3) 调整大小。"
+          },
+          "entries": {
+            "none": {
+              "description": {
+                "summary": "受约束时不移动子 surface",
+                "text": "即使在某些轴上受到约束（例如部分在输出边缘之外），也不要更改 surface 位置。"
+              }
+            },
+            "slide_x": {
+              "description": {
+                "summary": "沿 x 轴移动直到不受约束",
+                "text": "沿 x 轴滑动 surface 直到不再受约束。\n\n首先尝试沿重力方向在 x 轴上滑动，直到重力相反方向的边缘不受约束或重力方向的边缘受到约束。\n\n然后尝试沿重力相反方向在 x 轴上滑动，直到重力方向的边缘不受约束或重力相反方向的边缘受到约束。"
+              }
+            },
+            "slide_y": {
+              "description": {
+                "summary": "沿 y 轴移动直到不受约束",
+                "text": "沿 y 轴滑动 surface 直到不再受约束。\n\n首先尝试沿重力方向在 y 轴上滑动，直到重力相反方向的边缘不受约束或重力方向的边缘受到约束。\n\n然后尝试沿重力相反方向在 y 轴上滑动，直到重力方向的边缘不受约束或重力相反方向的边缘受到约束。"
+              }
+            },
+            "flip_x": {
+              "description": {
+                "summary": "在 x 轴上反转锚点和重力",
+                "text": "如果 surface 在 x 轴上受到约束，则在 x 轴上反转锚点和重力。例如，如果 surface 的左边缘受到约束，重力为 'left'，锚点为 'left'，则将重力更改为 'right'，锚点更改为 'right'。\n\n调整后的位置根据原始锚点矩形和偏移量计算，但使用新的翻转后的锚点和重力值。\n\n如果调整后的位置也受到约束，则 flip_x 调整的结果位置将是调整前的位置。"
+              }
+            },
+            "flip_y": {
+              "description": {
+                "summary": "在 y 轴上反转锚点和重力",
+                "text": "如果 surface 在 y 轴上受到约束，则在 y 轴上反转锚点和重力。例如，如果 surface 的底边缘受到约束，重力为 'bottom'，锚点为 'bottom'，则将重力更改为 'top'，锚点更改为 'top'。\n\n调整后的位置根据原始锚点矩形和偏移量计算，但使用新的翻转后的锚点和重力值。\n\n如果调整后的位置也受到约束，则 flip_y 调整的结果位置将是调整前的位置。"
+              }
+            },
+            "resize_x": {
+              "description": {
+                "summary": "水平调整 surface 大小",
+                "text": "水平调整 surface 大小，使其完全不受约束。"
+              }
+            },
+            "resize_y": {
+              "description": {
+                "summary": "垂直调整 surface 大小",
+                "text": "垂直调整 surface 大小，使其完全不受约束。"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

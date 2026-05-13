@@ -1,0 +1,19 @@
+{
+    "interfaces": {
+        "wl_drm": {
+            "enums": {
+                "capability": {
+                    "description": {
+                        "summary": "wl_drm 能力位掩码",
+                        "text": "能力位掩码。"
+                    },
+                    "entries": {
+                        "prime": {
+                            "summary": "wl_drm prime 可用"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,177 @@
+{
+    "description": {
+        "summary": "创建输入法的协议",
+        "text": "此协议允许应用程序作为合成器的输入法。\n\n输入法上下文用于管理输入法的状态。\n\n文本字符串为 UTF-8 编码，其索引和长度以字节为单位。\n\n本文档在使用\"必须\"、\"应当\"、\"可以\"等词语时遵循 RFC 2119 规范。\n\n警告！此文件中描述的实验性协议可能会进行不向后兼容的更改。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被宣布为稳定版本，协议和接口名称中的\"z\"前缀和版本号将被移除，接口版本号将被重置。"
+    },
+    "interfaces": {
+        "zwp_input_method_v2": {
+            "description": {
+                "summary": "输入法",
+                "text": "输入法对象允许客户端组合文本。\n\n此对象将客户端连接到应用程序中的文本输入，并允许客户端作为 seat 的输入法。\n\nzwp_input_method_v2 对象可以处于两种不同的状态：活动和非活动。在活动状态下，该对象关联并与文本输入通信。在非活动状态下，没有关联的文本输入，唯一的通信是与合成器进行的。最初，输入法处于非活动状态。\n\n在非活动状态下发出的请求必须被合成器接受。由于序列机制以及激活事件时的状态重置，它们不会对下一个文本输入的状态产生任何影响。\n\n每个 seat 的输入法对象不得超过一个。"
+            },
+            "requests": {
+                "commit_string": {
+                    "description": {
+                        "summary": "提交字符串",
+                        "text": "发送提交字符串文本以插入到应用程序中。\n\n在当前光标位置插入字符串（参见提交事件序列）。要提交的字符串可以是按键后的单个字符，也可以是某些组合的结果。\n\n参数 text 是包含要插入字符串的缓冲区。wayland 消息有最大长度限制，因此 text 不能超过 4000 字节。\n\n通过此事件设置的值是双缓冲的。它们必须在下一次 zwp_text_input_v3.commit 请求时应用并重置为初始值。\n\ntext 的初始值为空字符串。"
+                    }
+                },
+                "set_preedit_string": {
+                    "description": {
+                        "summary": "预编辑字符串",
+                        "text": "向应用程序文本输入发送预编辑字符串文本。\n\n在当前光标位置放置新的组合文本（预编辑）。必须移除之前设置的任何组合文本。必须移除之前存在的任何选定文本。光标移动到预编辑字符串中的新位置。\n\n参数 text 是包含预编辑字符串的缓冲区。wayland 消息有最大长度限制，因此 text 不能超过 4000 字节。\n\n参数 cursor_begin 和 cursor_end 以字节为单位相对于提交字符串缓冲区的开头计算。当两者都等于 -1 时，文本输入应隐藏光标。\n\ncursor_begin 表示光标的开始位置。cursor_end 表示光标的结束位置。它可以等于或不同于 cursor_begin。\n\n通过此事件设置的值是双缓冲的。它们必须在下一次 zwp_input_method_v2.commit 事件时应用。\n\ntext 的初始值为空字符串。cursor_begin 和 cursor_end 的初始值均为 0。"
+                    }
+                },
+                "delete_surrounding_text": {
+                    "description": {
+                        "summary": "删除文本",
+                        "text": "移除周围文本。\n\nbefore_length 和 after_length 是当前光标索引之前和之后要删除的字节数（不包括预编辑文本）。\n\n如果存在预编辑文本，则为此事件的目的将其替换为光标。实际上，before_length 从预编辑文本的开头计算，after_length 从其结尾计算（参见提交事件序列）。\n\n通过此事件设置的值是双缓冲的。它们必须在下一次 zwp_input_method_v2.commit 请求时应用并重置为初始值。\n\nbefore_length 和 after_length 的初始值均为 0。"
+                    }
+                },
+                "commit": {
+                    "description": {
+                        "summary": "应用状态",
+                        "text": "应用来自 commit_string、set_preedit_string 和 delete_surrounding_text 请求的状态更改。\n\n与这些事件相关的状态是双缓冲的，每个事件都会修改待处理状态。此请求用待处理状态替换当前状态。\n\n连接的文本输入应按以下顺序评估更改：\n\n1. 用光标替换现有的预编辑字符串。\n2. 删除请求的周围文本。\n3. 在光标所在位置插入提交字符串。\n4. 计算要发送的周围文本。\n5. 在光标位置插入新的预编辑文本。\n6. 将光标放置在预编辑文本内。\n\n序列号反映客户端已知的 zwp_input_method_v2 对象的最后状态。serial 参数的值必须等于该对象已发出的 done 事件数量。当合成器收到的 commit 请求的序列号与过去的 done 事件数量不同时，它必须照常进行，但不应更改 zwp_input_method_v2 对象的当前状态。"
+                    }
+                },
+                "get_input_popup_surface": {
+                    "description": {
+                        "summary": "创建弹出表面",
+                        "text": "创建一个新的 zwp_input_popup_surface_v2 对象来包装给定的表面。\n\n该表面被分配\"input_popup\"角色。如果该表面已有分配的角色，合成器必须发出协议错误。"
+                    }
+                },
+                "grab_keyboard": {
+                    "description": {
+                        "summary": "获取硬件键盘",
+                        "text": "允许输入法接收硬件键盘输入并处理按键事件以在线生成文本事件（带预编辑）。这允许多个按键事件组合输入文本的输入法，如 CJK 语言所做的那样。\n\n合成器应将 seat 上的所有键盘事件通过返回的 wl_keyboard 对象发送给 grab 持有者。尽管如此，合成器可以决定不转发任何特定事件。在事件被转发给 grab 持有者后，合成器不得进一步处理该事件。\n\n释放生成的 wl_keyboard 对象即释放 grab。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "销毁文本输入",
+                        "text": "销毁 zwp_text_input_v2 对象及任何关联的子对象，即 zwp_input_popup_surface_v2 和 zwp_input_method_keyboard_grab_v2。"
+                    }
+                }
+            },
+            "events": {
+                "activate": {
+                    "description": {
+                        "summary": "输入法已被请求",
+                        "text": "通知此 seat 上聚焦的文本输入请求激活输入法。\n\n此事件的目的是为合成器提供活动的输入法。\n\n此事件重置与之前 enable、disable、surrounding_text、text_change_cause 和 content_type 事件相关的所有状态，以及与 set_preedit_string、commit_string 和 delete_surrounding_text 请求相关的状态。此外，它将 zwp_input_method_v2 对象标记为活动状态，并使任何现有的 zwp_input_popup_surface_v2 对象可见。\n\n如果文本输入支持相应功能，surrounding_text 和 content_type 事件必须在下一个 done 事件之前发送。\n\n通过此事件设置的状态是双缓冲的。它将在下一个 zwp_input_method_v2.done 事件时应用，并保持有效直到被更改。"
+                    }
+                },
+                "deactivate": {
+                    "description": {
+                        "summary": "停用事件",
+                        "text": "通知当前没有聚焦的文本输入需要在此 seat 上激活输入法。\n\n此事件将 zwp_input_method_v2 对象标记为非活动状态。合成器必须使所有现有的 zwp_input_popup_surface_v2 对象不可见，直到下一个 activate 事件。\n\n通过此事件设置的状态是双缓冲的。它将在下一个 zwp_input_method_v2.done 事件时应用，并保持有效直到被更改。"
+                    }
+                },
+                "surrounding_text": {
+                    "description": {
+                        "summary": "周围文本事件",
+                        "text": "更新光标周围的纯文本，不包括预编辑文本。\n\n如果存在预编辑文本，则为此事件的目的将其替换为光标。\n\n参数 text 是包含预编辑字符串的缓冲区，必须包含光标位置和完整选择范围。它应在这些内容前后包含额外的字符。wayland 消息有最大长度限制，因此 text 不能超过 4000 字节。\n\ncursor 是 text 缓冲区中光标的字节偏移量。\n\nanchor 是 text 缓冲区中选择锚点的字节偏移量。如果没有选定文本，anchor 必须与 cursor 相同。\n\n如果此事件在第一个 done 事件之前未到达，输入法可以假设文本输入不支持此功能，并忽略后续的 surrounding_text 事件。\n\n通过此事件设置的值是双缓冲的。它们将在下一个 zwp_input_method_v2.done 事件时应用并设置为初始值。\n\n受影响字段的初始状态为空，表示文本输入不支持发送周围文本。如果应用了空值，后续更改它们的尝试可能不会生效。"
+                    }
+                },
+                "text_change_cause": {
+                    "description": {
+                        "summary": "指示周围文本变化的原因",
+                        "text": "告诉输入法光标周围的文本为何发生变化。\n\n每当客户端检测到文本、光标或锚点位置的外部变化时，它必须向合成器发出此请求。此请求旨在给输入法一个机会以适当的方式更新预编辑文本，例如当用户开始用键盘输入时将其移除。\n\ncause 描述了变化的来源。\n\n通过此事件设置的值是双缓冲的。它将在下一个 zwp_input_method_v2.done 事件时应用并设置为初始值。\n\ncause 的初始值为 input_method。"
+                    }
+                },
+                "content_type": {
+                    "description": {
+                        "summary": "内容用途和提示",
+                        "text": "指示当前 zwp_input_method_v2 实例的内容类型和提示。\n\n通过此事件设置的值是双缓冲的。它们将在下一个 zwp_input_method_v2.done 事件时应用。\n\nhint 的初始值为 none，purpose 的初始值为 normal。"
+                    }
+                },
+                "done": {
+                    "description": {
+                        "summary": "应用状态",
+                        "text": "原子性地应用最近发送到客户端的状态更改。\n\ndone 事件建立并更新客户端的状态，必须在任何更改后发出以应用它们。\n\n文本输入状态（内容用途、内容提示、周围文本和更改原因）在输入法上下文中是概念性双缓冲的。\n\n事件修改待处理状态，而不是输入法正在使用的当前状态。done 事件原子性地应用所有待处理状态，替换当前状态。done 之后，新的待处理状态如每个相关请求所记录。\n\n事件必须按到达顺序应用。\n\n除非另有说明，否则当前状态和待处理状态均不会被修改。"
+                    }
+                },
+                "unavailable": {
+                    "description": {
+                        "summary": "输入法不可用",
+                        "text": "输入法不再可用。\n\n如果在创建时有另一个 input_method 对象关联到同一个 seat，合成器必须将此事件作为该对象上的唯一事件发出。\n\n当对象不再可用时（例如由于 seat 被移除），合成器必须发出此请求。\n\n输入法上下文变为惰性状态，应在处理停用后销毁。除了 destroy 请求外，任何进一步的请求和事件都必须被忽略。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "role": {
+                            "summary": "wl_surface 已有其他角色"
+                        }
+                    }
+                }
+            }
+        },
+        "zwp_input_popup_surface_v2": {
+            "description": {
+                "summary": "弹出表面",
+                "text": "此接口将表面标记为用于与输入法交互的弹出窗口。\n\n合成器应将其放置在活动文本输入区域附近。当且仅当输入法处于活动状态时，它必须可见。\n\n在 zwp_input_popup_surface_v2 对象存在期间，客户端不得销毁底层的 wl_surface。"
+            },
+            "events": {
+                "text_input_rectangle": {
+                    "description": {
+                        "summary": "设置文本输入区域位置",
+                        "text": "通知文本输入区域的位置，以表面局部坐标中的矩形表示。\n\n这是对输入法的提示，告诉它正在输入的文本的相对位置。"
+                    }
+                }
+            }
+        },
+        "zwp_input_method_keyboard_grab_v2": {
+            "description": {
+                "summary": "键盘捕获",
+                "text": "zwp_input_method_keyboard_grab_v2 接口表示对与 seat 关联的 wl_keyboard 接口的独占捕获。"
+            },
+            "events": {
+                "keymap": {
+                    "description": {
+                        "summary": "键盘映射",
+                        "text": "此事件向客户端提供一个文件描述符，可以将其内存映射以提供键盘映射描述。"
+                    }
+                },
+                "key": {
+                    "description": {
+                        "summary": "按键事件",
+                        "text": "按键被按下或释放。\ntime 参数是毫秒精度的时间戳，基准未定义。"
+                    }
+                },
+                "modifiers": {
+                    "description": {
+                        "summary": "修饰键和组状态",
+                        "text": "通知客户端修饰键和/或组状态已更改，客户端应更新其本地状态。"
+                    }
+                },
+                "repeat_info": {
+                    "description": {
+                        "summary": "重复速率和延迟",
+                        "text": "通知客户端键盘的重复速率和延迟。\n\n此事件在 zwp_input_method_keyboard_grab_v2 对象创建后立即发送，并保证在任何按键事件之前被客户端接收。\n\nrate 或 delay 的负值是非法的。速率为零将禁用任何重复（无论 delay 的值如何）。\n\n如果需要，此事件稍后也可以使用新值发送，因此客户端应在 zwp_input_method_keyboard_grab_v2 创建后继续监听该事件。"
+                    }
+                }
+            }
+        },
+        "zwp_input_method_manager_v2": {
+            "description": {
+                "summary": "输入法管理器",
+                "text": "输入法管理器允许客户端成为所选 seat 上的输入法。\n\n在任何给定时间，任何一个 seat 关联的输入法不得超过一个。"
+            },
+            "requests": {
+                "get_input_method": {
+                    "description": {
+                        "summary": "请求输入法对象",
+                        "text": "请求一个新的与给定 seat 关联的 zwp_input_method_v2 对象。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "销毁输入法管理器",
+                        "text": "销毁 zwp_input_method_manager_v2 对象。\n\n由此产生的 zwp_input_method_v2 对象仍然有效。"
+                    }
+                }
+            }
+        }
+    }
+}

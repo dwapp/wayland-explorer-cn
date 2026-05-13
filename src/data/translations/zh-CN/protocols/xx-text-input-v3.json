@@ -1,0 +1,287 @@
+{
+  "description": {
+    "summary": "文本输入组合协议",
+    "text": "此协议允许合成器充当输入方法并向应用程序发送文本。文本输入对象用于管理应用程序中文本输入字段的状态。\n\n本文档在使用 \"must\"、\"should\"、\"may\" 等词时遵循 RFC 2119。\n\n警告！此文件中描述的协议是实验性的，可能会进行向后不兼容的更改。可能会添加向后兼容的更改，并相应地提升接口版本。向后不兼容的更改通过提升协议和接口名称中的版本号并重置接口版本来完成。一旦协议被宣布为稳定，协议和接口名称中的 'xx' 前缀和版本号将被移除，接口版本号将被重置。"
+  },
+  "interfaces": {
+    "xx_text_input_v3": {
+      "description": {
+        "summary": "文本输入",
+        "text": "xx_text_input_v3 接口表示与 seat 关联的文本输入和输入方法。它提供 enter/leave 事件以跟踪 seat 的文本输入焦点。\n\n请求用于启用/禁用文本输入对象和设置状态信息，如周围文本和选定文本或内容类型。有关输入文本的信息通过 preedit_string 和 commit_string 事件发送到文本输入对象。\n\n文本为有效的 UTF-8 编码，索引和长度以字节为单位。索引不得指向代码点的中间字节：它们必须指向代码点的第一个字节或缓冲区的末尾。长度必须在两个有效索引之间测量。\n\n焦点在 surface 之间的移动将导致发出 xx_text_input_v3.enter 和 xx_text_input_v3.leave 事件。当键盘焦点在 UI 的可编辑和不可编辑元素之间移动时，焦点 surface 必须提交 xx_text_input_v3.enable 和 xx_text_input_v3.disable 请求。这两个请求不需要配对，合成器必须能够处理连续的相同请求序列。\n\n状态由状态请求（set_surrounding_text、set_content_type 和 set_cursor_rectangle）和 commit 请求发送。在 enter 事件或 disable 请求之后，所有状态信息都将失效，需要由客户端重新发送。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xx_text_input",
+            "text": "销毁 xx_text_input 对象。同时禁用通过此 xx_text_input 对象启用的所有 surface。"
+          }
+        },
+        "enable": {
+          "description": {
+            "summary": "请求启用文本输入",
+            "text": "请求在之前从 enter 事件获取的 surface 上进行文本输入。\n\n每次活动文本输入更改为新的输入时，必须发出此请求，包括在当前 surface 内。当当前 surface 上不再有任何输入焦点时，使用 xx_text_input_v3.disable。\n\n客户端不得在单个 seat 上启用多个文本输入，应在启用新文本输入之前禁用当前文本输入。每个实例最多只能有一个文本输入实例处于启用状态，当某些文本输入处于活动状态时，启用另一个文本输入的请求必须被合成器忽略。\n\n此请求重置与先前 enable、disable、set_surrounding_text、set_text_change_cause、set_content_type 和 set_cursor_rectangle 请求关联的所有状态，以及与 preedit_string、commit_string、delete_surrounding_text 和 action 事件关联的状态。\n\n如果文本输入支持必要的功能，set_surrounding_text、set_content_type 和 set_cursor_rectangle 请求必须跟随之后。\n\n通过此请求设置的状态是双缓冲的。它将在下一个 xx_text_input_v3.commit 请求时应用，并保持有效直到下一个提交的 enable 或 disable 请求。\n\n更改必须在发出 xx_text_input_v3.commit 请求后由合成器应用。"
+          }
+        },
+        "disable": {
+          "description": {
+            "summary": "禁用 surface 上的文本输入",
+            "text": "显式禁用当前 surface 上的文本输入（通常当 surface 内没有任何文本输入字段获得焦点时）。\n\n通过此请求设置的状态是双缓冲的。它将在下一个 xx_text_input_v3.commit 请求时应用。"
+          }
+        },
+        "set_surrounding_text": {
+          "description": {
+            "summary": "设置周围文本",
+            "text": "设置输入周围的纯文本，不包括预编辑文本。\n\n客户端应将此请求携带的任何值的任何更改通知合成器，包括处理传入文本输入事件引起的更改以及键盘输入等其他机制引起的更改。\n\n如果客户端不知道光标周围的文本，则不应发出此请求，以向合成器表示不支持。\n\n文本为 UTF-8 编码，应包含光标位置、完整选择以及它们前后的额外字符。Wayland 消息有最大长度限制，因此文本不能超过 4000 字节。\n\n光标是文本缓冲区内光标的字节偏移量。\n\n锚点是文本缓冲区内选择锚点的字节偏移量。如果没有选定文本，锚点与光标相同。\n\n如果存在任何预编辑文本，则为此事件将其替换为光标。\n\n通过此请求设置的值是双缓冲的。它们将在下一个 xx_text_input_v3.commit 请求时应用，并保持有效直到下一个提交的 enable 或 disable 请求。\n\n受影响字段的初始状态为空，表示文本输入不支持发送周围文本。如果空值被应用，后续更改尝试可能无效。"
+          }
+        },
+        "set_text_change_cause": {
+          "description": {
+            "summary": "指示周围文本更改的原因",
+            "text": "告知合成器光标周围的文本更改的原因。\n\n每当客户端检测到文本、光标或锚点位置的外部更改时，必须向合成器发出此请求。此请求旨在让输入方法有机会以适当的方式更新预编辑文本，例如当用户开始用键盘输入时将其移除。\n\ncause 描述更改的来源。\n\n通过此请求设置的值是双缓冲的。它必须在下一个 xx_text_input_v3.commit 请求时应用并重置为初始值。\n\ncause 的初始值为 input_method。"
+          }
+        },
+        "set_content_type": {
+          "description": {
+            "summary": "设置内容用途和提示",
+            "text": "设置内容用途和内容提示。用途是输入字段的基本用途，提示标志允许修改某些行为。\n\n通过此请求设置的值是双缓冲的。它们将在下一个 xx_text_input_v3.commit 请求时应用。\n后续更新尝试可能无效。这些值在下一个提交的 enable 或 disable 请求之前保持有效。\n\nhint 的初始值为 none，purpose 的初始值为 normal。"
+          }
+        },
+        "set_cursor_rectangle": {
+          "description": {
+            "summary": "设置光标位置",
+            "text": "在 surface 局部坐标中将光标周围的区域标记为 x、y、width、height 矩形。\n\n允许合成器将带有单词建议的窗口放在光标附近，而不妨碍正在输入的文本。\n\n如果客户端不知道编辑文本的位置，则不应发出此请求，以向合成器表示不支持。\n\n通过此请求设置的值是双缓冲的。它们将在下一个 xx_text_input_v3.commit 请求时应用，并保持有效直到下一个提交的 enable 或 disable 请求。\n\n描述光标矩形的初始值为空。这意味着文本输入不支持描述光标区域。如果空值被应用，后续更改尝试可能无效。"
+          }
+        },
+        "commit": {
+          "description": {
+            "summary": "提交状态",
+            "text": "原子性地应用最近发送到合成器的状态更改。\n\ncommit 请求建立和更新客户端的状态，必须在任何更改后发出以应用它们。\n\n文本输入状态（启用状态、内容用途、内容提示、周围文本和更改原因、光标矩形）在文本输入的上下文中是概念性双缓冲的，即在提交的 enable 请求和以下提交的 enable 或 disable 请求之间。\n\n协议请求修改待处理状态，而不是输入方法使用的当前状态。commit 请求原子性地应用所有待处理状态，替换当前状态。提交后，新的待处理状态如每个相关请求所记录。\n\n请求按到达顺序应用。\n\n除非另有说明，否则当前和待处理状态均不会被修改。\n\n合成器必须计算来自每个 xx_text_input_v3 对象的 commit 请求数量，并将该计数用作 done 事件中的序列号。"
+          }
+        },
+        "set_available_actions": {
+          "description": {
+            "summary": "公布可用操作",
+            "text": "公布当前活动文本输入可用的操作。\n\n通过此事件设置的值是双缓冲的。它们将在下一个 .done 事件时应用。\n它们在下一个提交的 deactivate 事件时重置为初始值。\n\n初始值为空集：没有可用操作。\n\navailable_actions 数组中的值来自 text-input-v3.action。"
+          }
+        },
+        "announce_supported_features": {
+          "description": {
+            "summary": "公布额外支持的功能",
+            "text": "通知输入方法当前活动的文本输入客户端能够做什么。\n\n此事件应在与 .activate 相同的 .done 序列中出现。否则，输入方法可能会忽略它。\n\n通过此事件设置的值是双缓冲的。它们将在下一个 .done 事件时应用。\n它们在下一个提交的 deactivate 事件时重置为初始值。\n\nfeatures 的初始值为 none。"
+          }
+        }
+      },
+      "events": {
+        "enter": {
+          "description": {
+            "summary": "进入事件",
+            "text": "通知此 seat 的文本输入焦点在某个 surface 上。\n\n如果客户端创建了多个文本输入对象，合成器必须将此事件发送给所有对象。\n\n当 seat 具有键盘功能时，文本输入焦点跟随键盘焦点。此事件为文本输入对象设置当前 surface。"
+          }
+        },
+        "leave": {
+          "description": {
+            "summary": "离开事件",
+            "text": "通知此 seat 的文本输入焦点不再在某个 surface 上。客户端应重置之前设置的任何预编辑字符串。\n\nleave 通知清除当前 surface。它在新焦点的 enter 通知之前发送。leave 事件后，合成器必须忽略来自任何文本输入实例的请求，直到下一个 enter 事件。\n\n当 seat 具有键盘功能时，文本输入焦点跟随键盘焦点。"
+          }
+        },
+        "preedit_string": {
+          "description": {
+            "summary": "预编辑",
+            "text": "通知应在当前光标位置设置新的组合文本（预编辑）。必须移除之前设置的任何组合文本。必须移除任何先前存在的选定文本。\n\n参数 text 包含预编辑字符串缓冲区。\n\n参数 cursor_begin 和 cursor_end 以字节为单位相对于提交的文本缓冲区的开头计算。当两者都等于 -1 时应隐藏光标。\n\n如果两个值相同，客户端可以将其表示为一行，否则表示为文本高亮。\n\n通过此事件设置的值是双缓冲的。它们必须在下一个 xx_text_input_v3.done 事件时应用并重置为初始值。\n\ntext 的初始值为空字符串，cursor_begin、cursor_end 和 cursor_hidden 均为 0。"
+          }
+        },
+        "commit_string": {
+          "description": {
+            "summary": "文本提交",
+            "text": "通知何时应将文本插入编辑器部件。要提交的文本可以是按键后的单个字符，也可以是某些组合（预编辑）的结果。\n\n通过此事件设置的值是双缓冲的。它们必须在下一个 xx_text_input_v3.done 事件时应用并重置为初始值。\n\ntext 的初始值为空字符串。"
+          }
+        },
+        "delete_surrounding_text": {
+          "description": {
+            "summary": "删除周围文本",
+            "text": "通知何时应删除当前光标位置周围的文本。\n\nbefore_length 和 after_length 是当前光标索引之前和之后要删除的字节数（不包括选择）。\n\n如果选择了文本，必须删除它。\n\n如果索引超出了可用文本边界，应调整它们以适应边界并重新尝试删除。如果索引不在字节边界上，则文本输入客户端应删除至少那么多字节。在这种情况下，客户端决定端点，但建议使用与使用键盘删除时相同的字符边界。\n\n如果存在预编辑文本，实际上 before_length 从其开头计算，after_length 从其末尾计算（请参阅 done 事件序列）。\n\n通过此事件设置的值是双缓冲的。它们必须在下一个 xx_text_input_v3.done 事件时应用并重置为初始值。\n\nbefore_length 和 after_length 的初始值均为 0。"
+          }
+        },
+        "move_cursor": {
+          "description": {
+            "summary": "移动光标并更改选择",
+            "text": "取消选择文本、移动光标并选择文本。\n\n这相当于在文本上拖动鼠标：取消选择当前可能选择的任何内容并选择新的文本范围。\n\n参数中使用的偏移量以字节为单位相对于当前光标位置。cursor 是光标的新位置，anchor 是选择的另一端。如果没有选择，anchor 应等于 cursor。就拖动鼠标而言，anchor 是起点，cursor 是终点。\n\n偏移量不考虑预编辑内容，预编辑也不会通过此请求以任何方式更改。\n\ncursor 和 anchor 都必须落在代码点边界上，否则文本输入客户端可能会忽略该请求。因此不建议输入方法将其中任何一个移动到 surrounding_text 中接收的文本之外。\n\n当不支持 surrounding_text 时，偏移量不得解释为字节，而是解释为至少与代码点一样大的人类可读单位，例如字素。\n\ncursor 和 anchor 参数还可以采用以下特殊值：\nBEGINNING := 0x8000_0000 = i32::MIN\nEND := 0x7fff_ffff = i32::MAX\n分别表示输入字段中所有文本的开头和结尾。\n\n通过此事件设置的值是双缓冲的。它们必须在下一个 commit 请求时应用并重置为初始值。\n\ncursor 和 anchor 的初始值均为 0。"
+          }
+        },
+        "done": {
+          "description": {
+            "summary": "应用更改",
+            "text": "指示应用程序应用 preedit_string、commit_string、delete_surrounding_text 和 action 事件请求的状态更改。\n与这些事件相关的状态是双缓冲的，每个事件都会修改待处理状态。此事件用待处理状态替换当前状态。\n\n应用程序必须按以下顺序评估和应用更改：\n\n1. 用光标替换现有的预编辑字符串。\n2. 删除请求的周围文本。\n3. 在光标位置插入提交字符串。\n4. 移动光标和选择。\n5. 计算要发送的周围文本。\n6. 在光标位置插入新的预编辑文本。\n7. 在预编辑文本内放置光标。\n8. 执行请求的操作。\n\n版本 2 及以上的序列号处理：\n\n参数 \"serial\" 被忽略。\n\n版本 1 的序列号处理：\n\n序列号反映合成器已知的 xx_text_input_v3 对象的最后状态。serial 参数的值必须等于该对象上已发出的 commit 请求数量。\n\n当客户端收到序列号与过去的 commit 请求数量不同的 done 事件时，必须照常继续评估和应用更改，但不应更改 xx_text_input_v3 对象的当前状态。在收到序列号匹配的 xx_text_input_v3.done 事件后，应发送并提交 xx_text_input_v3 对象上的所有待处理状态请求（set_surrounding_text、set_content_type 和 set_cursor_rectangle）。"
+          }
+        },
+        "perform_action": {
+          "description": {
+            "summary": "执行的操作",
+            "text": "输入方法发出了要在此文本输入上执行的操作。\n\n通过此事件设置的值是双缓冲的。它们必须在下一个 .done 事件时应用并重置为初始值。\n\naction 的初始值为 none。"
+          }
+        }
+      },
+      "enums": {
+        "change_cause": {
+          "description": {
+            "summary": "文本更改原因",
+            "text": "周围文本或光标位置更改的原因。"
+          },
+          "entries": {
+            "input_method": {
+              "summary": "输入方法引起的更改"
+            },
+            "other": {
+              "summary": "输入方法以外的原因引起的更改"
+            }
+          }
+        },
+        "content_hint": {
+          "description": {
+            "summary": "内容提示",
+            "text": "内容提示是允许修改文本输入行为的位掩码。"
+          },
+          "entries": {
+            "none": {
+              "summary": "无特殊行为"
+            },
+            "completion": {
+              "summary": "建议单词补全"
+            },
+            "spellcheck": {
+              "summary": "建议单词更正"
+            },
+            "auto_capitalization": {
+              "summary": "在句子开头切换为大写字母"
+            },
+            "lowercase": {
+              "summary": "首选小写字母"
+            },
+            "uppercase": {
+              "summary": "首选大写字母"
+            },
+            "titlecase": {
+              "summary": "首选标题和标题的大小写（可能因语言而异）"
+            },
+            "hidden_text": {
+              "summary": "字符应被隐藏"
+            },
+            "sensitive_data": {
+              "summary": "输入的文本不应被存储"
+            },
+            "latin": {
+              "summary": "仅输入拉丁字符"
+            },
+            "multiline": {
+              "summary": "文本输入是多行的"
+            }
+          }
+        },
+        "content_purpose": {
+          "description": {
+            "summary": "内容用途",
+            "text": "内容用途允许指定文本输入的主要用途。\n\n这允许输入方法显示带有额外字符的特殊用途输入面板或禁止某些字符。"
+          },
+          "entries": {
+            "normal": {
+              "summary": "默认输入，允许所有字符"
+            },
+            "alpha": {
+              "summary": "仅允许字母字符"
+            },
+            "digits": {
+              "summary": "仅允许数字"
+            },
+            "number": {
+              "summary": "输入数字（包括小数分隔符和符号）"
+            },
+            "phone": {
+              "summary": "输入电话号码"
+            },
+            "url": {
+              "summary": "输入 URL"
+            },
+            "email": {
+              "summary": "输入电子邮件地址"
+            },
+            "name": {
+              "summary": "输入人名"
+            },
+            "password": {
+              "summary": "输入密码（与 sensitive_data 提示组合使用）"
+            },
+            "pin": {
+              "summary": "输入是数字密码（与 sensitive_data 提示组合使用）"
+            },
+            "date": {
+              "summary": "输入日期"
+            },
+            "time": {
+              "summary": "输入时间"
+            },
+            "datetime": {
+              "summary": "输入日期和时间"
+            },
+            "terminal": {
+              "summary": "终端输入"
+            }
+          }
+        },
+        "action": {
+          "description": {
+            "summary": "操作",
+            "text": "可在文本输入上执行的可能操作。"
+          },
+          "entries": {
+            "none": {
+              "description": {
+                "summary": "无操作",
+                "text": "此枚举值的存在仅为提供默认值以简化双缓冲实现。不应显式使用它。"
+              }
+            },
+            "finish": {
+              "description": {
+                "summary": "触发编辑完成的适当操作",
+                "text": "当用户完成字段编辑并想要继续时应触发此操作。例如，查询已输入，用户想要搜索结果。或者姓名已输入，接下来需要输入地址。\n\n要执行的操作取决于应用程序，应与当前 content_purpose 的值匹配。\n\n所有客户端都应实现此操作。没有它，屏幕键盘将无法按预期工作。"
+              }
+            }
+          }
+        },
+        "supported_features": {
+          "description": {
+            "summary": "可能支持的功能",
+            "text": "超出基线的客户端功能，不是隐式指示的。\n\n这不包括随 .enable 一起出现的事件：当输入方法收到此类事件时，很明显文本输入支持它，例如 content_type、available_actions。\n\n像 commit_string、set_preedit_string 这样的基线功能必须始终被支持，协议才有用。\n\n这些标志匹配文本输入协议版本，但应保持足够通用以支持其他协议。"
+          },
+          "entries": {
+            "none": {
+              "summary": "不支持额外功能"
+            },
+            "move_cursor": {
+              "summary": "move_cursor 请求"
+            }
+          }
+        }
+      }
+    },
+    "xx_text_input_manager_v3": {
+      "description": {
+        "summary": "文本输入管理器",
+        "text": "文本输入对象的工厂。此对象是全局单例。"
+      },
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁 xx_text_input_manager",
+            "text": "销毁 xx_text_input_manager 对象。"
+          }
+        },
+        "get_text_input": {
+          "description": {
+            "summary": "创建新的文本输入对象",
+            "text": "为给定 seat 创建新的文本输入对象。"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "description": {
+    "summary": "用于捕获输出内容或窗口内容的协议",
+    "text": "此协议允许授权应用程序捕获输出内容或窗口内容（适用于窗口串流）。"
+  },
+  "interfaces": {
+    "treeland_capture_session_v1": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "删除此对象",
+            "text": "取消帧引用。当帧不再有效时必须尽快调用此请求。"
+          }
+        },
+        "start": {
+          "description": {
+            "summary": "启动会话",
+            "text": "启动会话并持续发送帧。"
+          }
+        },
+        "frame_done": {
+          "description": {
+            "summary": "指示当前帧已完成",
+            "text": "这是对当前 \"ready\" 事件的确认。只有在当前 \"ready\" 事件被确认后才会发送下一个 \"frame\" 事件。时间戳应与 \"ready\" 事件中发送的时间戳相同。\n如果帧具有 \"transient\" 标志，则此事件之后之前发送的所有对象都将失效。"
+          }
+        }
+      },
+      "events": {
+        "frame": {
+          "description": {
+            "summary": "向客户端提供帧信息",
+            "text": "向客户端提供帧信息的主要事件。如果捕获未失败，此事件始终在其他事件之前首先发出。\n当提供 mask 时，x 和 y 应为相对于 mask surface 原点的偏移量。否则 offset_x 和 offset_y 应始终为零。"
+          }
+        },
+        "object": {
+          "description": {
+            "summary": "向客户端提供对象 fd"
+          }
+        },
+        "ready": {
+          "description": {
+            "summary": "指示帧可供读取",
+            "text": "帧呈现后立即发送此事件，指示帧可供读取。此事件包含呈现发生的时间。"
+          }
+        },
+        "cancel": {
+          "description": {
+            "summary": "通知当前帧不再有效",
+            "text": "如果捕获失败或在 \"frame\" 事件发出后帧不再有效，此事件将通知客户端丢弃该帧。"
+          }
+        }
+      },
+      "enums": {
+        "cancel_reason": {
+          "entries": {
+            "temporary": {
+              "summary": "临时错误，源将产生更多帧"
+            },
+            "permanent": {
+              "summary": "致命错误，源将不再产生帧"
+            },
+            "resizing": {
+              "summary": "临时错误，源将产生更多帧"
+            }
+          }
+        },
+        "flags": {
+          "entries": {
+            "transient": {
+              "summary": "客户端应在处理前复制帧"
+            }
+          }
+        }
+      }
+    },
+    "treeland_capture_frame_v1": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "删除此对象，无论是否已使用",
+            "text": "销毁上下文。客户端可随时发送此请求。"
+          }
+        },
+        "copy": {
+          "description": {
+            "summary": "复制捕获内容",
+            "text": "将捕获内容复制到提供的缓冲区。"
+          }
+        }
+      },
+      "events": {
+        "buffer": {
+          "description": {
+            "summary": "通知客户端准备缓冲区",
+            "text": "通知客户端准备缓冲区。"
+          }
+        },
+        "buffer_done": {
+          "description": {
+            "summary": "所有缓冲区格式已发送完毕",
+            "text": "通知客户端所有支持的缓冲区格式已发送完毕。"
+          }
+        },
+        "flags": {
+          "description": {
+            "summary": "帧标志",
+            "text": "提供关于帧的标志。此事件在 \"ready\" 事件之前发送一次。"
+          }
+        },
+        "ready": {
+          "description": {
+            "summary": "缓冲区已复制完成",
+            "text": "通知缓冲区已准备好可供读取。"
+          }
+        },
+        "failed": {
+          "description": {
+            "summary": "帧复制失败",
+            "text": "通知帧复制失败。"
+          }
+        }
+      },
+      "enums": {
+        "flags": {
+          "entries": {
+            "y_inverted": {
+              "summary": "内容沿 y 轴翻转"
+            }
+          }
+        }
+      }
+    },
+    "treeland_capture_context_v1": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "删除此对象，无论是否已使用",
+            "text": "销毁上下文。客户端可随时发送此请求。"
+          }
+        },
+        "select_source": {
+          "description": {
+            "summary": "交互式选择源",
+            "text": "选择器由合成器提供。客户端可以提供源提示来引导合成器提供特定类型的源。"
+          }
+        },
+        "capture": {
+          "description": {
+            "summary": "捕获一帧",
+            "text": "此事件只能调用一次。第二次调用可能会导致协议错误，因为我们只提供 transient。"
+          }
+        },
+        "create_session": {
+          "description": {
+            "summary": "创建持久捕获会话",
+            "text": "通常由屏幕录制器使用。"
+          }
+        }
+      },
+      "events": {
+        "source_ready": {
+          "description": {
+            "summary": "通知客户端源已就绪",
+            "text": "此事件向客户端提供有关捕获源的一些信息，包括相对于 mask 的捕获区域和源类型。"
+          }
+        },
+        "source_failed": {
+          "description": {
+            "summary": "通知客户端源选择失败",
+            "text": "可能有很多原因，但最常见的是选择器正忙。"
+          }
+        }
+      },
+      "enums": {
+        "source_type": {
+          "entries": {
+            "output": {
+              "summary": "输出源类型"
+            },
+            "window": {
+              "summary": "窗口源类型"
+            },
+            "region": {
+              "summary": "区域源类型"
+            }
+          }
+        },
+        "source_failure": {
+          "description": {
+            "summary": "源失败原因"
+          },
+          "entries": {
+            "selector_busy": {
+              "summary": "选择器被其他上下文占用"
+            },
+            "user_cancel": {
+              "summary": "用户从合成器取消此上下文"
+            },
+            "source_destroyed": {
+              "summary": "源已被销毁"
+            },
+            "other": {
+              "summary": "其他失败"
+            }
+          }
+        }
+      }
+    },
+    "treeland_capture_manager_v1": {
+      "requests": {
+        "destroy": {
+          "description": {
+            "summary": "销毁捕获管理器",
+            "text": "销毁 treeland_capture_manager_v1 对象。"
+          }
+        },
+        "get_context": {
+          "description": {
+            "summary": "获取捕获上下文"
+          }
+        }
+      }
+    }
+  }
+}

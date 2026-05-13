@@ -1,0 +1,163 @@
+{
+    "interfaces": {
+        "surface_augmenter": {
+            "description": {
+                "summary": "表面合成委托",
+                "text": "暴露表面委托合成功能的全局接口用于实例化 wl_surface 对象的接口扩展。此扩展接口将允许委托表面内容的合成，有效地断开缓冲区与表面内容之间的直接关系（例如添加对纯色四边形和圆角的支持）。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 surface augmenter",
+                        "text": "通知服务器客户端将不再使用此协议对象。这不会影响任何其他对象，包括 augmenter 对象。"
+                    }
+                },
+                "create_solid_color_buffer": {
+                    "description": {
+                        "summary": "创建纯色缓冲区",
+                        "text": "实例化给定大小的缓冲区，用于给定颜色的纯色四边形。\n\n此缓冲区不需要合成器中的资源，因此可以立即重用和共享。因此它不负责发送 wl_buffer.release 或 zwp_linux_buffer_release_v1.*_release 事件。"
+                    }
+                },
+                "get_augmented_surface": {
+                    "description": {
+                        "summary": "扩展表面接口以进行委托",
+                        "text": "为给定的 wl_surface 实例化接口扩展以扩展其内容的合成。如果给定的 wl_surface 已有关联的 augmentation 对象，则引发 delegate_exists 协议错误。\n\n如果需要调用此方法，必须在创建表面角色对象之前调用。"
+                    }
+                },
+                "get_augmented_subsurface": {
+                    "description": {
+                        "summary": "扩展子表面接口以进行委托",
+                        "text": "为给定的 wl_subsurface 实例化接口扩展以扩展其内容的合成。如果给定的 wl_subsurface 已有关联的 augmentation 对象，则引发 delegate_exists 协议错误。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "augmented_surface_exists": {
+                            "summary": "该表面已有关联的 augmenter 对象"
+                        }
+                    }
+                }
+            }
+        },
+        "augmented_surface": {
+            "description": {
+                "summary": "wl_surface 的委托合成",
+                "text": "wl_surface 对象的附加接口，允许客户端指定表面内容的委托合成。\n\n这使得该表面成为仅用于合成其父表面的对象。这意味着该表面将被裁剪到父边界，不会接收输入事件或显示进入/离开事件等。\n\n使用 wl_subsurface 角色对象来表示此对象将为其执行委托合成的父表面。\n\n对此外表面的提交假定与其父提交同步行为，如同同步的 wl_subsurface 一样。\n\n合成器不会执行由 augmented_surface 的移动、大小调整、堆叠更改或消失引入的细粒度损坏扩展计算。执行此类操作的客户端应考虑这一点并相应地损坏父级非增强的 wl_surface。\n\n各种更改（如添加或删除增强子表面、更改其位置或堆叠顺序）不会在合成器端引入额外的损坏。父 wl_surface 应考虑引入的额外损坏。\n\n此表面使用其父级的 wl_subsurface 角色，不能相对于父级的非增强子表面堆叠，但可以相对于其他增强子表面堆叠。此表面也不能有非增强子表面子级。\n\n使用 augmented_surfaces 委托合成 wl_surfaces 的混合树结构如下所示：\n\nwl_surface@1:{ augmented_surface@1,2,3 }\n/           \\_____\n/                   \\\nwl_surface@2:               wl_surface@3:\n{ augmented_surface@4,5 }   { augmented_surface@6 }\n\n每个 wl_surface 都有一个 augmented_surfaces 列表。假设 wl_surface 堆叠顺序从下到上为：\nwl_surface@1, wl_surface@2, wl_surface@3\n\n则最终合成顺序从下到上为：\nwl_surface@1, augmented_surface@1,2,3, wl_surface@2, augmented_surface@4,5, wl_surface@3,..."
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "移除表面的委托合成",
+                        "text": "客户端将不再能够控制此表面的委托合成属性。这不会更改现有的委托合成行为。"
+                    }
+                },
+                "set_rounded_corners": {
+                    "description": {
+                        "summary": "设置表面圆角",
+                        "text": "[已弃用]。使用下面的 set_rounded_corners_clip_bounds 请求。\n\n通知服务器它必须应用将在下次提交时应用的圆角蒙版滤镜。请改用 set_rounded_corners_bounds。"
+                    }
+                },
+                "set_destination_size": {
+                    "description": {
+                        "summary": "设置表面目标视口大小（亚像素精度）",
+                        "text": "设置表面目标视口大小，具有亚像素精度。此状态是双缓冲的，在下次 wl_surface.commit 时应用。"
+                    }
+                },
+                "set_rounded_clip_bounds": {
+                    "description": {
+                        "summary": "设置表面圆角裁剪边界",
+                        "text": "[已弃用]。使用下面的 set_rounded_corners_clip_bounds 请求。\n\n通知服务器它必须应用将在下次提交时应用的圆角裁剪蒙版滤镜。该蒙版可以对多个表面统一应用，使两个或多个表面在视觉上看起来像一个具有圆角的单一表面。请注意，这只能用作覆盖层的表面，不能有任何子树。如果边界在表面之外，圆角将被忽略。"
+                    }
+                },
+                "set_background_color": {
+                    "description": {
+                        "summary": "设置此表面的背景颜色",
+                        "text": "设置此表面的背景颜色。此信息将与下一个缓冲区提交关联。请注意，这与纯色缓冲区不同，纯色缓冲区会创建新的缓冲区实例，而是提供有关如何合成缓冲区的附加信息。传递空数组表示重置背景颜色。默认值由 Wayland 合成器确定。"
+                    }
+                },
+                "set_trusted_damage": {
+                    "description": {
+                        "summary": "设置此表面的可信损坏状态",
+                        "text": "[已弃用] 设置后，此表面信任报告到此表面及后代子表面的所有损坏都是准确的，不会尝试重新计算。如果未设置，各种更改（如添加或删除子表面、更改其位置或堆叠顺序）可能会导致此表面的完全损坏。\n\n初始状态为禁用。"
+                    }
+                },
+                "set_rounded_corners_clip_bounds": {
+                    "description": {
+                        "summary": "设置表面圆角裁剪边界",
+                        "text": "通知服务器它必须应用将在下次提交时应用的圆角裁剪蒙版滤镜。该蒙版可以对多个表面统一应用，使两个或多个表面在视觉上看起来像一个具有圆角的单一表面。\n\n从版本 9 开始，边界将以其原点（左上角像素）放置在表面局部坐标系的 x, y 位置。在版本 8 或更早版本中，它使用其根表面坐标放置，但这已弃用。\n\n请注意，这只能用作覆盖层的表面，不能有任何子树。如果边界在表面之外，圆角将被忽略。"
+                    }
+                },
+                "set_clip_rect": {
+                    "description": {
+                        "summary": "在表面局部坐标上设置子表面裁剪矩形",
+                        "text": "计划在绘制此子表面时应用裁剪矩形。裁剪将以其原点（左上角像素）放置在表面局部坐标系的 x, y 位置。坐标不限于表面区域。允许负的 x 和 y 值。\n\n如果 x、y、width 和 height 都为 -1.0，则取消设置裁剪矩形。\n\n最初，表面没有设置裁剪。此状态是双缓冲的，在下次 wl_surface.commit 时应用。"
+                    }
+                },
+                "set_frame_trace_id": {
+                    "description": {
+                        "summary": "设置用于跟踪帧提交流程的跟踪 ID",
+                        "text": "设置跟踪 ID 以连接客户端和服务器端的帧提交跟踪事件流。此状态是双缓冲的，在下次 wl_surface.commit 时应用。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "bad_value": {
+                            "summary": "半径或大小中的负值"
+                        },
+                        "no_surface": {
+                            "summary": "wl_surface 已被销毁"
+                        },
+                        "bad_surface": {
+                            "summary": "不兼容的表面"
+                        }
+                    }
+                }
+            }
+        },
+        "augmented_sub_surface": {
+            "description": {
+                "summary": "wl_subsurface 的委托合成",
+                "text": "wl_subsurface 对象的附加接口，允许客户端指定表面内容的委托合成。"
+            },
+            "requests": {
+                "destroy": {
+                    "description": {
+                        "summary": "移除表面的委托合成",
+                        "text": "关联的 wl_surface 的 augmenter 被移除。更改在下次 wl_surface.commit 时应用。"
+                    }
+                },
+                "set_position": {
+                    "description": {
+                        "summary": "设置具有亚像素精度的子表面位置",
+                        "text": "计划子表面位置更改。子表面将被移动，使其原点（左上角像素）位于父表面坐标系的 x, y 位置。坐标不限于父表面区域。允许负值。\n\n计划的坐标将在父表面状态被应用时生效。何时发生取决于父表面是否处于同步模式。详见 wl_subsurface.set_sync 和 wl_subsurface.set_desync。\n\n如果客户端在父表面提交之前发出多个 set_position 请求，新请求的位置总是替换任何先前请求的计划位置。\n\n初始位置为 0, 0。此状态是双缓冲的，在下次 wl_surface.commit 时应用。"
+                    }
+                },
+                "set_clip_rect": {
+                    "description": {
+                        "summary": "设置具有亚像素精度的子表面裁剪矩形",
+                        "text": "[已弃用] 改为在 augmented_surface 上使用 set_clip_rect。计划在绘制此子表面时应用裁剪矩形。裁剪将以其原点（左上角像素）放置在父表面坐标系的 x, y 位置。坐标不限于父表面区域。允许负的 x 和 y 值。\n\n如果 x、y、width 和 height 都为 -1.0，则取消设置裁剪矩形。\n\n最初，表面没有设置裁剪。此状态是双缓冲的，在下次 wl_surface.commit 时应用。"
+                    }
+                },
+                "set_transform": {
+                    "description": {
+                        "summary": "将子表面变换设置为仿射矩阵",
+                        "text": "计划在绘制此子表面时应用变换。此变换不应用于此子表面的任何子表面。\n\n矩阵应作为列主序的 6 个浮点数组传递。可以发送空数组将变换设置为单位矩阵。\n\n初始变换为单位矩阵。此状态是双缓冲的，在下次 wl_surface.commit 时应用。"
+                    }
+                }
+            },
+            "enums": {
+                "error": {
+                    "entries": {
+                        "invalid_size": {
+                            "summary": "发送的数组尺寸无效"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

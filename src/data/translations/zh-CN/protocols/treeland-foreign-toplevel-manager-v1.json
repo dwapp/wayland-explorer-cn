@@ -1,0 +1,238 @@
+{
+    "interfaces": {
+        "treeland_foreign_toplevel_manager_v1": {
+            "description": {
+                "summary": "外部顶层管理器",
+                "text": "此接口允许客户端获取顶层的一些信息。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后不兼容的更改只能通过创建新的扩展主版本来完成。"
+            },
+            "requests": {
+                "stop": {
+                    "description": {
+                        "summary": "停止发送事件",
+                        "text": "表示客户端不再希望接收新顶层的事件。但是合成器可能会进一步发出 toplevel_created 事件，直到发出 finished 事件。\n\n客户端在发送此请求后不得再发送任何请求。"
+                    }
+                }
+            },
+            "events": {
+                "toplevel": {
+                    "description": {
+                        "summary": "已创建一个顶层",
+                        "text": "每当创建新的顶层窗口时发出此事件。对所有顶层都会发出此事件，无论创建它们的应用程序是什么。\n\n顶层的所有初始详细信息（标题、app_id、状态等）将在此事件之后立即通过 treeland_foreign_toplevel_handle_v1 中的相应事件发送。"
+                    }
+                },
+                "finished": {
+                    "description": {
+                        "summary": "合成器已完成顶层管理器",
+                        "text": "此事件表示合成器已完成向 treeland_foreign_toplevel_manager_v1 发送事件。服务器将在发送此请求后立即销毁该对象，因此它将变为无效，客户端应释放与其关联的任何资源。"
+                    }
+                }
+            }
+        },
+        "treeland_foreign_toplevel_handle_v1": {
+            "description": {
+                "summary": "已打开的顶层",
+                "text": "treeland_foreign_toplevel_handle_v1 对象表示已打开的顶层窗口。每个应用程序可以有多个已打开的顶层。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后不兼容的更改只能通过创建新的扩展主版本来完成。"
+            },
+            "requests": {
+                "set_maximized": {
+                    "description": {
+                        "summary": "请求最大化顶层",
+                        "text": "请求最大化顶层。如果最大化状态实际发生变化，将通过 state 事件表示。"
+                    }
+                },
+                "unset_maximized": {
+                    "description": {
+                        "summary": "请求取消最大化顶层",
+                        "text": "请求取消最大化顶层。如果最大化状态实际发生变化，将通过 state 事件表示。"
+                    }
+                },
+                "set_minimized": {
+                    "description": {
+                        "summary": "请求最小化顶层",
+                        "text": "请求最小化顶层。如果最小化状态实际发生变化，将通过 state 事件表示。"
+                    }
+                },
+                "unset_minimized": {
+                    "description": {
+                        "summary": "请求取消最小化顶层",
+                        "text": "请求取消最小化顶层。如果最小化状态实际发生变化，将通过 state 事件表示。"
+                    }
+                },
+                "activate": {
+                    "description": {
+                        "summary": "激活顶层",
+                        "text": "请求在给定 seat 上激活此顶层。不保证顶层将实际被激活。"
+                    }
+                },
+                "close": {
+                    "description": {
+                        "summary": "请求关闭顶层",
+                        "text": "向顶层发送关闭自身的请求。合成器通常会使用特定于 shell 的方法来执行此请求，例如发送 xdg_toplevel.close 事件。但这不保证顶层将实际被销毁。如果发生这种情况，将发出 treeland_foreign_toplevel_handle_v1.closed 事件。"
+                    }
+                },
+                "set_rectangle": {
+                    "description": {
+                        "summary": "表示顶层的矩形",
+                        "text": "此请求中指定的表面矩形对应于使用此协议的应用程序表示给定顶层的位置。合成器可以将其用作某些操作的提示，例如最小化。但客户端不需要设置此值，在这种情况下，合成器可以自由决定某个默认值。\n\n如果客户端指定了多个矩形，则只考虑最后一个。\n\n尺寸以表面局部坐标给出。\n设置 width=height=0 会移除已设置的矩形。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "销毁 treeland_foreign_toplevel_handle_v1 对象",
+                        "text": "销毁 treeland_foreign_toplevel_handle_v1 对象。\n\n当客户端不再想使用该顶层或在 closed 事件之后以最终确定对象的销毁时，应调用此请求。"
+                    }
+                },
+                "set_fullscreen": {
+                    "description": {
+                        "summary": "请求全屏显示顶层",
+                        "text": "请求在给定输出上全屏显示顶层。如果全屏状态和/或顶层可见的输出实际发生变化，将通过 state 和 output_enter/leave 事件表示。\n\noutput 参数只是对合成器的提示。此外，如果 output 为 NULL，合成器应决定顶层将在哪个输出上全屏显示（如果有的话）。"
+                    }
+                },
+                "unset_fullscreen": {
+                    "description": {
+                        "summary": "请求取消全屏显示顶层",
+                        "text": "请求取消全屏显示顶层。如果全屏状态实际发生变化，将通过 state 事件表示。"
+                    }
+                }
+            },
+            "events": {
+                "pid": {
+                    "description": {
+                        "summary": "拥有窗口的应用程序的进程 ID 已更改",
+                        "text": "当合成器设置了此窗口所属的进程 ID 时发送此事件。应在发送 initial_state 之前设置一次。"
+                    }
+                },
+                "title": {
+                    "description": {
+                        "summary": "标题更改",
+                        "text": "每当顶层的标题更改时发出此事件。"
+                    }
+                },
+                "app_id": {
+                    "description": {
+                        "summary": "app-id 更改",
+                        "text": "每当顶层的 app-id 更改时发出此事件。"
+                    }
+                },
+                "identifier": {
+                    "description": {
+                        "summary": "顶层的稳定标识符",
+                        "text": "每个顶层及其句柄的标识符必须是唯一的。两个不同的顶层不能具有相同的标识符。此标识符仅在顶层映射期间有效。如果顶层未映射，标识符不得重用。合成器不得重用标识符，以确保在进程之间共享标识符时不会出现竞争。"
+                    }
+                },
+                "output_enter": {
+                    "description": {
+                        "summary": "顶层进入了输出",
+                        "text": "每当顶层在给定输出上变得可见时发出此事件。顶层可能在多个输出上可见。"
+                    }
+                },
+                "output_leave": {
+                    "description": {
+                        "summary": "顶层离开了输出",
+                        "text": "每当顶层在给定输出上不再可见时发出此事件。保证在此事件之前已发出具有相同输出的 entered-output 事件。"
+                    }
+                },
+                "state": {
+                    "description": {
+                        "summary": "顶层状态已更改",
+                        "text": "在 treeland_foreign_toplevel_handle_v1 创建后以及每次顶层状态更改时（无论是由于合成器操作还是此协议中的请求）立即发出此事件。"
+                    }
+                },
+                "done": {
+                    "description": {
+                        "summary": "顶层的所有信息已发送",
+                        "text": "在发送完顶层状态的所有更改后发送此事件。\n\n这允许将 treeland_foreign_toplevel_handle_v1 属性的更改视为原子性的，即使它们通过多个事件发生。"
+                    }
+                },
+                "closed": {
+                    "description": {
+                        "summary": "此顶层已被销毁",
+                        "text": "此事件表示顶层已被销毁。保证不会再有此 treeland_foreign_toplevel_handle_v1 的任何事件。顶层本身变为惰性，因此除了 destroy 请求外，任何请求都将被忽略。"
+                    }
+                },
+                "parent": {
+                    "description": {
+                        "summary": "父级更改",
+                        "text": "每当顶层的父级更改时发出此事件。\n\n当父句柄被客户端销毁时不会发出事件。"
+                    }
+                }
+            },
+            "enums": {
+                "state": {
+                    "description": {
+                        "summary": "顶层上的状态类型",
+                        "text": "顶层可以具有的不同状态。这些与 xdg-toplevel 中定义的同名状态具有相同的含义。"
+                    },
+                    "entries": {
+                        "maximized": {
+                            "summary": "顶层已最大化"
+                        },
+                        "minimized": {
+                            "summary": "顶层已最小化"
+                        },
+                        "activated": {
+                            "summary": "顶层处于活动状态"
+                        },
+                        "fullscreen": {
+                            "summary": "顶层已全屏"
+                        }
+                    }
+                },
+                "error": {
+                    "entries": {
+                        "invalid_rectangle": {
+                            "summary": "提供的矩形无效"
+                        }
+                    }
+                }
+            }
+        },
+        "treeland_dock_preview_context_v1": {
+            "description": {
+                "summary": "处理 dock 预览",
+                "text": "此接口允许 dock 设置窗口预览。\n\n警告！此文件中描述的协议目前处于测试阶段。向后兼容的更改可能会与相应的接口版本号提升一起添加。向后不兼容的更改只能通过创建新的扩展主版本来完成。"
+            },
+            "requests": {
+                "show": {
+                    "description": {
+                        "summary": "设置预览表面",
+                        "text": "X 和 Y 相对于 relative_surface。surfaces wl_array 是标识符。"
+                    }
+                },
+                "close": {
+                    "description": {
+                        "summary": "关闭预览框",
+                        "text": "关闭预览框。"
+                    }
+                },
+                "destroy": {
+                    "description": {
+                        "summary": "销毁上下文对象",
+                        "text": "销毁上下文对象。"
+                    }
+                }
+            },
+            "events": {
+                "enter": {
+                    "description": {
+                        "summary": "进入预览框",
+                        "text": "鼠标进入预览框后发送此事件。"
+                    }
+                },
+                "leave": {
+                    "description": {
+                        "summary": "离开预览框",
+                        "text": "鼠标离开预览框后发送此事件。"
+                    }
+                }
+            },
+            "enums": {
+                "direction": {
+                    "description": {
+                        "summary": "dock 预览的方向类型"
+                    }
+                }
+            }
+        }
+    }
+}
