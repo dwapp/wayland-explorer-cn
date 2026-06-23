@@ -61,7 +61,7 @@ async function renderAndWriteHTML(
     { routerPath, fileName, pageTitle }: StaticPageDescriptor
 ): Promise<void> {
     const contentHTML = renderToString(
-        <Router hook={staticLocationHook(routerPath)} base="/protocols">
+        <Router hook={staticLocationHook(routerPath)} base="/wayland-explorer-cn">
             <LanguageProvider>
                 <App />
             </LanguageProvider>
